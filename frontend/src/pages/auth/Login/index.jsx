@@ -1,67 +1,9 @@
 import React, { useState } from "react";
-import Input from "../../../components/auth/Input";
-import Button from "../../../components/auth/Button";
-import Checkbox from "../../../components/auth/Checkbox";
 import Carousel from "../../../components/auth/Carousel";
-import kachaLogo from "../../../assets/images/kacha_logo.jpg";
 import loginBg from "../../../assets/images/login_bg_image.jpg";
 import LoginForm from "../../../components/auth/LoginForm";
 
 export default function Login() {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    rememberMe: false,
-  });
-  const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Login attempt:", formData);
-      setIsLoading(false);
-      // Handle login logic here
-    }, 1500);
-  };
 
   return (
     <div
