@@ -12,8 +12,18 @@ export default {
         "k-white": "#ffffff",
       },
       fontFamily: {
-        sans: ["var(--font-family-base)", "system-ui", "-apple-system", "sans-serif"],
-        base: ["var(--font-family-base)", "system-ui", "-apple-system", "sans-serif"],
+        sans: [
+          "var(--font-family-base)",
+          "system-ui",
+          "-apple-system",
+          "sans-serif",
+        ],
+        base: [
+          "var(--font-family-base)",
+          "system-ui",
+          "-apple-system",
+          "sans-serif",
+        ],
         heading: ["var(--font-family-heading)", "system-ui", "sans-serif"],
         display: ["var(--font-family-display)", "system-ui", "sans-serif"],
         accent: ["var(--font-familyaccent)", "system-ui", "sans-serif"],
