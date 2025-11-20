@@ -1,42 +1,53 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Jost:wght@500;600;700&family=Space+Grotesk:wght@400;500;600&family=Outfit:wght@400;500;600&display=swap");
+
+:root {
+  /* Kacha HRMS Color Palette */
+  /* Primary Colors */
+  --color-k-orange: #db602c;
+  --color-k-yellow: #fecd30;
+
+  /* Neutral Colors */
+  --color-k-dark-grey: #333333;
+  --color-k-medium-grey: #888888;
+  --color-k-light-grey: #f5f5f5;
+  --color-k-white: #ffffff;
+
+  /* Semantic Colors */
+  --color-success: #28a745;
+  --color-error: #dc3545;
+  --color-warning: #ffc107;
+  --color-info: #17a2b8;
+
+  /* Typography */
+  --font-family-base: "Montserrat", system-ui, -apple-system, sans-serif;
+  --font-family-heading: "Jost", "Space Grotesk", system-ui, sans-serif;
+  --font-family-display: "Space Grotesk", "Outfit", system-ui, sans-serif;
+  --font-familyaccent: "Outfit", "Jost", system-ui, sans-serif;
+
+  /* Shadows for depth */
+  --shadow-card: 0 20px 40px rgba(0, 0, 0, 0.08);
+}
+
+/* Base Styles */
+*,
+*,
+*::before,
+*::after {
+  font-family: var(--font-family-base);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  min-height: 100vh;
+  font-family: var(--font-family-base);
+  color: var(--color-k-dark-grey);
+  background-color: var(--color-k-white);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+  min-height: 100vh;
 }
