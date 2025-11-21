@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import Carousel from "../../../components/common/Carousel";
 import loginBg from "../../../assets/images/login_bg_image.jpg";
 import LoginForm from "../../../components/auth/LoginForm";
@@ -20,8 +19,8 @@ export default function Login() {
 
       {/* Login container */}
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 w-full max-w-[1200px] h-[550px] bg-white/20 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden mx-4">
+        
         {/* Left Side - Login Form */}
-
         <LoginForm title="Welcome Back!" subtitle="Login to your account" />
 
         {/* Right Side - Carousel */}

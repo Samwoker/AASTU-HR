@@ -41,7 +41,7 @@ export default function Input({
             Icon ? "pl-11" : ""
           } font-base text-base text-k-dark-grey bg-white/70 backdrop-blur-sm border rounded-xl transition-all duration-200 placeholder:text-k-medium-grey placeholder:opacity-70 focus:outline-none ${
             error
-              ? "border-error focus:border-error focus:ring-4 focus:ring-red-100"
+              ? "border-error focus:border-error focus:ring-4 focus:ring-red-200"
               : "border-gray-200 focus:border-k-orange focus:ring-4 focus:ring-orange-300"
           }`}
           aria-invalid={error ? "true" : "false"}
@@ -49,12 +49,12 @@ export default function Input({
           {...props}
         />
       </div>
-      {helperText && (
+      {(error || helperText) && (
         <span
           id={`${name}-helper`}
           className={`text-sm ${error ? "text-error" : "text-k-medium-grey"}`}
         >
-          {helperText}
+          {error || helperText}
         </span>
       )}
     </div>

@@ -19,7 +19,7 @@ export default function Button({
     primary:
       "text-white bg-[#db602c] shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 disabled:hover:translate-y-0 disabled:hover:shadow-lg",
     secondary:
-      "text-k-dark-grey bg-white border-2 border-[#db602c] shadow-md hover:bg-[#fecd30] hover:-translate-y-0.5 hover:shadow-lg disabled:hover:translate-y-0 disabled:hover:bg-white",
+      "text-k-dark-grey bg-white border-2 border-[#db602c] shadow-md hover:bg-gray-100 hover:-translate-y-0.5 hover:shadow-lg disabled:hover:translate-y-0 disabled:hover:bg-white",
     link: "text-[#db602c] bg-transparent p-0 h-auto font-medium shadow-none hover:text-k-dark-grey hover:underline",
   };
 

@@ -1,10 +1,6 @@
-import React from "react";
 import LoginForm from "../../../components/auth/LoginForm";
 import Carousel from "../../../components/common/Carousel";
 import loginBg from "../../../assets/images/login_bg_image.jpg";
-import carousel1 from "../../../assets/images/carousel/carousel-1.png";
-import carousel2 from "../../../assets/images/carousel/carousel-2.png";
-import carousel3 from "../../../assets/images/carousel/carousel-3.png";
 
 export default function SuperadminLogin() {
   const hrCarouselSlides = [
