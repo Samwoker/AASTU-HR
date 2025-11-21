@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Carousel from "../../../components/auth/Carousel";
+import Carousel from "../../../components/common/Carousel";
 import loginBg from "../../../assets/images/login_bg_image.jpg";
 import LoginForm from "../../../components/auth/LoginForm";
 

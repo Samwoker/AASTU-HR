@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import Input from "./Input";
-import Button from "./Button";
-import Checkbox from "./Checkbox";
+import Input from "../common/Input";
+import Button from "../common/Button";
+import Checkbox from "../common/Checkbox";
 import { MdEmail, MdLock } from "react-icons/md";
 import kachaLogo from "../../assets/images/kacha_logo.jpg";
 
