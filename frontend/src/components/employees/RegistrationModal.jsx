@@ -1,0 +1,287 @@
+import React, { useState, useRef } from "react";
+import { MdCloudUpload, MdEdit, MdClose, MdCheckCircle, MdError, MdArrowForward, MdArrowBack } from "react-icons/md";
+import { extractResumeData } from "../../services/geminiService";
+
+export default function RegistrationModal({ isOpen, onClose, onAutoFill, onManualStart }) {
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [file, setFile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+  const fileInputRef = useRef(null);
+
+  if (!isOpen) return null;
+
+  const handleFileSelect = (selectedFile) => {
+    // Validate file type
+    const validTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain'
+    ];
+
+    if (!validTypes.includes(selectedFile.type)) {
+      setError('Please upload a PDF, DOC, DOCX, or TXT file');
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      setError('File size must be less than 10MB');
+      return;
+    }
+
+    setFile(selectedFile);
+    setError(null);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const droppedFile = e.dataTransfer.files[0];
+    if (droppedFile) {
+      handleFileSelect(droppedFile);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleFileInputChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      handleFileSelect(selectedFile);
+    }
+  };
+
+  const handleAutoFillSubmit = async () => {
+    if (!file) {
+      setError('Please select a file first');
+      return;
+    }
+
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      const extractedData = await extractResumeData(file);
+      setSuccess(true);
+      
+      // Wait a moment to show success state
+      setTimeout(() => {
+        onAutoFill(extractedData);
+        onClose();
+      }, 800);
+    } catch (err) {
+      console.error('Error processing resume:', err);
+      setError(err.message || 'Failed to process resume. Please try again.');
+      setIsProcessing(false);
+    }
+  };
+
+  const handleManualOption = () => {
+    onManualStart();
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[slideUp_0.3s_ease-out]">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="sticky top-0 bg-gradient-to-r from-orange-600 to-k-yellow text-white p-6 rounded-t-2xl z-50">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold font-heading">Employee Registration</h2>
+              <p className="text-orange-100 mt-1">Choose how you'd like to get started</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-white/20 rounded-full transition-colors cursor-pointer"
+              aria-label="Close modal"
+            >
+              <MdClose size={24} />
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6">
+          {!selectedOption ? (
+            /* Option Selection */
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Auto-fill Option */}
+              <button
+                onClick={() => setSelectedOption('autofill')}
+                className="group relative bg-gradient-to-br from-k-orange/10 to-orange-100/50 hover:from-k-orange/20 hover:to-orange-200/60 border-2 border-k-orange/30 hover:border-k-orange rounded-xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer"
+              >
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="p-4 bg-k-orange/10 group-hover:bg-k-orange rounded-full transition-colors duration-300">
+                    <MdCloudUpload className="w-12 h-12 text-k-orange group-hover:text-white transition-colors duration-300" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-k-dark-grey font-heading">Auto-fill with AI</h3>
+                    <p className="text-sm text-k-medium-grey mt-2">
+                      Upload your CV/Resume and let AI extract your information automatically
+                    </p>
+                  </div>
+                  <div className="mt-4 px-4 py-2 bg-k-orange text-white rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
+                    Get Started <MdArrowForward className="w-4 h-4" />
+                  </div>
+                </div>
+              </button>
+
+              {/* Manual Option */}
+              <button
+                onClick={handleManualOption}
+                className="group relative bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 border-2 border-gray-300 hover:border-gray-400 rounded-xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer"
+              >
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="p-4 bg-gray-200 group-hover:bg-k-dark-grey rounded-full transition-colors duration-300">
+                    <MdEdit className="w-12 h-12 text-k-dark-grey group-hover:text-white transition-colors duration-300" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-k-dark-grey font-heading">Manual Entry</h3>
+                    <p className="text-sm text-k-medium-grey mt-2">
+                      Fill in your information manually step by step
+                    </p>
+                  </div>
+                  <div className="mt-4 px-4 py-2 bg-k-dark-grey text-white rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
+                    Start Filling <MdArrowForward className="w-4 h-4" />
+                  </div>
+                </div>
+              </button>
+            </div>
+          ) : (
+            /* Auto-fill File Upload */
+            <div className="space-y-6">
+              <button
+                onClick={() => {
+                  setSelectedOption(null);
+                  setFile(null);
+                  setError(null);
+                }}
+                className="text-k-medium-grey hover:text-k-dark-grey flex items-center gap-2 text-sm cursor-pointer"
+              >
+                <MdArrowBack className="w-4 h-4" /> Back to options
+              </button>
+
+              {/* File Upload Area */}
+              <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onClick={() => fileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-xl p-12 text-center transition-all duration-300 cursor-pointer ${
+                  isDragging
+                    ? 'border-k-orange bg-orange-50 scale-105'
+                    : file
+                    ? 'border-success bg-green-50'
+                    : 'border-gray-300 hover:border-k-orange hover:bg-gray-50'
+                }`}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,.txt"
+                  onChange={handleFileInputChange}
+                  className="hidden"
+                />
+
+                {file ? (
+                  <div className="flex flex-col items-center space-y-3">
+                    <MdCheckCircle className="w-16 h-16 text-success" />
+                    <div>
+                      <p className="font-medium text-k-dark-grey">{file.name}</p>
+                      <p className="text-sm text-k-medium-grey">
+                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFile(null);
+                        setError(null);
+                      }}
+                      className="text-sm text-error hover:underline cursor-pointer"
+                    >
+                      Remove file
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center space-y-3">
+                    <MdCloudUpload className="w-16 h-16 text-k-orange" />
+                    <div>
+                      <p className="text-lg font-medium text-k-dark-grey">
+                        Drop your CV/Resume here
+                      </p>
+                      <p className="text-sm text-k-medium-grey mt-1">
+                        or click to browse
+                      </p>
+                    </div>
+                    <p className="text-xs text-k-medium-grey">
+                      Supported formats: PDF, DOC, DOCX, TXT (Max 10MB)
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="flex items-start gap-3 p-4 bg-red-50 border border-error rounded-xl">
+                  <MdError className="w-5 h-5 text-error flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-error">{error}</p>
+                </div>
+              )}
+
+              {/* Success Message */}
+              {success && (
+                <div className="flex items-center gap-3 p-4 bg-green-50 border border-success rounded-xl">
+                  <MdCheckCircle className="w-5 h-5 text-success" />
+                  <p className="text-sm text-success font-medium">
+                    Resume processed successfully! Loading form...
+                  </p>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <div className="flex gap-3">
+                <button
+                  onClick={handleAutoFillSubmit}
+                  disabled={!file || isProcessing || success}
+                  className={`flex-1 py-3 px-6 rounded-xl font-medium transition-all duration-300 ${
+                    !file || isProcessing || success
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-k-orange text-white hover:bg-orange-600 hover:shadow-lg cursor-pointer'
+                  }`}
+                >
+                  {isProcessing ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Processing Resume...
+                    </span>
+                  ) : success ? (
+                    'Success! Loading...'
+                  ) : (
+                    'Auto-fill Form with AI'
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
