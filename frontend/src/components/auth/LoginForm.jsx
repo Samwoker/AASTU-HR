@@ -56,7 +56,7 @@ export default function LoginForm({
     e.preventDefault();
 
     if (!validateForm()) {
-      toast.error('Please correct the errors in the form.'); // Added toast for validation errors
+      toast.error("Please correct the errors in the form."); // Added toast for validation errors
       return;
     }
 
@@ -66,7 +66,7 @@ export default function LoginForm({
       console.log("Login attempt:", formData);
       setIsLoading(false);
       // Handle login logic here
-      toast.success('Login successful!'); // Added toast for success
+      toast.success("Login successful!"); // Added toast for success
       navigate("/employee/onboarding"); // Redirect on successful login
     }, 1500);
   };
