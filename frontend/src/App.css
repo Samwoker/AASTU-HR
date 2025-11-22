@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Jost:wght@500;600;700&family=Space+Grotesk:wght@400;500;600&family=Outfit:wght@400;500;600&display=swap");
 
 :root {
   /* Kacha HRMS Color Palette */
@@ -17,35 +16,19 @@
   --color-error: #dc3545;
   --color-warning: #ffc107;
   --color-info: #17a2b8;
-
-  /* Typography */
-  --font-family-base: "Montserrat", system-ui, -apple-system, sans-serif;
-  --font-family-heading: "Jost", "Space Grotesk", system-ui, sans-serif;
-  --font-family-display: "Space Grotesk", "Outfit", system-ui, sans-serif;
-  --font-familyaccent: "Outfit", "Jost", system-ui, sans-serif;
-
-  /* Shadows for depth */
-  --shadow-card: 0 20px 40px rgba(0, 0, 0, 0.08);
 }
 
 /* Base Styles */
-*,
-*,
-*::before,
-*::after {
-  font-family: var(--font-family-base);
-}
-
 body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   min-height: 100vh;
-  font-family: var(--font-family-base);
-  color: var(--color-k-dark-grey);
-  background-color: var(--color-k-white);
+  color: #333333;
+  background-color: #ffffff;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
 }
 
 #root {

@@ -1,1 +1,34 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Jost:wght@500;600;700&family=Space+Grotesk:wght@400;500;600&family=Outfit:wght@400;500;600&display=swap");
 @import "tailwindcss";
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@theme {
+  /* Kacha HRMS Color Palette */
+  --color-k-orange: #db602c;
+  --color-k-yellow: #fecd30;
+  --color-k-dark-grey: #333333;
+  --color-k-medium-grey: #888888;
+  --color-k-light-grey: #f5f5f5;
+  --color-k-white: #ffffff;
+  --color-success: #28a745;
+  --color-error: #dc3545;
+  --color-warning: #ffc107;
+  --color-info: #17a2b8;
+
+  /* Font Families */
+  --font-sans: Montserrat, system-ui, -apple-system, sans-serif;
+  --font-base: Montserrat, system-ui, -apple-system, sans-serif;
+  --font-heading: Jost, "Space Grotesk", system-ui, sans-serif;
+  --font-display: "Space Grotesk", Outfit, system-ui, sans-serif;
+  --font-accent: Outfit, Jost, system-ui, sans-serif;
+}
