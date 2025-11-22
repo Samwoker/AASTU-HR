@@ -9,6 +9,7 @@ import StepDocuments from "../../components/employees/wizard/StepDocuments";
 import RegistrationModal from "../../components/employees/RegistrationModal";
 import Button from "../../components/common/Button";
 import { MdCheck, MdArrowBack, MdArrowForward, MdError } from "react-icons/md";
+import toast from "react-hot-toast";
 
 const STEPS = [
   { id: 1, title: "Personal Info", component: StepPersonalInfo },
@@ -142,7 +143,9 @@ export default function EmployeeRegistrationWizard() {
         handleSubmit();
       }
     } else {
-      // Scroll to top to see errors if needed, or show a toast
+      // Show validation error toast
+      toast.error('Please fill in all required fields correctly');
+      // Scroll to top to see errors
       window.scrollTo(0, 0);
     }
   };
@@ -157,8 +160,17 @@ export default function EmployeeRegistrationWizard() {
   const handleSubmit = () => {
     if (validateStep(currentStep)) {
       console.log("Form Submitted:", formData);
+      
+      // Show success toast
+      toast.success('Application submitted successfully!');
+      
       // TODO: API call to submit data
-      navigate("/dashboard"); // Redirect to dashboard after submission
+      // Redirect to dashboard after a brief delay
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1000);
+    } else {
+      toast.error('Please fix all errors before submitting');
     }
   };
 

@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { MdCloudUpload, MdEdit, MdClose, MdCheckCircle, MdError, MdArrowForward, MdArrowBack } from "react-icons/md";
 import { extractResumeData } from "../../services/geminiService";
+import toast from "react-hot-toast";
 
 export default function RegistrationModal({ isOpen, onClose, onAutoFill, onManualStart }) {
   const [selectedOption, setSelectedOption] = useState(null);
@@ -65,6 +66,7 @@ export default function RegistrationModal({ isOpen, onClose, onAutoFill, onManua
 
   const handleAutoFillSubmit = async () => {
     if (!file) {
+      toast.error('Please select a file first');
       setError('Please select a file first');
       return;
     }
@@ -72,8 +74,18 @@ export default function RegistrationModal({ isOpen, onClose, onAutoFill, onManua
     setIsProcessing(true);
     setError(null);
 
+    // Show loading toast
+    const loadingToastId = toast.loading('Processing your resume with AI...');
+
     try {
       const extractedData = await extractResumeData(file);
+      
+      // Dismiss loading toast
+      toast.dismiss(loadingToastId);
+      
+      // Show success toast
+      toast.success('Resume processed successfully! Auto-filling form...');
+      
       setSuccess(true);
       
       // Wait a moment to show success state
@@ -83,6 +95,13 @@ export default function RegistrationModal({ isOpen, onClose, onAutoFill, onManua
       }, 800);
     } catch (err) {
       console.error('Error processing resume:', err);
+      
+      // Dismiss loading toast
+      toast.dismiss(loadingToastId);
+      
+      // Show error toast
+      toast.error(err.message || 'Failed to process resume. Please try again.');
+      
       setError(err.message || 'Failed to process resume. Please try again.');
       setIsProcessing(false);
     }

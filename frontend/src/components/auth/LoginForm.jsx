@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Input from "../common/Input";
 import Button from "../common/Button";
 import Checkbox from "../common/Checkbox";
 import { MdEmail, MdLock } from "react-icons/md";
+import toast from "react-hot-toast";
 import kachaLogo from "../../assets/images/kacha_logo.jpg";
 
 export default function LoginForm({
@@ -16,6 +18,8 @@ export default function LoginForm({
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -52,6 +56,7 @@ export default function LoginForm({
     e.preventDefault();
 
     if (!validateForm()) {
+      toast.error('Please correct the errors in the form.'); // Added toast for validation errors
       return;
     }
 
@@ -61,6 +66,8 @@ export default function LoginForm({
       console.log("Login attempt:", formData);
       setIsLoading(false);
       // Handle login logic here
+      toast.success('Login successful!'); // Added toast for success
+      navigate("/employee/onboarding"); // Redirect on successful login
     }, 1500);
   };
 
