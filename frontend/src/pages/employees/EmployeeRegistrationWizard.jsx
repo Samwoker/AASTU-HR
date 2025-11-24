@@ -6,6 +6,7 @@ import StepEducation from "../../components/employees/wizard/StepEducation";
 import StepWorkExperience from "../../components/employees/wizard/StepWorkExperience";
 import StepCertifications from "../../components/employees/wizard/StepCertifications";
 import StepDocuments from "../../components/employees/wizard/StepDocuments";
+import StepReview from "../../components/employees/wizard/StepReview";
 import RegistrationModal from "../../components/employees/RegistrationModal";
 import Button from "../../components/common/Button";
 import { MdCheck, MdArrowBack, MdArrowForward, MdError } from "react-icons/md";
@@ -18,6 +19,7 @@ const STEPS = [
   { id: 4, title: "Work Experience", component: StepWorkExperience },
   { id: 5, title: "Certifications", component: StepCertifications },
   { id: 6, title: "Documents", component: StepDocuments },
+  { id: 7, title: "Review", component: StepReview },
 ];
 
 export default function EmployeeRegistrationWizard() {
@@ -57,7 +59,8 @@ export default function EmployeeRegistrationWizard() {
       certificates: null,
       experienceLetters: null,
       photo: null,
-      taxForms: null,
+      taxForms: [],
+      pensionForms: [],
     },
   });
 
@@ -354,6 +357,10 @@ export default function EmployeeRegistrationWizard() {
               handleChange={handleChange}
               updateFormData={updateFormData}
               errors={errors}
+              onEditStep={(stepId) => {
+                setCurrentStep(stepId);
+                window.scrollTo(0, 0);
+              }}
             />
           </div>
 
@@ -376,6 +383,8 @@ export default function EmployeeRegistrationWizard() {
             >
               {currentStep === STEPS.length
                 ? "Submit Application"
+                : currentStep === STEPS.length - 1
+                ? "Review and Submit"
                 : "Next Step"}
             </Button>
           </div>
