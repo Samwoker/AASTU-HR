@@ -170,7 +170,7 @@ export default function EmployeeRegistrationWizard() {
       // TODO: API call to submit data
       // Redirect to dashboard after a brief delay
       setTimeout(() => {
-        navigate("/dashboard");
+        navigate("/employee/dashboard");
       }, 1000);
     } else {
       toast.error("Please fix all errors before submitting");
