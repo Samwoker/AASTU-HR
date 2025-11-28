@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import EmployeeSidebar from "../Sidebars/EmployeeSidebar";
 import EmployeeHeader from "../Header/EmployeeHeader";
 
@@ -9,10 +9,8 @@ interface EmployeeLayoutProps {
 export default function EmployeeLayout({ children }: EmployeeLayoutProps) {
   return (
     <div className="flex min-h-screen w-full overflow-hidden bg-[#F5F5F5]">
-      {/* STICKY, NEVER MOVES */}
       <EmployeeSidebar />
 
-      {/* CONTENT SCROLLS, SIDEBAR DOES NOT */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         <EmployeeHeader />
 

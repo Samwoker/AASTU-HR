@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   MdDashboard,
   MdGroup,
@@ -7,16 +7,25 @@ import {
   MdPersonAdd,
   MdKeyboardArrowDown,
   MdKeyboardArrowRight,
-  MdKeyboardArrowLeft,
   MdMenu,
 } from "react-icons/md";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export default function Sidebar() {
   const [open, setOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
-
   const [employeeOpen, setEmployeeOpen] = useState(false);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    if (
+      location.pathname.startsWith("/admin/employees") ||
+      location.pathname.startsWith("/admin/employment")
+    ) {
+      setEmployeeOpen(true);
+    }
+  }, [location.pathname]);
 
   return (
     <>
@@ -33,11 +42,11 @@ export default function Sidebar() {
           h-screen bg-white shadow-lg border-r border-gray-200 flex flex-col transition-all duration-300
           ${open ? "w-80" : "w-24"}
           fixed top-0 left-0 z-40
-          md:sticky md:top-0 
+          md:sticky md:top-0
           ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
       >
-        {/* Logo & Collapse Button */}
+        {/* Logo +  Switch */}
         <div className="pt-8 pb-6 px-4 flex flex-col items-center relative">
           {open && (
             <img
@@ -47,11 +56,23 @@ export default function Sidebar() {
             />
           )}
 
+          {/* SWITCH BUTTON */}
           <button
             onClick={() => setOpen(!open)}
-            className="hidden md:flex absolute right-3 top-3 p-2 bg-gray-100 rounded-full hover:bg-gray-200 shadow"
+            className={`
+              hidden md:flex absolute right-3 top-3
+              w-12 h-6 rounded-full
+              transition-all duration-300
+              shadow-inner flex items-center px-1 cursor-pointer
+              ${open ? "bg-[#DB5E00]" : "bg-[#FFCC00]"}
+            `}
           >
-            {open ? <MdKeyboardArrowLeft /> : <MdKeyboardArrowRight />}
+            <div
+              className={`
+                w-5 h-5 rounded-full bg-white shadow transition-all duration-300
+                ${open ? "translate-x-6" : "translate-x-0"}
+              `}
+            ></div>
           </button>
         </div>
 
@@ -67,7 +88,7 @@ export default function Sidebar() {
             {open && <span>Dashboard</span>}
           </Link>
 
-          {/* Employees Dropdown */}
+          {/* EMPLOYEE DROPDOWN */}
           <div>
             <button
               onClick={() => setEmployeeOpen(!employeeOpen)}
@@ -115,7 +136,7 @@ export default function Sidebar() {
             )}
           </div>
 
-          {/* Create User (Previously Create Account - now moved OUTSIDE) */}
+          {/* Create User */}
           <Link
             to="/admin/create-user"
             className="group flex items-center gap-5 p-4 rounded-lg text-gray-700 font-semibold text-lg transition hover:bg-[#FFCC00] hover:text-white"
