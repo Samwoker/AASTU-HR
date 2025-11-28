@@ -12,6 +12,7 @@ import {
   selectCreateAccountSuccess,
 } from "./slice/selectors";
 import { USER_ROLES } from "../../../../utils/constants";
+import ToastService from "../../../../utils/ToastService";
 
 export default function CreateEmployeeAccount() {
   const dispatch = useDispatch();
@@ -30,7 +31,7 @@ export default function CreateEmployeeAccount() {
   // Reset form on success
   useEffect(() => {
     if (success) {
-      alert("Account created successfully!");
+      ToastService.success("Account created successfully!");
       setForm({
         employeeId: "",
         email: "",
@@ -44,7 +45,7 @@ export default function CreateEmployeeAccount() {
   // Show error if any
   useEffect(() => {
     if (error) {
-      alert(`Error: ${error}`);
+      ToastService.error(error);
     }
   }, [error]);
 
@@ -148,8 +149,8 @@ export default function CreateEmployeeAccount() {
               type="submit"
               disabled={loading}
               className={`w-full py-3 font-semibold rounded-xl shadow ${loading
-                  ? "bg-gray-300 cursor-not-allowed"
-                  : "bg-[#FFCC00] hover:bg-[#e6b800] text-black"
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-[#FFCC00] hover:bg-[#e6b800] text-black"
                 }`}
             >
               {loading ? "Creating..." : "Create Account"}

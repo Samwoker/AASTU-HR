@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig, AxiosResponse, Method } from 'axios';
+import axios, { AxiosRequestConfig, AxiosResponse, Method } from "axios";
 
 export interface IAPICallConfig {
   route: string;
@@ -13,13 +13,15 @@ const makeCall = async (config: IAPICallConfig): Promise<AxiosResponse> => {
     const { method, route, body, query, isSecureRoute = true } = config;
 
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
 
     if (isSecureRoute) {
-      const token = localStorage.getItem('token');
+      const token =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjMiLCJjb21wYW55X2lkIjoiMSIsInJvbGVfaWQiOiIxIiwiaWF0IjoxNzY0MzI5OTM0LCJleHAiOjE3NjQ0MTYzMzR9.FF8wAF4104U8wsCmrMK0ELj4Vvwokz8RmT-Mw5h85BA";
+      // const token = localStorage.getItem('token');
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        headers["Authorization"] = `Bearer ${token}`;
       }
     }
 
