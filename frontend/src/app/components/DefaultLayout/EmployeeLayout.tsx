@@ -1,7 +1,12 @@
+import React from 'react';
 import EmployeeSidebar from "../Sidebars/EmployeeSidebar";
 import EmployeeHeader from "../Header/EmployeeHeader";
 
-export default function EmployeeLayout({ children }) {
+interface EmployeeLayoutProps {
+  children: React.ReactNode;
+}
+
+export default function EmployeeLayout({ children }: EmployeeLayoutProps) {
   return (
     <div className="flex min-h-screen w-full overflow-hidden bg-[#F5F5F5]">
       {/* STICKY, NEVER MOVES */}
