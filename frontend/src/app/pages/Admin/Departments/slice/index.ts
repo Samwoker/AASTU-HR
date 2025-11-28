@@ -25,6 +25,18 @@ const slice = createSlice({
       state.isLoading = false;
       state.error = action.payload;
     },
+    createDepartmentRequest(state, _action: PayloadAction<{ name: string }>) {
+      state.isLoading = true;
+      state.error = null;
+    },
+    createDepartmentSuccess(state, action: PayloadAction<Department>) {
+      state.isLoading = false;
+      state.departments.push(action.payload);
+    },
+    createDepartmentFailure(state, action: PayloadAction<string>) {
+      state.isLoading = false;
+      state.error = action.payload;
+    },
   },
 });
 

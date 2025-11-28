@@ -5,6 +5,9 @@ const apiRoutes = {
   login: `${BASE_URL}/auth/login`,
   users: `${BASE_URL}/users`,
   employees: `${BASE_URL}/employees`,
+  employments: `${BASE_URL}/employments`,
+  departments: `${BASE_URL}/department`,
+  jobTitles: `${BASE_URL}/job-titles`,
 };
 
 export default apiRoutes;
