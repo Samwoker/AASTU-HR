@@ -11,6 +11,7 @@ import RegistrationModal from "../../components/employees/RegistrationModal";
 import Button from "../../components/common/Button";
 import { MdCheck, MdArrowBack, MdArrowForward, MdError } from "react-icons/md";
 import toast from "react-hot-toast";
+import employeeService from "../../services/employeeService";
 
 const STEPS = [
   { id: 1, title: "Personal Info", component: StepPersonalInfo },
@@ -160,18 +161,27 @@ export default function EmployeeRegistrationWizard() {
     }
   };
 
-  const handleSubmit = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
     if (validateStep(currentStep)) {
       console.log("Form Submitted:", formData);
+      setIsSubmitting(true);
 
-      // Show success toast
-      toast.success("Application submitted successfully!");
-
-      // TODO: API call to submit data
-      // Redirect to dashboard after a brief delay
-      setTimeout(() => {
-        navigate("/employee/dashboard");
-      }, 1000);
+      try {
+        await employeeService.onboardEmployee(formData);
+        toast.success("Application submitted successfully!");
+        
+        // Redirect to dashboard after a brief delay
+        setTimeout(() => {
+          navigate("/employee/dashboard");
+        }, 1000);
+      } catch (error) {
+        console.error("Submission error:", error);
+        const message = error.response?.data?.message || "Failed to submit application. Please try again.";
+        toast.error(message);
+        setIsSubmitting(false);
+      }
     } else {
       toast.error("Please fix all errors before submitting");
     }
@@ -380,6 +390,7 @@ export default function EmployeeRegistrationWizard() {
               onClick={handleNext}
               icon={currentStep === STEPS.length ? MdCheck : MdArrowForward}
               iconPosition="right"
+              loading={isSubmitting}
             >
               {currentStep === STEPS.length
                 ? "Submit Application"

@@ -8,6 +8,7 @@ import EmployeeRegistrationWizard from "./pages/employees/EmployeeRegistrationWi
 import SuperAdminDashboard from "./pages/superadmin/Dashboard";
 import CreateEmployeeAccount from "./pages/superadmin/CreateAccount";
 import EmployeeDashboard from "./pages/employee/Dashboard";
+import TestUpload from "./pages/TestUpload";
 
 const router = createBrowserRouter([
   {
@@ -37,6 +38,10 @@ const router = createBrowserRouter([
   {
     path: "/employee/dashboard",
     element: <EmployeeDashboard />,
+  },
+  {
+    path: "/test-upload",
+    element: <TestUpload />,
   },
 ]);
 

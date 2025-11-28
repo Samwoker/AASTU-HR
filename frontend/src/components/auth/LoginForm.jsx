@@ -1,15 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import Input from "../common/Input";
 import Button from "../common/Button";
 import Checkbox from "../common/Checkbox";
 import { MdEmail, MdLock } from "react-icons/md";
 import toast from "react-hot-toast";
 import kachaLogo from "../../assets/images/kacha_logo.jpg";
+import { login, reset } from "../../features/auth/authSlice";
 
 export default function LoginForm({
   title = "Welcome Back!",
   subtitle = "Login to your account",
+  redirectPath,
 }) {
   const [formData, setFormData] = useState({
     email: "",
@@ -17,9 +20,41 @@ export default function LoginForm({
     rememberMe: false,
   });
   const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const { user, isLoading, isError, isSuccess, message } = useSelector(
+    (state) => state.auth
+  );
+
+  useEffect(() => {
+    if (isError) {
+      toast.error(message);
+    }
+
+    if (isSuccess || user) {
+      // Show success toast
+      if (isSuccess) {
+        toast.success(`Welcome back, ${user?.email || 'User'}!`);
+      }
+      
+      // Determine redirect path based on user role_id
+      let path = redirectPath;
+      if (!path) {
+        // If no custom redirect path, route based on role_id
+        // role_id: 1 = SUPER_ADMIN, others = regular employees
+        if (user?.role_id === 1) {
+          path = "/superadmin/dashboard";
+        } else {
+          path = "/employee/onboarding";
+        }
+      }
+      navigate(path);
+    }
+
+    dispatch(reset());
+  }, [user, isError, isSuccess, message, navigate, dispatch, redirectPath]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -52,23 +87,15 @@ export default function LoginForm({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
-      toast.error("Please correct the errors in the form."); // Added toast for validation errors
+      toast.error("Please correct the errors in the form.");
       return;
     }
 
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Login attempt:", formData);
-      setIsLoading(false);
-      // Handle login logic here
-      toast.success("Login successful!"); // Added toast for success
-      navigate("/employee/onboarding"); // Redirect on successful login
-    }, 1500);
+    dispatch(login(formData));
   };
 
   return (
@@ -126,7 +153,7 @@ export default function LoginForm({
             />
             <a
               href="#forgot-password"
-              className="text-sm font-medium text-[#db602c] hover:text-k-dark-grey transition-colors duration-200"
+              className="text-sm font-medium text-k-orange hover:text-k-dark-grey transition-colors duration-200"
             >
               Reset Password?
             </a>

@@ -21,7 +21,10 @@ export default function Login() {
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 w-full max-w-[1200px] h-[550px] bg-white/20 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden mx-4">
         
         {/* Left Side - Login Form */}
-        <LoginForm title="Welcome Back!" subtitle="Login to your account" />
+        <LoginForm 
+          title="Welcome Back!" 
+          subtitle="Login to your account" 
+        />
 
         {/* Right Side - Carousel */}
         <div className="hidden lg:block relative h-full rounded-r-2xl overflow-hidden">
