@@ -7,19 +7,31 @@ export const initialState: EmployeesState = {
   loading: false,
   error: null,
   employees: [],
+  pagination: {
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+  },
 };
 
 const slice = createSlice({
   name: 'employees',
   initialState,
   reducers: {
-    fetchAllEmployeesRequest(state) {
+    fetchAllEmployeesRequest(state, _action: PayloadAction<{ page: number; limit: number } | undefined>) {
       state.loading = true;
       state.error = null;
     },
-    fetchAllEmployeesSuccess(state, action: PayloadAction<Employee[]>) {
+    fetchAllEmployeesSuccess(state, action: PayloadAction<{ employees: Employee[]; total: number; page: number; limit: number }>) {
       state.loading = false;
-      state.employees = action.payload;
+      state.employees = action.payload.employees;
+      state.pagination = {
+        page: action.payload.page,
+        limit: action.payload.limit,
+        total: action.payload.total,
+        totalPages: Math.ceil(action.payload.total / action.payload.limit),
+      };
     },
     fetchAllEmployeesFailure(state, action: PayloadAction<string>) {
       state.loading = false;
