@@ -1,20 +1,25 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { RootState } from '../../../../../store/types/RootState';
 import { initialState } from '.';
+import { RootState } from '../../../../../store/types/RootState';
 
-const selectDomain = (state: RootState) => state.employees || initialState;
+const selectSlice = (state: RootState) => state.employees || initialState;
+
+export const selectAllEmployees = createSelector(
+  [selectSlice],
+  (state) => state.employees,
+);
 
 export const selectEmployeesLoading = createSelector(
-  [selectDomain],
+  [selectSlice],
   (state) => state.loading,
 );
 
 export const selectEmployeesError = createSelector(
-  [selectDomain],
+  [selectSlice],
   (state) => state.error,
 );
 
-export const selectAllEmployees = createSelector(
-  [selectDomain],
-  (state) => state.employees,
+export const selectEmployeesPagination = createSelector(
+  [selectSlice],
+  (state) => state.pagination,
 );

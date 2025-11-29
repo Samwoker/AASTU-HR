@@ -8,6 +8,10 @@ const apiRoutes = {
   employments: `${BASE_URL}/employments`,
   departments: `${BASE_URL}/department`,
   jobTitles: `${BASE_URL}/job-titles`,
+  employeesCount: `${BASE_URL}/employees/count`,
+  departmentsCount: `${BASE_URL}/department/count`,
+  activeEmploymentsCount: `${BASE_URL}/employments/count/active`,
+  managersCount: `${BASE_URL}/employments/count/managers`,
 };
 
 export default apiRoutes;

@@ -4,6 +4,8 @@ export const routeConstants = {
   dashboard: '/admin/dashboard',
   createUser: '/admin/create-user',
   createEmployment: '/admin/employment/create',
+  createEmployee: '/admin/employees/create',
+  employees: '/admin/employees',
   departments: '/admin/departments',
   employeeDashboard: '/employee/dashboard',
 };

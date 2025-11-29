@@ -1,8 +1,21 @@
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useDashboardSlice } from './slice';
+import { selectDashboardStats, selectDashboardLoading } from './slice/selectors';
 import AdminLayout from "../../../components/DefaultLayout/AdminLayout";
 import StatCard from "../../../components/Core/ui/StatCard";
-import { MdGroup, MdApartment } from "react-icons/md";
+import { MdGroup, MdApartment, MdPersonOutline, MdWork } from "react-icons/md";
 
 export default function AdminDashboard() {
+  const dispatch = useDispatch();
+  const { actions } = useDashboardSlice();
+  const stats = useSelector(selectDashboardStats);
+  const isLoading = useSelector(selectDashboardLoading);
+
+  useEffect(() => {
+    dispatch(actions.fetchStatsRequest());
+  }, [dispatch, actions]);
+
   return (
     <AdminLayout>
       <h1 className="text-xl md:text-2xl font-bold text-[#333] mb-6">
@@ -10,9 +23,27 @@ export default function AdminDashboard() {
       </h1>
 
       {/* Top statistics section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        <StatCard title="Total Employees" value="60" icon={<MdGroup />} />
-        <StatCard title="Departments" value="12" icon={<MdApartment />} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <StatCard
+          title="Total Employees"
+          value={isLoading ? "..." : stats.totalEmployees.toString()}
+          icon={<MdGroup />}
+        />
+        <StatCard
+          title="Departments"
+          value={isLoading ? "..." : stats.totalDepartments.toString()}
+          icon={<MdApartment />}
+        />
+        <StatCard
+          title="Active Employees"
+          value={isLoading ? "..." : stats.activeEmployees.toString()}
+          icon={<MdPersonOutline />}
+        />
+        <StatCard
+          title="Total Managers"
+          value={isLoading ? "..." : stats.totalManagers.toString()}
+          icon={<MdWork />}
+        />
       </div>
 
       {/* Recent activity module */}

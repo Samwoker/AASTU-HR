@@ -3,6 +3,8 @@ import { CreateAccountState } from '../../app/pages/Admin/CreateAccount/slice/ty
 import { EmployeesState } from '../../app/pages/Admin/Employees/slice/types';
 import { JobTitlesState } from '../../app/pages/Admin/Settings/JobTitles/slice/types';
 import { CreateEmploymentState } from '../../app/pages/Admin/CreateEmployment/slice/types';
+import { CreateEmployeeState } from '../../app/pages/Admin/CreateEmployee/slice/types';
+import { DashboardState } from '../../app/pages/Admin/Dashboard/slice/types';
 // Import other slice states here as needed, e.g. AuthState
 
 export interface RootState {
@@ -11,5 +13,7 @@ export interface RootState {
   jobTitles?: JobTitlesState;
   createEmployment?: CreateEmploymentState;
   departments?: DepartmentsState;
+  createEmployee?: CreateEmployeeState;
+  dashboard?: DashboardState;
   // [INSERT NEW REDUCER KEY ABOVE] < Needed for generating containers seamlessly
 }
