@@ -19,7 +19,9 @@ export default function Sidebar() {
   const location = useLocation();
 
   // Initialize employeeOpen based on current path
-  const isEmployeeSection = location.pathname.includes('/admin/employees') || location.pathname.includes('/admin/employment');
+  const isEmployeeSection =
+    location.pathname.includes("/admin/employees") ||
+    location.pathname.includes("/admin/employment");
   const [employeeOpen, setEmployeeOpen] = useState(isEmployeeSection);
 
   // Update employeeOpen if path changes (optional, but good for deep linking if sidebar doesn't remount)
@@ -31,9 +33,8 @@ export default function Sidebar() {
 
   const isActive = (path: string) => location.pathname === path;
 
-
   const linkClasses = (path: string) => `
-    group flex items-center gap-5 p-4 rounded-lg font-semibold text-lg transition 
+    group flex items-center gap-5 p-4 rounded-lg font-semibold text-lg transition
     ${isActive(path) ? "bg-[#FFCC00] text-white" : "text-gray-700 hover:bg-[#FFCC00] hover:text-white"}
   `;
 
@@ -41,9 +42,6 @@ export default function Sidebar() {
     p-2 rounded-lg text-sm transition
     ${isActive(path) ? "bg-[#FFCC00] text-white" : "text-gray-600 hover:bg-[#FFCC00] hover:text-white"}
   `;
-
-
-  const location = useLocation();
 
   useEffect(() => {
     if (
@@ -111,7 +109,9 @@ export default function Sidebar() {
             className={linkClasses("/admin/dashboard")}
             onClick={() => setMobileOpen(false)}
           >
-            <MdDashboard className={`text-3xl ${isActive("/admin/dashboard") ? "text-white" : "text-[#DB5E00] group-hover:text-white"}`} />
+            <MdDashboard
+              className={`text-3xl ${isActive("/admin/dashboard") ? "text-white" : "text-[#DB5E00] group-hover:text-white"}`}
+            />
             {open && <span>Dashboard</span>}
           </Link>
 
@@ -120,12 +120,14 @@ export default function Sidebar() {
             <button
               onClick={() => setEmployeeOpen(!employeeOpen)}
               className={`
-                group flex items-center justify-between w-full p-4 rounded-lg font-semibold text-lg transition 
+                group flex items-center justify-between w-full p-4 rounded-lg font-semibold text-lg transition
                 ${isEmployeeSection ? "bg-gray-50 text-[#DB5E00]" : "text-gray-700 hover:bg-[#FFCC00] hover:text-white"}
               `}
             >
               <div className="flex items-center gap-5">
-                <MdGroup className={`text-3xl ${isEmployeeSection ? "text-[#DB5E00]" : "text-[#DB5E00] group-hover:text-white"}`} />
+                <MdGroup
+                  className={`text-3xl ${isEmployeeSection ? "text-[#DB5E00]" : "text-[#DB5E00] group-hover:text-white"}`}
+                />
                 {open && <span>Employees</span>}
               </div>
 
@@ -172,7 +174,9 @@ export default function Sidebar() {
             className={linkClasses("/admin/create-user")}
             onClick={() => setMobileOpen(false)}
           >
-            <MdPersonAdd className={`text-3xl ${isActive("/admin/create-user") ? "text-white" : "text-[#DB5E00] group-hover:text-white"}`} />
+            <MdPersonAdd
+              className={`text-3xl ${isActive("/admin/create-user") ? "text-white" : "text-[#DB5E00] group-hover:text-white"}`}
+            />
             {open && <span>Create User</span>}
           </Link>
 
@@ -182,7 +186,9 @@ export default function Sidebar() {
             className={linkClasses("/admin/departments")}
             onClick={() => setMobileOpen(false)}
           >
-            <MdApartment className={`text-3xl ${isActive("/admin/departments") ? "text-white" : "text-[#DB5E00] group-hover:text-white"}`} />
+            <MdApartment
+              className={`text-3xl ${isActive("/admin/departments") ? "text-white" : "text-[#DB5E00] group-hover:text-white"}`}
+            />
             {open && <span>Departments</span>}
           </Link>
 
@@ -192,7 +198,9 @@ export default function Sidebar() {
             className={linkClasses("/admin/settings")}
             onClick={() => setMobileOpen(false)}
           >
-            <MdSettings className={`text-3xl ${isActive("/admin/settings") ? "text-white" : "text-[#DB5E00] group-hover:text-white"}`} />
+            <MdSettings
+              className={`text-3xl ${isActive("/admin/settings") ? "text-white" : "text-[#DB5E00] group-hover:text-white"}`}
+            />
             {open && <span>Settings</span>}
           </Link>
         </div>
