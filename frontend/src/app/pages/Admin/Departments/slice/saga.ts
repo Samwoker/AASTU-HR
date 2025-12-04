@@ -12,13 +12,6 @@ export function* fetchDepartments() {
       isSecureRoute: true,
     });
 
-    // Adjust based on actual API response structure. 
-    // Assuming response.data.data.departments or similar based on previous interactions
-    // If the previous mock was [{id: 1, name: 'IT'}], the backend likely returns an array.
-    // Let's assume standard response format.
-
-    // Based on createEmployment saga, we might need to be careful with response structure.
-    // Let's try to be safe.
     const departments = response?.data?.data?.department || [];
     yield put(departmentsActions.fetchDepartmentsSuccess(departments));
   } catch (error: any) {

@@ -1,7 +1,10 @@
-import { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useDashboardSlice } from './slice';
-import { selectDashboardStats, selectDashboardLoading } from './slice/selectors';
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useDashboardSlice } from "./slice";
+import {
+  selectDashboardStats,
+  selectDashboardLoading,
+} from "./slice/selectors";
 import AdminLayout from "../../../components/DefaultLayout/AdminLayout";
 import StatCard from "../../../components/Core/ui/StatCard";
 import { MdGroup, MdApartment, MdPersonOutline, MdWork } from "react-icons/md";
