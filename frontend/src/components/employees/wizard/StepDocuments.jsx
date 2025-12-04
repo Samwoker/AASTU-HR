@@ -19,7 +19,7 @@ const FileUpload = ({ label, name, files, onChange, required = false, error, mul
   const removeFile = (indexToRemove) => {
     if (multiple && Array.isArray(files)) {
       const newFiles = files.filter((_, index) => index !== indexToRemove);
-      onChange(name, newFiles.length > 0 ? newFiles : null);
+      onChange(name, newFiles); // Return empty array, not null
     } else {
       onChange(name, null);
     }

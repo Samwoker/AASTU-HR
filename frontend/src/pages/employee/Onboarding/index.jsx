@@ -1,6 +1,7 @@
 import EmployeeLayout from "../../../components/layout/EmployeeLayout";
 import Button from "../../../components/ui/Button";
 import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   updateField,
   updateArrayField,
@@ -30,7 +31,7 @@ function StepIndicator({ step }) {
           {steps.map((label, i) => {
             const s = i + 1;
             return (
-              <div key={s} className="flex flex-col items-center flex-shrink-0">
+              <div key={s} className="flex flex-col items-center shrink-0">
                 <div
                   className={`
                     w-10 h-10 flex items-center justify-center rounded-full font-semibold text-sm
@@ -74,6 +75,7 @@ function Input({ label, name, value, type = "text", onChange }) {
 
 export default function EmployeeOnboarding() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const step = useSelector((state) => state.onboarding.step);
   const form = useSelector((state) => state.onboarding.form);
@@ -84,6 +86,7 @@ export default function EmployeeOnboarding() {
   const handleSubmit = (e) => {
     e.preventDefault();
     alert("Onboarding Completed!");
+    navigate("/employee/dashboard");
   };
 
   return (

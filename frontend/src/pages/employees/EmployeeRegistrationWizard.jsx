@@ -54,12 +54,12 @@ export default function EmployeeRegistrationWizard() {
     // Certifications
     certifications: [],
 
-    // Documents
+    // Documents (all as arrays for multiple file support)
     documents: {
-      cv: null,
-      certificates: null,
-      experienceLetters: null,
-      photo: null,
+      cv: [],
+      certificates: [],
+      experienceLetters: [],
+      photo: [],
       taxForms: [],
       pensionForms: [],
     },
@@ -122,10 +122,12 @@ export default function EmployeeRegistrationWizard() {
     }
 
     if (step === 6) {
-      if (!formData.documents.cv) newErrors.cv = "CV/Resume is required";
-      if (!formData.documents.certificates)
+      if (!formData.documents.cv || formData.documents.cv.length === 0) 
+        newErrors.cv = "CV/Resume is required";
+      if (!formData.documents.certificates || formData.documents.certificates.length === 0)
         newErrors.certificates = "Educational Certificates are required";
-      if (!formData.documents.photo) newErrors.photo = "Photo/ID is required";
+      if (!formData.documents.photo || formData.documents.photo.length === 0) 
+        newErrors.photo = "Photo/ID is required";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -139,12 +141,15 @@ export default function EmployeeRegistrationWizard() {
   };
 
   const handleNext = () => {
+    if (currentStep === STEPS.length) {
+      navigate("/employee/dashboard");
+      return;
+    }
+
     if (validateStep(currentStep)) {
       if (currentStep < STEPS.length) {
         setCurrentStep((prev) => prev + 1);
         window.scrollTo(0, 0);
-      } else {
-        handleSubmit();
       }
     } else {
       // Show validation error toast
@@ -165,11 +170,107 @@ export default function EmployeeRegistrationWizard() {
 
   const handleSubmit = async () => {
     if (validateStep(currentStep)) {
-      console.log("Form Submitted:", formData);
       setIsSubmitting(true);
 
       try {
-        await employeeService.onboardEmployee(formData);
+        // Deep copy formData to avoid mutating state directly during upload process
+        const submissionData = JSON.parse(JSON.stringify(formData));
+        
+        // Helper to upload a single file
+        const uploadIfFile = async (fileOrUrl) => {
+          // Check if it's a File object (has name, size, type) - simplified check
+          // In a real browser environment, instanceof File is better, but this works for now
+          if (fileOrUrl && typeof fileOrUrl === 'object' && fileOrUrl.name) {
+            try {
+              // Upload as raw for PDFs/docs, auto for others
+              const isDoc = fileOrUrl.type.includes('pdf') || fileOrUrl.type.includes('document');
+              const options = isDoc ? { resourceType: 'raw' } : {};
+              // Note: We reverted fileUploadService to simple version, so no options supported currently.
+              // Just call uploadFile(fileOrUrl)
+              // If we re-enable raw support later, we can pass options.
+              
+              // Import uploadFile dynamically or ensure it's imported at top
+              const { uploadFile } = await import("../../services/fileUploadService");
+              return await uploadFile(fileOrUrl);
+            } catch (err) {
+              console.error(`Failed to upload file ${fileOrUrl.name}`, err);
+              throw new Error(`Failed to upload ${fileOrUrl.name}`);
+            }
+          }
+          return fileOrUrl; // Return as is if it's already a URL or null
+        };
+
+        // 1. Upload Main Documents (all as arrays now)
+        if (formData.documents.cv && Array.isArray(formData.documents.cv) && formData.documents.cv.length > 0) {
+          submissionData.documents.cv = await Promise.all(
+            formData.documents.cv.map(file => uploadIfFile(file))
+          );
+        }
+        
+        if (formData.documents.certificates && Array.isArray(formData.documents.certificates) && formData.documents.certificates.length > 0) {
+          submissionData.documents.certificates = await Promise.all(
+            formData.documents.certificates.map(file => uploadIfFile(file))
+          );
+        }
+        
+        if (formData.documents.photo && Array.isArray(formData.documents.photo) && formData.documents.photo.length > 0) {
+          submissionData.documents.photo = await Promise.all(
+            formData.documents.photo.map(file => uploadIfFile(file))
+          );
+        }
+        
+        if (formData.documents.experienceLetters && Array.isArray(formData.documents.experienceLetters) && formData.documents.experienceLetters.length > 0) {
+          submissionData.documents.experienceLetters = await Promise.all(
+            formData.documents.experienceLetters.map(file => uploadIfFile(file))
+          );
+        }
+        
+        // Handle arrays of files (taxForms, pensionForms) if they exist
+        if (formData.documents.taxForms && Array.isArray(formData.documents.taxForms) && formData.documents.taxForms.length > 0) {
+           submissionData.documents.taxForms = await Promise.all(
+             formData.documents.taxForms.map(file => uploadIfFile(file))
+           );
+        }
+        
+        if (formData.documents.pensionForms && Array.isArray(formData.documents.pensionForms) && formData.documents.pensionForms.length > 0) {
+           submissionData.documents.pensionForms = await Promise.all(
+             formData.documents.pensionForms.map(file => uploadIfFile(file))
+           );
+        }
+
+        // 2. Upload Education Documents
+        if (formData.education && formData.education.length > 0) {
+          submissionData.education = await Promise.all(
+            formData.education.map(async (edu) => {
+              if (edu.costSharingDocument) {
+                return {
+                  ...edu,
+                  costSharingDocument: await uploadIfFile(edu.costSharingDocument)
+                };
+              }
+              return edu;
+            })
+          );
+        }
+
+        // 3. Upload Certification Documents
+        if (formData.certifications && formData.certifications.length > 0) {
+          submissionData.certifications = await Promise.all(
+            formData.certifications.map(async (cert) => {
+              if (cert.certificateDocument) {
+                return {
+                  ...cert,
+                  certificateDocument: await uploadIfFile(cert.certificateDocument)
+                };
+              }
+              return cert;
+            })
+          );
+        }
+
+        console.log("Submitting with Uploaded URLs:", submissionData);
+
+        await employeeService.onboardEmployee(submissionData);
         toast.success("Application submitted successfully!");
         
         // Redirect to dashboard after a brief delay
@@ -178,8 +279,9 @@ export default function EmployeeRegistrationWizard() {
         }, 1000);
       } catch (error) {
         console.error("Submission error:", error);
-        const message = error.response?.data?.message || "Failed to submit application. Please try again.";
+        const message = error.response?.data?.message || error.message || "Failed to submit application. Please try again.";
         toast.error(message);
+      } finally {
         setIsSubmitting(false);
       }
     } else {
@@ -390,10 +492,10 @@ export default function EmployeeRegistrationWizard() {
               onClick={handleNext}
               icon={currentStep === STEPS.length ? MdCheck : MdArrowForward}
               iconPosition="right"
-              loading={isSubmitting}
+              loading={isSubmitting && currentStep !== STEPS.length}
             >
               {currentStep === STEPS.length
-                ? "Submit Application"
+                ? "Finish"
                 : currentStep === STEPS.length - 1
                 ? "Review and Submit"
                 : "Next Step"}
