@@ -1,16 +1,22 @@
-import { MdNotifications } from "react-icons/md";
-import { HiMenuAlt3 } from "react-icons/hi";
+import { MdNotifications, MdMenu } from "react-icons/md";
+import { useSidebar } from "../../context/SidebarContext";
 
 export default function EmployeeHeader() {
+  const { toggleMobile } = useSidebar();
+
   return (
-    <div className="w-full h-20 bg-white shadow-md flex items-center justify-between px-4 md:px-8 relative">
+    <div className="w-full h-20 bg-white shadow-md flex items-center justify-between px-4 md:px-8 relative md:hidden">
       <div className="flex items-center gap-4 md:gap-6">
-        <button className="p-2 rounded-full bg-white shadow-md md:hidden">
-          <HiMenuAlt3 className="text-2xl text-gray-700" />
+        {/* Hamburger menu for mobile */}
+        <button
+          onClick={toggleMobile}
+          className="p-2 rounded-full hover:bg-gray-100 md:hidden cursor-pointer"
+        >
+          <MdMenu className="text-2xl text-gray-700" />
         </button>
 
         <h2 className="text-lg md:text-xl font-semibold text-gray-700 whitespace-nowrap">
-          Welcome, Abebe
+          Welcome, Tesfamichael Tafere
         </h2>
       </div>
 
@@ -27,7 +33,7 @@ export default function EmployeeHeader() {
           />
 
           <div className="hidden md:block text-sm text-[#333]">
-            <p className="font-semibold">Abebe</p>
+            <p className="font-semibold">Tesfamichael Tafere</p>
             <p className="text-xs text-gray-500">Employee</p>
           </div>
         </div>
