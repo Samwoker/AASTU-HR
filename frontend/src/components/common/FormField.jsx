@@ -15,6 +15,7 @@ export default function FormField({
   options = [], // For select type
   children, // For select options if passed as children
   className = "",
+  inputClassName = "",
   ...props
 }) {
   const baseInputClasses = `w-full h-12 px-4 font-base text-base text-k-dark-grey bg-white/70 backdrop-blur-sm border rounded-xl transition-all duration-200 placeholder:text-k-medium-grey placeholder:opacity-70 focus:outline-none ${
@@ -32,7 +33,7 @@ export default function FormField({
             name={name}
             value={value}
             onChange={onChange}
-            className={`${baseInputClasses} appearance-none cursor-pointer ${
+            className={`${baseInputClasses} ${inputClassName} appearance-none cursor-pointer ${
               Icon ? "pl-11" : ""
             }`}
             aria-invalid={error ? "true" : "false"}
@@ -53,6 +54,22 @@ export default function FormField({
       );
     }
 
+    if (type === "textarea") {
+      return (
+        <textarea
+          id={name}
+          name={name}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          className={`${baseInputClasses} ${inputClassName} py-3 h-auto min-h-[100px] resize-y`}
+          aria-invalid={error ? "true" : "false"}
+          aria-describedby={helperText ? `${name}-helper` : undefined}
+          {...props}
+        />
+      );
+    }
+
     return (
       <input
         id={name}
@@ -62,7 +79,7 @@ export default function FormField({
         onChange={onChange}
         placeholder={placeholder}
         onClick={(e) => type === "date" && e.target.showPicker?.()}
-        className={`${baseInputClasses} ${Icon ? "pl-11" : ""} ${
+        className={`${baseInputClasses} ${inputClassName} ${Icon ? "pl-11" : ""} ${
           type === "date" ? "cursor-pointer" : ""
         }`}
         aria-invalid={error ? "true" : "false"}
@@ -83,9 +100,9 @@ export default function FormField({
           {required && <span className="text-error ml-0.5">*</span>}
         </label>
       )}
-      <div className="relative flex items-center">
+      <div className="relative">
         {Icon && (
-          <div className="absolute left-4 flex items-center text-k-medium-grey pointer-events-none z-10">
+          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 flex items-center text-k-medium-grey pointer-events-none z-10">
             <Icon />
           </div>
         )}
@@ -102,3 +119,4 @@ export default function FormField({
     </div>
   );
 }
+
