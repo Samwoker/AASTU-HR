@@ -8,6 +8,9 @@ import EmployeeRegistrationWizard from "./pages/employees/EmployeeRegistrationWi
 import SuperAdminDashboard from "./pages/superadmin/Dashboard";
 import CreateEmployeeAccount from "./pages/superadmin/CreateAccount";
 import EmployeeDashboard from "./pages/employee/Dashboard";
+import LeaveApplication from "./pages/employee/LeaveApplication";
+import LeaveRecall from "./pages/employee/LeaveRecall";
+import ProfileUpdateLayout from "./pages/employee/ProfileUpdate/ProfileUpdateLayout";
 import TestUpload from "./pages/TestUpload";
 
 const router = createBrowserRouter([
@@ -38,6 +41,18 @@ const router = createBrowserRouter([
   {
     path: "/employee/dashboard",
     element: <EmployeeDashboard />,
+  },
+  {
+    path: "/employee/leave",
+    element: <LeaveApplication />,
+  },
+  {
+    path: "/employee/leave-recall",
+    element: <LeaveRecall />,
+  },
+  {
+    path: "/employee/profile",
+    element: <ProfileUpdateLayout />,
   },
   {
     path: "/test-upload",
