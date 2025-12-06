@@ -1,46 +1,51 @@
 import EmployeeLayout from "../../../components/layout/EmployeeLayout";
-import StatCard from "../../../components/ui/StatCard";
-import {
-  MdWork,
-  MdTaskAlt,
-  MdAccessTime,
-  MdCalendarToday,
-} from "react-icons/md";
+import QuickActions from "../../../components/dashboard/QuickActions";
+import LeaveBalanceCard from "../../../components/dashboard/LeaveBalanceCard";
+import ToDoList from "../../../components/dashboard/ToDoList";
+import AnnouncementCard from "../../../components/dashboard/AnnouncementCard";
+import PaySlipWidget from "../../../components/dashboard/PaySlipWidget";
+import CompanyOverviewChart from "../../../components/dashboard/CompanyOverviewChart";
+import PageHeader from "../../../components/common/PageHeader";
 
 export default function EmployeeDashboard() {
   return (
     <EmployeeLayout>
-      <h1 className="text-xl md:text-2xl font-bold text-[#333] mb-6">
-        Employee Dashboard
-      </h1>
+      <PageHeader>
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="flex items-center gap-6">
+            <div className="w-20 h-20 rounded-full bg-k-yellow border-4 border-white/20 flex items-center justify-center overflow-hidden shadow-lg">
+              <img
+                src="https://avatar.iran.liara.run/public/boy"
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold mb-1">
+                Tesfamichael Tafere
+              </h1>
+              <p className="text-gray-300 font-medium">Software Engineer</p>
+            </div>
+          </div>
+        </div>
+      </PageHeader>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <StatCard title="Assigned Tasks" value="12" icon={<MdTaskAlt />} />
-        <StatCard title="Pending Approvals" value="3" icon={<MdAccessTime />} />
-        <StatCard
-          title="Leave Balance"
-          value="16 Days"
-          icon={<MdCalendarToday />}
-        />
-        <StatCard title="Projects" value="2 Active" icon={<MdWork />} />
+      <QuickActions />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <CompanyOverviewChart />
+        <LeaveBalanceCard />
       </div>
 
-      <div className="mt-10 bg-white p-6 rounded-xl shadow">
-        <h2 className="text-xl font-semibold mb-4 text-[#333]">
-          Recent Activities
-        </h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <ToDoList />
+        <PaySlipWidget />
+      </div>
 
-        <ul className="space-y-3 text-[#555]">
-          <li className="border-l-4 border-[#ffcc00] pl-4">
-            Task completed: <strong>Annual Report Draft</strong>
-          </li>
-          <li className="border-l-4 border-[#ffcc00] pl-4">
-            Leave request submitted: <strong>2 Days - Awaiting approval</strong>
-          </li>
-          <li className="border-l-4 border-[#ffcc00] pl-4">
-            Assigned to new project: <strong>HR Digitalization</strong>
-          </li>
-        </ul>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <AnnouncementCard />
+        {/* Placeholder for future widget or empty space */}
+        <div className="hidden lg:block"></div>
       </div>
     </EmployeeLayout>
   );
