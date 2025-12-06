@@ -2,11 +2,12 @@ import React from "react";
 import { RouterProvider } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import router from "./routes";
+import { SidebarProvider } from "./context/SidebarContext";
 import "./App.css";
 
 function App() {
   return (
-    <>
+    <SidebarProvider>
       <Toaster
         position="top-right"
         reverseOrder={false}
@@ -19,7 +20,7 @@ function App() {
         }}
       />
       <RouterProvider router={router} />
-    </>
+    </SidebarProvider>
   );
 }
 
