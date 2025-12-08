@@ -1,32 +1,29 @@
-import React from "react";
 import Carousel from "../../../components/common/Carousel";
+import loginBg from "../../../../assets/images/login_bg_image.jpg";
 import LoginForm from "../../../components/auth/LoginForm";
 
 export default function Login() {
   return (
-    <div className="flex h-screen w-full bg-gray-50">
-      {/* Left Side - Carousel */}
-      <div className="hidden lg:flex lg:w-1/2 p-4 h-full">
-        <Carousel />
-      </div>
+    <div
+      className="min-h-screen flex items-center justify-center relative"
+      style={{
+        backgroundImage: `url(${loginBg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+      {/* Blur overlay */}
+      <div className="absolute inset-0 backdrop-blur-sm bg-black/10"></div>
 
-      {/* Right Side - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 md:p-8 lg:p-12">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 md:p-10 animate-[fadeIn_0.5s_ease-out]">
-          <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-k-dark-grey mb-2">
-              Welcome Back
-            </h1>
-            <p className="text-gray-500">
-              Please enter your details to sign in
-            </p>
-          </div>
+      {/* Login container */}
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 w-full max-w-[1200px] h-[550px] bg-white/20 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden mx-4">
+        {/* Left Side - Login Form */}
+        <LoginForm title="Welcome Back!" subtitle="Login to your account" />
 
-          <LoginForm />
-
-          <div className="mt-8 text-center text-sm text-gray-400">
-            <p>&copy; {new Date().getFullYear()} Kacha Digital Financial Service S.C.</p>
-          </div>
+        {/* Right Side - Carousel */}
+        <div className="hidden lg:block relative h-full rounded-r-2xl overflow-hidden">
+          <Carousel />
         </div>
       </div>
     </div>
