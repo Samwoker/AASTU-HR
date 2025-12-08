@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import carousel1 from "../../assets/images/carousel/carousel-1.png";
-import carousel2 from "../../assets/images/carousel/carousel-2.png";
-import carousel3 from "../../assets/images/carousel/carousel-3.png";
+import carousel1 from "../../../assets/images/carousel/carousel-1.png";
+import carousel2 from "../../../assets/images/carousel/carousel-2.png";
+import carousel3 from "../../../assets/images/carousel/carousel-3.png";
 
 const defaultSlides = [
   {

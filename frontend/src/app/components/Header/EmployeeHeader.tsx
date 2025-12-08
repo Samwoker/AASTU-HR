@@ -1,3 +1,5 @@
+import { MdNotifications } from "react-icons/md";
+
 export default function EmployeeHeader() {
   return (
     <div className="w-full h-20 bg-white shadow-md flex items-center justify-between px-4 md:px-8 relative md:hidden">

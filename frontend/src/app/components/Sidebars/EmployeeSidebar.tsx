@@ -16,7 +16,7 @@ export default function EmployeeSidebar() {
 
   const location = useLocation();
 
-  const isActive = (path) => location.pathname.startsWith(path);
+  const isActive = (path: string) => location.pathname.startsWith(path);
 
   return (
     <>

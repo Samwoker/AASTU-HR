@@ -5,6 +5,7 @@ import { JobTitlesState } from "../../app/pages/Admin/Settings/JobTitles/slice/t
 import { CreateEmploymentState } from "../../app/pages/Admin/CreateEmployment/slice/types";
 import { CreateEmployeeState } from "../../app/pages/Admin/CreateEmployee/slice/types";
 import { DashboardState } from "../../app/pages/Admin/Dashboard/slice/types";
+import { OnboardingState } from "../../app/slice/onboardingSlice";
 // Import other slice states here as needed, e.g. AuthState
 
 export interface RootState {
@@ -15,5 +16,14 @@ export interface RootState {
   departments?: DepartmentsState;
   createEmployee?: CreateEmployeeState;
   dashboard?: DashboardState;
-  // [INSERT NEW REDUCER KpEY ABOVE] < Needed for generating containers seamlessly
+  auth?: {
+    user: { role_id?: number; email?: string } | null;
+    isError: boolean;
+    isSuccess: boolean;
+    isLoading: boolean;
+    message: string;
+  };
+  onboarding: OnboardingState;
+  // [INSERT NEW REDUCER KEY ABOVE] < Needed for generating containers seamlessly
 }
+

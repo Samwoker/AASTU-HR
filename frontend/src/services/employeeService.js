@@ -70,6 +70,17 @@ const employeeService = {
       throw error;
     }
   },
+  // Get Employee by ID
+  getEmployee: async (id) => {
+    const response = await api.get(`/employees/${id}`);
+    return response.data;
+  },
+
+  // Update Employee
+  updateEmployee: async (id, data) => {
+    const response = await api.put(`/employees/${id}`, data);
+    return response.data;
+  },
 };
 
 export default employeeService;

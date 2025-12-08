@@ -1,4 +1,18 @@
-import React from "react";
+import React, { ComponentType } from "react";
+
+interface ButtonProps {
+  children: React.ReactNode;
+  variant?: "primary" | "secondary" | "outline" | "link";
+  type?: "button" | "submit" | "reset";
+  onClick?: () => void;
+  disabled?: boolean;
+  fullWidth?: boolean;
+  icon?: ComponentType;
+  iconPosition?: "left" | "right";
+  loading?: boolean;
+  className?: string;
+  [key: string]: unknown;
+}
 
 export default function Button({
   children,
@@ -12,7 +26,7 @@ export default function Button({
   loading = false,
   className = "",
   ...props
-}) {
+}: ButtonProps) {
   const baseClasses =
     "relative inline-flex items-center justify-center gap-2 h-12 px-8 rounded-xl border-0 font-semibold text-base cursor-pointer transition-all duration-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#db602c]/20 focus-visible:ring-offset-2 disabled:opacity-55 disabled:cursor-not-allowed";
 

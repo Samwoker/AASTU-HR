@@ -3,6 +3,7 @@ import { createInjectorsEnhancer } from 'redux-injectors';
 import createSagaMiddleware from 'redux-saga';
 import { createReducer } from './reducers';
 import authReducer from '../app/slice/authSlice';
+import onboardingReducer from '../app/slice/onboardingSlice';
 
 export function configureAppStore(): Store {
   const reduxSagaOptions = {};
@@ -19,7 +20,7 @@ export function configureAppStore(): Store {
   ];
 
   const store = configureStore({
-    reducer: createReducer({ auth: authReducer }),
+    reducer: createReducer({ auth: authReducer, onboarding: onboardingReducer }),
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({
         serializableCheck: false,
