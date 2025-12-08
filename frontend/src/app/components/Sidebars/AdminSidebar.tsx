@@ -91,10 +91,10 @@ export default function AdminSidebar() {
           <Link
             to="/admin/dashboard"
             className={`
-              flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group
+              flex items-center gap-3 p-3.5 rounded-2xl transition-all duration-200 group
               ${
                 isActive("/admin/dashboard")
-                  ? "bg-k-orange text-white shadow-md"
+                  ? "bg-k-orange text-white"
                   : "text-gray-600 hover:bg-orange-50 hover:text-k-orange"
               }
             `}
@@ -120,7 +120,7 @@ export default function AdminSidebar() {
                 setEmployeeOpen(!employeeOpen);
               }}
               className={`
-                w-full flex items-center justify-between px-3 py-3 rounded-lg transition-all duration-200 group
+                w-full flex items-center justify-between p-3.5 rounded-2xl transition-all duration-200 group
                 ${
                   isEmployeeSection
                     ? "bg-orange-50 text-k-orange"
@@ -166,7 +166,7 @@ export default function AdminSidebar() {
                 <Link
                   to="/admin/employees"
                   className={`
-                    py-2 px-3 rounded-md text-sm transition-colors
+                    p-3 rounded-xl text-sm transition-colors
                     ${
                       isActive("/admin/employees")
                         ? "text-k-orange bg-orange-50 font-medium"
@@ -180,7 +180,7 @@ export default function AdminSidebar() {
                 <Link
                   to="/admin/employees/create"
                   className={`
-                    py-2 px-3 rounded-md text-sm transition-colors
+                    p-3 rounded-xl text-sm transition-colors
                     ${
                       isActive("/admin/employees/create")
                         ? "text-k-orange bg-orange-50 font-medium"
@@ -194,7 +194,7 @@ export default function AdminSidebar() {
                 <Link
                   to="/admin/employment/create"
                   className={`
-                    py-2 px-3 rounded-md text-sm transition-colors
+                    p-3 rounded-xl text-sm transition-colors
                     ${
                       isActive("/admin/employment/create")
                         ? "text-k-orange bg-orange-50 font-medium"
@@ -213,10 +213,10 @@ export default function AdminSidebar() {
           <Link
             to="/admin/create-user"
             className={`
-              flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group
+              flex items-center gap-3 p-3.5 rounded-2xl transition-all duration-200 group
               ${
                 isActive("/admin/create-user")
-                  ? "bg-k-orange text-white shadow-md"
+                  ? "bg-k-orange text-white"
                   : "text-gray-600 hover:bg-orange-50 hover:text-k-orange"
               }
             `}
@@ -238,10 +238,10 @@ export default function AdminSidebar() {
           <Link
             to="/admin/departments"
             className={`
-              flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group
+              flex items-center gap-3 p-3.5 rounded-2xl transition-all duration-200 group
               ${
                 isActive("/admin/departments")
-                  ? "bg-k-orange text-white shadow-md"
+                  ? "bg-k-orange text-white"
                   : "text-gray-600 hover:bg-orange-50 hover:text-k-orange"
               }
             `}
@@ -263,10 +263,10 @@ export default function AdminSidebar() {
           <Link
             to="/admin/settings"
             className={`
-              flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group
+              flex items-center gap-3 p-3.5 rounded-2xl transition-all duration-200 group
               ${
                 isActive("/admin/settings")
-                  ? "bg-k-orange text-white shadow-md"
+                  ? "bg-k-orange text-white"
                   : "text-gray-600 hover:bg-orange-50 hover:text-k-orange"
               }
             `}

@@ -169,14 +169,14 @@ export default function CreateEmployment() {
   }, [form.department, departments]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
     if (name === "department") setShowDepartmentSuggestions(true);
   };
 
-  const handleJobTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleJobTitleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setJobTitleInput((prev) => ({ ...prev, [name]: value }));
     if (name === "title") setShowTitleSuggestions(true);

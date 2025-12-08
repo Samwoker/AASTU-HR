@@ -1,5 +1,29 @@
-import React from "react";
+import React, { ChangeEvent, ReactNode, ComponentType } from "react";
 import { MdArrowDropDown } from "react-icons/md";
+import { IconType } from "react-icons";
+
+interface Option {
+  label: string;
+  value: string | number;
+}
+
+interface FormFieldProps {
+  label?: string;
+  type?: string;
+  name: string;
+  value?: string | number;
+  onChange?: (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
+  placeholder?: string;
+  error?: string;
+  helperText?: string;
+  required?: boolean;
+  icon?: IconType | ComponentType;
+  options?: Option[];
+  children?: ReactNode;
+  className?: string;
+  inputClassName?: string;
+  [key: string]: any;
+}
 
 export default function FormField({
   label,
@@ -17,7 +41,7 @@ export default function FormField({
   className = "",
   inputClassName = "",
   ...props
-}) {
+}: FormFieldProps) {
   const baseInputClasses = `w-full h-12 px-4 font-base text-base text-k-dark-grey bg-white/70 backdrop-blur-sm border rounded-xl transition-all duration-200 placeholder:text-k-medium-grey placeholder:opacity-70 focus:outline-none ${
     error
       ? "border-error focus:border-error focus:ring-4 focus:ring-red-200"
