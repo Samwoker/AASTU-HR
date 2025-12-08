@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef, ChangeEvent, DragEvent } from "react";
 import {
   MdCloudUpload,
   MdEdit,
@@ -11,23 +11,30 @@ import {
 import { extractResumeData } from "../../services/geminiService";
 import toast from "react-hot-toast";
 
+interface RegistrationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onAutoFill: (data: any) => void;
+  onManualStart: () => void;
+}
+
 export default function RegistrationModal({
   isOpen,
   onClose,
   onAutoFill,
   onManualStart,
-}) {
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [file, setFile] = useState(null);
+}: RegistrationModalProps) {
+  const [selectedOption, setSelectedOption] = useState<"autofill" | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
 
-  const handleFileSelect = (selectedFile) => {
+  const handleFileSelect = (selectedFile: File) => {
     // Validate file type
     const validTypes = [
       "application/pdf",
@@ -51,7 +58,7 @@ export default function RegistrationModal({
     setError(null);
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
 
@@ -61,7 +68,7 @@ export default function RegistrationModal({
     }
   };
 
-  const handleDragOver = (e) => {
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(true);
   };
@@ -70,8 +77,8 @@ export default function RegistrationModal({
     setIsDragging(false);
   };
 
-  const handleFileInputChange = (e) => {
-    const selectedFile = e.target.files[0];
+  const handleFileInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       handleFileSelect(selectedFile);
     }
@@ -106,7 +113,7 @@ export default function RegistrationModal({
         onAutoFill(extractedData);
         onClose();
       }, 800);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error processing resume:", err);
 
       // Dismiss loading toast
@@ -129,7 +136,7 @@ export default function RegistrationModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[slideUp_0.3s_ease-out]">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-orange-600 to-k-yellow text-white p-6 rounded-t-2xl z-50">
+        <div className="sticky top-0 bg-linear-to-r from-orange-600 to-k-yellow text-white p-6 rounded-t-2xl z-50">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold font-heading">
@@ -157,7 +164,7 @@ export default function RegistrationModal({
               {/* Auto-fill Option */}
               <button
                 onClick={() => setSelectedOption("autofill")}
-                className="group relative bg-gradient-to-br from-k-orange/10 to-orange-100/50 hover:from-k-orange/20 hover:to-orange-200/60 border-2 border-k-orange/30 hover:border-k-orange rounded-xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer"
+                className="group relative bg-linear-to-br from-k-orange/10 to-orange-100/50 hover:from-k-orange/20 hover:to-orange-200/60 border-2 border-k-orange/30 hover:border-k-orange rounded-xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer"
               >
                 <div className="flex flex-col items-center text-center space-y-4">
                   <div className="p-4 bg-k-orange/10 group-hover:bg-k-orange rounded-full transition-colors duration-300">
@@ -181,7 +188,7 @@ export default function RegistrationModal({
               {/* Manual Option */}
               <button
                 onClick={handleManualOption}
-                className="group relative bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 border-2 border-gray-300 hover:border-gray-400 rounded-xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer"
+                className="group relative bg-linear-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 border-2 border-gray-300 hover:border-gray-400 rounded-xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer"
               >
                 <div className="flex flex-col items-center text-center space-y-4">
                   <div className="p-4 bg-gray-200 group-hover:bg-k-dark-grey rounded-full transition-colors duration-300">
@@ -280,7 +287,7 @@ export default function RegistrationModal({
               {/* Error Message */}
               {error && (
                 <div className="flex items-start gap-3 p-4 bg-red-50 border border-error rounded-xl">
-                  <MdError className="w-5 h-5 text-error flex-shrink-0 mt-0.5" />
+                  <MdError className="w-5 h-5 text-error shrink-0 mt-0.5" />
                   <p className="text-sm text-error">{error}</p>
                 </div>
               )}

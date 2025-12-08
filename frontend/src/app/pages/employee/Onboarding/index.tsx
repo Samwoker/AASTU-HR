@@ -1,527 +1,608 @@
-import { ChangeEvent, FormEvent } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import EmployeeLayout from "../../../components/DefaultLayout/EmployeeLayout";
+import StepPersonalInfo from "../../../components/employees/wizard/StepPersonalInfo";
+import StepContactInfo from "../../../components/employees/wizard/StepContactInfo";
+import StepEducation from "../../../components/employees/wizard/StepEducation";
+import StepWorkExperience from "../../../components/employees/wizard/StepWorkExperience";
+import StepCertifications from "../../../components/employees/wizard/StepCertifications";
+import StepDocuments from "../../../components/employees/wizard/StepDocuments";
+import StepReview from "../../../components/employees/wizard/StepReview";
+import RegistrationModal from "../../../components/employees/RegistrationModal";
 import Button from "../../../components/common/Button";
-import { RootState } from "../../../../store/types/RootState";
-import {
-  updateField,
-  updateArrayField,
-  updatePhone,
-  addField,
-  addPhone,
-  updateFile,
-  nextStep,
-  prevStep,
-} from "../../../slice/onboardingSlice";
+import { MdCheck, MdArrowBack, MdArrowForward, MdError } from "react-icons/md";
+import toast from "react-hot-toast";
+import employeeService from "../../../services/employeeService";
 
-interface StepIndicatorProps {
-  step: number;
+// Define types for the form data
+interface Phone {
+  number: string;
+  type: string;
+  isPrimary: boolean;
 }
 
-interface InputProps {
-  label: string;
-  name?: string;
-  value: string;
-  type?: string;
-  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+interface Education {
+  level: string;
+  fieldOfStudy: string;
+  institution: string;
+  programType: string;
+  hasCostSharing: boolean;
+  costSharingDocument?: File | null;
+  [key: string]: any;
 }
 
-// Step Indicator Component
-function StepIndicator({ step }: StepIndicatorProps) {
-  const steps = [
-    "Personal Info",
-    "Address & Contact",
-    "Education",
-    "Work Experience",
-    "Certificates",
-    "Documents",
-    "Review",
-  ];
-
-  return (
-    <div className="bg-white shadow-lg p-6 rounded-2xl mb-8 border border-gray-100">
-      <div className="overflow-x-auto -mx-4 px-4">
-        <div className="flex items-center justify-start gap-4 md:gap-8 min-w-max py-2">
-          {steps.map((label, i) => {
-            const stepNumber = i + 1;
-            const isActive = step === stepNumber;
-            const isCompleted = step > stepNumber;
-
-            return (
-              <div key={stepNumber} className="flex flex-col items-center shrink-0">
-                <div
-                  className={`
-                    w-12 h-12 flex items-center justify-center rounded-full font-bold text-sm
-                    transition-all duration-300 shadow-md
-                    ${
-                      isActive
-                        ? "bg-gradient-to-r from-[#DB5E00] to-[#FFCC00] text-white scale-110"
-                        : isCompleted
-                        ? "bg-gradient-to-r from-green-500 to-green-400 text-white"
-                        : "bg-gray-100 text-gray-500 border-2 border-gray-200"
-                    }
-                  `}
-                >
-                  {isCompleted ? "✓" : stepNumber}
-                </div>
-                <p
-                  className={`text-xs mt-3 w-20 text-center font-medium transition-colors ${
-                    isActive ? "text-[#DB5E00]" : isCompleted ? "text-green-600" : "text-gray-500"
-                  }`}
-                >
-                  {label}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
+interface WorkExperience {
+  companyName: string;
+  startDate: string;
+  [key: string]: any;
 }
 
-// Simple Input Component for the form
-function FormInput({ label, name, value, type = "text", onChange }: InputProps) {
-  return (
-    <div className="flex flex-col gap-2">
-      <label className="text-gray-700 font-semibold text-sm">{label}</label>
-      <input
-        name={name}
-        type={type}
-        value={value}
-        onChange={onChange}
-        className="border border-gray-200 w-full px-4 py-3 rounded-xl outline-none 
-                   focus:ring-2 focus:ring-[#DB5E00]/20 focus:border-[#DB5E00] 
-                   transition-all duration-200 bg-gray-50 hover:bg-white"
-      />
-    </div>
-  );
+interface Certification {
+  name: string;
+  certificateDocument?: File | null;
+  [key: string]: any;
 }
 
-export default function EmployeeOnboarding() {
-  const dispatch = useDispatch();
+interface Documents {
+  cv: File[];
+  certificates: File[];
+  experienceLetters: File[];
+  photo: File[];
+  taxForms: File[];
+  pensionForms: File[];
+  [key: string]: File[];
+}
+
+export interface OnboardingFormData {
+  fullName: string;
+  gender: string;
+  dateOfBirth: string;
+  tinNumber: string;
+  pensionNumber: string;
+  placeOfWork: string;
+  region: string;
+  city: string;
+  subCity: string;
+  woreda: string;
+  phones: Phone[];
+  education: Education[];
+  workExperience: WorkExperience[];
+  certifications: Certification[];
+  documents: Documents;
+  [key: string]: any;
+}
+
+const STEPS = [
+  { id: 1, title: "Personal Info", component: StepPersonalInfo },
+  { id: 2, title: "Contact Info", component: StepContactInfo },
+  { id: 3, title: "Education", component: StepEducation },
+  { id: 4, title: "Work Experience", component: StepWorkExperience },
+  { id: 5, title: "Certifications", component: StepCertifications },
+  { id: 6, title: "Documents", component: StepDocuments },
+  { id: 7, title: "Review", component: StepReview },
+];
+
+export default function EmployeeRegistrationWizard() {
+  const [showModal, setShowModal] = useState(true);
+  const [wizardStarted, setWizardStarted] = useState(false);
   const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState<OnboardingFormData>({
+    // Personal Info (flat structure)
+    fullName: "",
+    gender: "",
+    dateOfBirth: "",
+    tinNumber: "",
+    pensionNumber: "",
+    placeOfWork: "Head Office",
 
-  const step = useSelector((state: RootState) => state.onboarding.step);
-  const form = useSelector((state: RootState) => state.onboarding.form);
+    // Contact Info (flat structure)
+    region: "",
+    city: "",
+    subCity: "",
+    woreda: "",
+    phones: [{ number: "", type: "Private", isPrimary: true }],
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) =>
-    dispatch(updateField({ name: e.target.name as keyof typeof form, value: e.target.value }));
+    // Education
+    education: [],
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    alert("Onboarding Completed!");
-    navigate("/employee/dashboard");
+    // Work Experience
+    workExperience: [],
+
+    // Certifications
+    certifications: [],
+
+    // Documents (all as arrays for multiple file support)
+    documents: {
+      cv: [],
+      certificates: [],
+      experienceLetters: [],
+      photo: [],
+      taxForms: [],
+      pensionForms: [],
+    },
+  });
+
+  const validateStep = (step: number) => {
+    const newErrors: Record<string, string> = {};
+    let isValid = true;
+
+    if (step === 1) {
+      if (!formData.fullName) newErrors.fullName = "Full Name is required";
+      if (!formData.gender) newErrors.gender = "Gender is required";
+      if (!formData.dateOfBirth)
+        newErrors.dateOfBirth = "Date of Birth is required";
+    }
+
+    if (step === 2) {
+      if (formData.phones.length === 0) {
+        newErrors.phones = "At least one phone number is required";
+      } else {
+        formData.phones.forEach((phone, index) => {
+          if (!phone.number) {
+            newErrors[`phone_${index}`] = "Phone number is required";
+          }
+        });
+      }
+    }
+
+    if (step === 3) {
+      formData.education.forEach((edu, index) => {
+        if (!edu.level) newErrors[`edu_level_${index}`] = "Level is required";
+        if (!edu.fieldOfStudy)
+          newErrors[`edu_field_${index}`] = "Field of Study is required";
+        if (!edu.institution)
+          newErrors[`edu_inst_${index}`] = "Institution is required";
+        if (!edu.programType)
+          newErrors[`edu_prog_${index}`] = "Program Type is required";
+
+        if (edu.hasCostSharing && !edu.costSharingDocument) {
+          newErrors[`edu_cost_doc_${index}`] =
+            "Cost Sharing Document is required";
+        }
+      });
+    }
+
+    if (step === 4) {
+      formData.workExperience.forEach((exp, index) => {
+        if (!exp.companyName)
+          newErrors[`exp_company_${index}`] = "Company Name is required";
+        if (!exp.startDate)
+          newErrors[`exp_start_${index}`] = "Start Date is required";
+      });
+    }
+
+    if (step === 5) {
+      formData.certifications.forEach((cert, index) => {
+        if (!cert.name)
+          newErrors[`cert_name_${index}`] = "Certificate Name is required";
+      });
+    }
+
+    if (step === 6) {
+      if (!formData.documents.cv || formData.documents.cv.length === 0)
+        newErrors.cv = "CV/Resume is required";
+      if (
+        !formData.documents.certificates ||
+        formData.documents.certificates.length === 0
+      )
+        newErrors.certificates = "Educational Certificates are required";
+      if (!formData.documents.photo || formData.documents.photo.length === 0)
+        newErrors.photo = "Photo/ID is required";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      isValid = false;
+    } else {
+      setErrors({});
+    }
+
+    return isValid;
   };
 
-  return (
-    <EmployeeLayout>
-      <div className="max-w-4xl mx-auto p-4 md:p-0 w-full overflow-x-hidden">
-        <StepIndicator step={step} />
+  const handleNext = () => {
+    if (currentStep === STEPS.length) {
+      handleSubmit();
+      return;
+    }
 
-        <div className="mt-6 bg-white shadow-lg p-6 md:p-10 rounded-2xl border border-gray-100">
-          <div className="mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Employee Onboarding</h1>
-            <p className="text-gray-500 mt-2">Complete your profile information to get started</p>
+    if (validateStep(currentStep)) {
+      if (currentStep < STEPS.length) {
+        setCurrentStep((prev) => prev + 1);
+        window.scrollTo(0, 0);
+      }
+    } else {
+      // Show validation error toast
+      toast.error("Please fill in all required fields correctly");
+      // Scroll to top to see errors
+      window.scrollTo(0, 0);
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep((prev) => prev - 1);
+      window.scrollTo(0, 0);
+    }
+  };
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (validateStep(currentStep)) {
+      setIsSubmitting(true);
+
+      try {
+        // Deep copy formData to avoid mutating state directly during upload process
+        const submissionData = JSON.parse(JSON.stringify(formData));
+
+        // Helper to upload a single file
+        const uploadIfFile = async (fileOrUrl: any) => {
+          // Check if it's a File object (has name, size, type) - simplified check
+          // In a real browser environment, instanceof File is better, but this works for now
+          if (fileOrUrl && typeof fileOrUrl === "object" && fileOrUrl.name) {
+            try {
+              // Upload as raw for PDFs/docs, auto for others
+              // const isDoc =
+              //   fileOrUrl.type.includes("pdf") ||
+              //   fileOrUrl.type.includes("document");
+              // const options = isDoc ? { resourceType: "raw" } : {};
+              // Note: We reverted fileUploadService to simple version, so no options supported currently.
+              // Just call uploadFile(fileOrUrl)
+              // If we re-enable raw support later, we can pass options.
+
+              // Import uploadFile dynamically or ensure it's imported at top
+              const { uploadFile } = await import(
+                "../../../services/fileUploadService"
+              );
+              return await uploadFile(fileOrUrl);
+            } catch (err) {
+              console.error(`Failed to upload file ${fileOrUrl.name}`, err);
+              throw new Error(`Failed to upload ${fileOrUrl.name}`);
+            }
+          }
+          return fileOrUrl; // Return as is if it's already a URL or null
+        };
+
+        // 1. Upload Main Documents (all as arrays now)
+        if (
+          formData.documents.cv &&
+          Array.isArray(formData.documents.cv) &&
+          formData.documents.cv.length > 0
+        ) {
+          submissionData.documents.cv = await Promise.all(
+            formData.documents.cv.map((file) => uploadIfFile(file))
+          );
+        }
+
+        if (
+          formData.documents.certificates &&
+          Array.isArray(formData.documents.certificates) &&
+          formData.documents.certificates.length > 0
+        ) {
+          submissionData.documents.certificates = await Promise.all(
+            formData.documents.certificates.map((file) => uploadIfFile(file))
+          );
+        }
+
+        if (
+          formData.documents.photo &&
+          Array.isArray(formData.documents.photo) &&
+          formData.documents.photo.length > 0
+        ) {
+          submissionData.documents.photo = await Promise.all(
+            formData.documents.photo.map((file) => uploadIfFile(file))
+          );
+        }
+
+        if (
+          formData.documents.experienceLetters &&
+          Array.isArray(formData.documents.experienceLetters) &&
+          formData.documents.experienceLetters.length > 0
+        ) {
+          submissionData.documents.experienceLetters = await Promise.all(
+            formData.documents.experienceLetters.map((file) =>
+              uploadIfFile(file)
+            )
+          );
+        }
+
+        // Handle arrays of files (taxForms, pensionForms) if they exist
+        if (
+          formData.documents.taxForms &&
+          Array.isArray(formData.documents.taxForms) &&
+          formData.documents.taxForms.length > 0
+        ) {
+          submissionData.documents.taxForms = await Promise.all(
+            formData.documents.taxForms.map((file) => uploadIfFile(file))
+          );
+        }
+
+        if (
+          formData.documents.pensionForms &&
+          Array.isArray(formData.documents.pensionForms) &&
+          formData.documents.pensionForms.length > 0
+        ) {
+          submissionData.documents.pensionForms = await Promise.all(
+            formData.documents.pensionForms.map((file) => uploadIfFile(file))
+          );
+        }
+
+        // 2. Upload Education Documents
+        if (formData.education && formData.education.length > 0) {
+          submissionData.education = await Promise.all(
+            formData.education.map(async (edu: any) => {
+              if (edu.costSharingDocument) {
+                return {
+                  ...edu,
+                  costSharingDocument: await uploadIfFile(
+                    edu.costSharingDocument
+                  ),
+                };
+              }
+              return edu;
+            })
+          );
+        }
+
+        // 3. Upload Certification Documents
+        if (formData.certifications && formData.certifications.length > 0) {
+          submissionData.certifications = await Promise.all(
+            formData.certifications.map(async (cert: any) => {
+              if (cert.certificateDocument) {
+                return {
+                  ...cert,
+                  certificateDocument: await uploadIfFile(
+                    cert.certificateDocument
+                  ),
+                };
+              }
+              return cert;
+            })
+          );
+        }
+
+        console.log("Submitting with Uploaded URLs:", submissionData);
+
+        await employeeService.onboardEmployee(submissionData);
+        toast.success("Application submitted successfully!");
+
+        // Redirect to dashboard after a brief delay
+        setTimeout(() => {
+          navigate("/employee/dashboard");
+        }, 1000);
+      } catch (error: any) {
+        console.error("Submission error:", error);
+        const message =
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to submit application. Please try again.";
+        toast.error(message);
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      toast.error("Please fix all errors before submitting");
+    }
+  };
+
+  const updateFormData = (section: string, data: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      [section]: data, // Or merge depending on structure
+    }));
+    // Clear errors for this section on change (simplified)
+    setErrors({});
+  };
+
+  // Helper to update specific fields directly
+  const handleChange = (field: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  // Modal handlers
+  const handleAutoFill = (extractedData: any) => {
+    console.log("Auto-fill data received:", extractedData);
+
+    // Flatten and merge extracted data with form data
+    setFormData((prev) => ({
+      ...prev,
+      // Personal Info - flatten from nested structure
+      fullName: extractedData.personalInfo?.fullName || prev.fullName,
+      gender: extractedData.personalInfo?.gender || prev.gender,
+      dateOfBirth: extractedData.personalInfo?.dateOfBirth || prev.dateOfBirth,
+      tinNumber: extractedData.personalInfo?.tinNumber || prev.tinNumber,
+      pensionNumber:
+        extractedData.personalInfo?.pensionNumber || prev.pensionNumber,
+      placeOfWork: extractedData.personalInfo?.placeOfWork || prev.placeOfWork,
+
+      // Contact Info - flatten from nested structure
+      region: extractedData.contactInfo?.region || prev.region,
+      city: extractedData.contactInfo?.city || prev.city,
+      subCity: extractedData.contactInfo?.subCity || prev.subCity,
+      woreda: extractedData.contactInfo?.woreda || prev.woreda,
+      phones:
+        extractedData.contactInfo?.phones?.length > 0
+          ? extractedData.contactInfo.phones
+          : prev.phones,
+
+      // Education, Work Experience, Certifications - direct arrays
+      education:
+        extractedData.education && extractedData.education.length > 0
+          ? extractedData.education
+          : prev.education,
+      workExperience:
+        extractedData.workExperience && extractedData.workExperience.length > 0
+          ? extractedData.workExperience
+          : prev.workExperience,
+      certifications:
+        extractedData.certifications && extractedData.certifications.length > 0
+          ? extractedData.certifications
+          : prev.certifications,
+
+      // Documents
+      documents: {
+        ...prev.documents,
+        ...(extractedData.documents || {}),
+      },
+    }));
+
+    console.log("Form data updated with extracted information");
+    setWizardStarted(true);
+    setShowModal(false);
+  };
+
+  const handleManualStart = () => {
+    setWizardStarted(true);
+    setShowModal(false);
+  };
+
+  const CurrentStepComponent = STEPS[currentStep - 1].component;
+
+  return (
+    <>
+      {/* Registration Modal */}
+      <RegistrationModal
+        isOpen={showModal && !wizardStarted}
+        onClose={() => setShowModal(false)}
+        onAutoFill={handleAutoFill}
+        onManualStart={handleManualStart}
+      />
+
+      <div className="min-h-screen bg-k-light-grey py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto">
+          {/* Header */}
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold text-k-dark-grey">
+              Employee Onboarding
+            </h1>
+            <p className="text-k-medium-grey mt-2">
+              Please complete your profile information
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-10">
-            {/* STEP 1: Personal Info */}
-            {step === 1 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormInput
-                  label="First Name"
-                  name="firstName"
-                  value={form.firstName}
-                  onChange={handleChange}
-                />
-                <FormInput
-                  label="Last Name"
-                  name="lastName"
-                  value={form.lastName}
-                  onChange={handleChange}
-                />
-                <FormInput
-                  label="Date of Birth"
-                  type="date"
-                  name="dob"
-                  value={form.dob}
-                  onChange={handleChange}
-                />
-                <FormInput
-                  label="Gender"
-                  name="gender"
-                  value={form.gender}
-                  onChange={handleChange}
-                />
-                <FormInput
-                  label="Marital Status"
-                  name="maritalStatus"
-                  value={form.maritalStatus}
-                  onChange={handleChange}
-                />
-              </div>
-            )}
+          {/* Progress Bar */}
+          <div className="mb-10">
+            <div className="flex items-center justify-between relative">
+              {/* Progress Line Background */}
+              <div className="absolute left-0 top-4 transform -translate-y-1/2 w-full h-[3px] bg-gray-200 z-10" />
 
-            {/* STEP 2: Address & Contact */}
-            {step === 2 && (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormInput
-                    label="Address"
-                    name="address"
-                    value={form.address}
-                    onChange={handleChange}
-                  />
-                  <FormInput
-                    label="City"
-                    name="city"
-                    value={form.city}
-                    onChange={handleChange}
-                  />
-                </div>
+              {/* Active Progress Line */}
+              <div
+                className="absolute left-0 top-4 transform -translate-y-1/2 h-[3px] bg-success transition-all duration-500 z-20"
+                style={{
+                  width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%`,
+                }}
+              />
 
-                <div className="mt-6">
-                  <label className="font-semibold text-gray-700 text-sm">Phone Numbers</label>
+              {STEPS.map((step) => {
+                const isCompleted = step.id < currentStep;
+                const isCurrent = step.id === currentStep;
 
-                  {form.phones.map((ph, i) => (
-                    <input
-                      key={i}
-                      value={ph}
-                      onChange={(e) =>
-                        dispatch(updatePhone({ index: i, value: e.target.value }))
-                      }
-                      className="border border-gray-200 w-full px-4 py-3 rounded-xl mt-3 outline-none 
-                                 focus:ring-2 focus:ring-[#DB5E00]/20 focus:border-[#DB5E00] 
-                                 transition-all duration-200 bg-gray-50 hover:bg-white"
-                      placeholder={`Phone ${i + 1}`}
-                    />
-                  ))}
-
-                  <button
-                    type="button"
-                    onClick={() => dispatch(addPhone())}
-                    className="text-[#DB5E00] mt-4 font-semibold hover:text-[#FFCC00] transition-colors"
+                return (
+                  <div
+                    key={step.id}
+                    className="flex flex-col items-center cursor-pointer z-30"
+                    onClick={() => {
+                      // Optional: Allow clicking to go back to completed steps
+                      if (isCompleted) setCurrentStep(step.id);
+                    }}
                   >
-                    + Add Phone
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* STEP 3: Education */}
-            {step === 3 && (
-              <>
-                {form.education.map((edu, i) => (
-                  <div key={i} className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 bg-gray-50 rounded-xl">
-                    <FormInput
-                      label="School"
-                      value={edu.school}
-                      onChange={(e) =>
-                        dispatch(
-                          updateArrayField({
-                            field: "education",
-                            index: i,
-                            key: "school",
-                            value: e.target.value,
-                          })
-                        )
-                      }
-                    />
-                    <FormInput
-                      label="Degree"
-                      value={edu.degree}
-                      onChange={(e) =>
-                        dispatch(
-                          updateArrayField({
-                            field: "education",
-                            index: i,
-                            key: "degree",
-                            value: e.target.value,
-                          })
-                        )
-                      }
-                    />
-                    <FormInput
-                      label="Year"
-                      value={edu.year}
-                      onChange={(e) =>
-                        dispatch(
-                          updateArrayField({
-                            field: "education",
-                            index: i,
-                            key: "year",
-                            value: e.target.value,
-                          })
-                        )
-                      }
-                    />
+                    {/* Circle */}
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 border-2 ${
+                        isCompleted
+                          ? "bg-success border-white"
+                          : isCurrent
+                          ? "bg-white border-k-orange"
+                          : "bg-white border-gray-300"
+                      }`}
+                    >
+                      {isCompleted ? (
+                        <MdCheck className="w-5 h-5 text-white" />
+                      ) : (
+                        <span
+                          className={`text-sm font-medium font-heading ${
+                            isCurrent ? "text-k-orange" : "text-gray-500"
+                          }`}
+                        >
+                          {step.id}
+                        </span>
+                      )}
+                    </div>
+                    <span
+                      className={`mt-2 text-xs font-medium transition-colors duration-300 ${
+                        isCurrent
+                          ? "text-k-orange"
+                          : isCompleted
+                          ? "text-success"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {step.title}
+                    </span>
                   </div>
-                ))}
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    dispatch(
-                      addField({
-                        field: "education",
-                        empty: { school: "", degree: "", year: "" },
-                      })
-                    )
-                  }
-                  className="text-[#DB5E00] font-semibold hover:text-[#FFCC00] transition-colors"
-                >
-                  + Add Education
-                </button>
-              </>
-            )}
-
-            {/* STEP 4: Work Experience */}
-            {step === 4 && (
-              <>
-                {form.work.map((job, i) => (
-                  <div key={i} className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 bg-gray-50 rounded-xl">
-                    <FormInput
-                      label="Company"
-                      value={job.company}
-                      onChange={(e) =>
-                        dispatch(
-                          updateArrayField({
-                            field: "work",
-                            index: i,
-                            key: "company",
-                            value: e.target.value,
-                          })
-                        )
-                      }
-                    />
-                    <FormInput
-                      label="Job Title"
-                      value={job.title}
-                      onChange={(e) =>
-                        dispatch(
-                          updateArrayField({
-                            field: "work",
-                            index: i,
-                            key: "title",
-                            value: e.target.value,
-                          })
-                        )
-                      }
-                    />
-                    <FormInput
-                      label="Years"
-                      value={job.years}
-                      onChange={(e) =>
-                        dispatch(
-                          updateArrayField({
-                            field: "work",
-                            index: i,
-                            key: "years",
-                            value: e.target.value,
-                          })
-                        )
-                      }
-                    />
-                  </div>
-                ))}
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    dispatch(
-                      addField({
-                        field: "work",
-                        empty: { company: "", title: "", years: "" },
-                      })
-                    )
-                  }
-                  className="text-[#DB5E00] font-semibold hover:text-[#FFCC00] transition-colors"
-                >
-                  + Add Work Experience
-                </button>
-              </>
-            )}
-
-            {/* STEP 5: Certificates */}
-            {step === 5 && (
-              <>
-                {form.certificates.map((cert, i) => (
-                  <div key={i} className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gray-50 rounded-xl">
-                    <FormInput
-                      label="Certificate Name"
-                      value={cert.name}
-                      onChange={(e) =>
-                        dispatch(
-                          updateArrayField({
-                            field: "certificates",
-                            index: i,
-                            key: "name",
-                            value: e.target.value,
-                          })
-                        )
-                      }
-                    />
-                    <FormInput
-                      label="Issued By"
-                      value={cert.org}
-                      onChange={(e) =>
-                        dispatch(
-                          updateArrayField({
-                            field: "certificates",
-                            index: i,
-                            key: "org",
-                            value: e.target.value,
-                          })
-                        )
-                      }
-                    />
-                  </div>
-                ))}
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    dispatch(
-                      addField({
-                        field: "certificates",
-                        empty: { name: "", org: "" },
-                      })
-                    )
-                  }
-                  className="text-[#DB5E00] font-semibold hover:text-[#FFCC00] transition-colors"
-                >
-                  + Add Certificate
-                </button>
-              </>
-            )}
-
-            {/* STEP 6: Documents */}
-            {step === 6 && (
-              <div className="grid gap-6">
-                <div className="p-4 bg-gray-50 rounded-xl">
-                  <label className="block font-semibold text-gray-700 mb-3">Profile Photo</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) =>
-                      dispatch(
-                        updateFile({
-                          field: "photo",
-                          file: e.target.files?.[0] || null,
-                        })
-                      )
-                    }
-                    className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#DB5E00] file:text-white file:font-semibold file:cursor-pointer hover:file:bg-[#FFCC00] transition-all"
-                  />
-                </div>
-                <div className="p-4 bg-gray-50 rounded-xl">
-                  <label className="block font-semibold text-gray-700 mb-3">ID Card</label>
-                  <input
-                    type="file"
-                    accept="image/*,.pdf"
-                    onChange={(e) =>
-                      dispatch(
-                        updateFile({
-                          field: "idCard",
-                          file: e.target.files?.[0] || null,
-                        })
-                      )
-                    }
-                    className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#DB5E00] file:text-white file:font-semibold file:cursor-pointer hover:file:bg-[#FFCC00] transition-all"
-                  />
-                </div>
-                <div className="p-4 bg-gray-50 rounded-xl">
-                  <label className="block font-semibold text-gray-700 mb-3">CV</label>
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={(e) =>
-                      dispatch(
-                        updateFile({
-                          field: "cv",
-                          file: e.target.files?.[0] || null,
-                        })
-                      )
-                    }
-                    className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#DB5E00] file:text-white file:font-semibold file:cursor-pointer hover:file:bg-[#FFCC00] transition-all"
-                  />
-                </div>
-                <div className="p-4 bg-gray-50 rounded-xl">
-                  <label className="block font-semibold text-gray-700 mb-3">Recommendation Letter</label>
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={(e) =>
-                      dispatch(
-                        updateFile({
-                          field: "recommendation",
-                          file: e.target.files?.[0] || null,
-                        })
-                      )
-                    }
-                    className="w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#DB5E00] file:text-white file:font-semibold file:cursor-pointer hover:file:bg-[#FFCC00] transition-all"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* STEP 7: Review */}
-            {step === 7 && (
-              <div className="space-y-4">
-                <h2 className="text-lg font-bold text-gray-800 mb-4">Review Your Information</h2>
-                <pre className="bg-gray-50 p-6 rounded-xl border border-gray-200 max-h-96 overflow-auto text-sm">
-                  {JSON.stringify(
-                    {
-                      ...form,
-                      photo: form.photo?.name || null,
-                      idCard: form.idCard?.name || null,
-                      cv: form.cv?.name || null,
-                      recommendation: form.recommendation?.name || null,
-                    },
-                    null,
-                    2
-                  )}
-                </pre>
-              </div>
-            )}
-
-            {/* Navigation Buttons */}
-            <div className="flex justify-between pt-6 border-t border-gray-100">
-              {step > 1 ? (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => dispatch(prevStep())}
-                >
-                  Back
-                </Button>
-              ) : (
-                <div />
-              )}
-
-              {step < 7 ? (
-                <Button
-                  type="button"
-                  variant="primary"
-                  onClick={() => dispatch(nextStep())}
-                >
-                  Next
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  variant="primary"
-                  className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500"
-                >
-                  Submit Application
-                </Button>
-              )}
+                );
+              })}
             </div>
-          </form>
+          </div>
+
+          {/* Step Content */}
+          <div className="bg-white rounded-2xl shadow-card p-6 md:p-10 mb-8 animate-[slideUp_0.4s_ease-out]">
+            <h2 className="text-2xl font-bold text-k-dark-grey mb-6 border-b pb-4 flex justify-between items-center">
+              {STEPS[currentStep - 1].title}
+              {Object.keys(errors).length > 0 && (
+                <span className="text-error text-sm font-normal flex items-center gap-1">
+                  <MdError /> Please fill in all required fields
+                </span>
+              )}
+            </h2>
+
+            <CurrentStepComponent
+              formData={formData}
+              handleChange={handleChange}
+              updateFormData={updateFormData}
+              errors={errors}
+              onEditStep={(stepId: number) => {
+                setCurrentStep(stepId);
+                window.scrollTo(0, 0);
+              }}
+            />
+          </div>
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between items-center">
+            <Button
+              variant="secondary"
+              onClick={handleBack}
+              disabled={currentStep === 1}
+              icon={MdArrowBack}
+            >
+              Previous
+            </Button>
+
+            <Button
+              variant="primary"
+              onClick={handleNext}
+              icon={currentStep === STEPS.length ? MdCheck : MdArrowForward}
+              iconPosition="right"
+              loading={isSubmitting && currentStep === STEPS.length}
+            >
+              {currentStep === STEPS.length
+                ? "Submit Application"
+                : "Next Step"}
+            </Button>
+          </div>
         </div>
       </div>
-    </EmployeeLayout>
+    </>
   );
 }
