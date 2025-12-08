@@ -1,12 +1,8 @@
-import { useState, useEffect } from "react";
 import {
   MdDashboard,
   MdGroup,
   MdApartment,
   MdSettings,
-  MdPersonAdd,
-  MdKeyboardArrowDown,
-  MdKeyboardArrowRight,
   MdClose,
   MdChevronLeft,
   MdChevronRight,
@@ -18,20 +14,30 @@ export default function AdminSidebar() {
   const { isOpen, toggle, isMobileOpen, closeMobile } = useSidebar();
   const location = useLocation();
 
-  // Initialize employeeOpen based on current path
-  const isEmployeeSection =
-    location.pathname.includes("/admin/employees") ||
-    location.pathname.includes("/admin/employment");
-  const [employeeOpen, setEmployeeOpen] = useState(isEmployeeSection);
-
-  // Update employeeOpen if path changes
-  useEffect(() => {
-    if (isEmployeeSection) {
-      setEmployeeOpen(true);
-    }
-  }, [isEmployeeSection]);
-
   const isActive = (path: string) => location.pathname === path;
+
+  const navItems = [
+    {
+      path: "/admin/dashboard",
+      label: "Dashboard",
+      icon: MdDashboard,
+    },
+    {
+      path: "/admin/employees",
+      label: "Employees",
+      icon: MdGroup,
+    },
+    {
+      path: "/admin/departments",
+      label: "Departments",
+      icon: MdApartment,
+    },
+    {
+      path: "/admin/settings",
+      label: "Settings",
+      icon: MdSettings,
+    },
+  ];
 
   return (
     <>
@@ -87,202 +93,63 @@ export default function AdminSidebar() {
         </div>
 
         <div className="flex-1 mt-6 px-4 space-y-2 overflow-y-auto custom-scrollbar">
-          {/* Dashboard */}
-          <Link
-            to="/admin/dashboard"
-            className={`
-              flex items-center gap-3 p-3.5 rounded-2xl transition-all duration-200 group
-              ${
-                isActive("/admin/dashboard")
-                  ? "bg-k-orange text-white"
-                  : "text-gray-600 hover:bg-orange-50 hover:text-k-orange"
-              }
-            `}
-            onClick={closeMobile}
-          >
-            <MdDashboard size={24} className="shrink-0" />
-            <span
-              className={`font-medium whitespace-nowrap transition-all duration-300 ${
-                isOpen || isMobileOpen
-                  ? "opacity-100 translate-x-0"
-                  : "opacity-0 -translate-x-4 hidden lg:block"
-              }`}
-            >
-              Dashboard
-            </span>
-          </Link>
-
-          {/* EMPLOYEE DROPDOWN */}
-          <div>
-            <button
-              onClick={() => {
-                if (!isOpen && !isMobileOpen) toggle();
-                setEmployeeOpen(!employeeOpen);
-              }}
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
               className={`
-                w-full flex items-center justify-between p-3.5 rounded-2xl transition-all duration-200 group
+                group flex items-center gap-4 p-3.5 rounded-2xl font-medium transition-colors
+                ${isOpen || isMobileOpen ? "" : "justify-center"}
                 ${
-                  isEmployeeSection
-                    ? "bg-orange-50 text-k-orange"
-                    : "text-gray-600 hover:bg-orange-50 hover:text-k-orange"
+                  isActive(item.path)
+                    ? "bg-k-orange text-white"
+                    : "text-gray-500 hover:bg-orange-50 hover:text-k-orange"
                 }
               `}
+              onClick={closeMobile}
             >
-              <div className="flex items-center gap-3">
-                <MdGroup size={24} className="shrink-0" />
-                <span
-                  className={`font-medium whitespace-nowrap transition-all duration-300 ${
-                    isOpen || isMobileOpen
-                      ? "opacity-100 translate-x-0"
-                      : "opacity-0 -translate-x-4 hidden lg:block"
-                  }`}
-                >
-                  Employees
-                </span>
-              </div>
+              <item.icon className="text-2xl shrink-0" />
+
               {(isOpen || isMobileOpen) && (
-                <div className="text-gray-400">
-                  {employeeOpen ? (
-                    <MdKeyboardArrowDown size={20} />
-                  ) : (
-                    <MdKeyboardArrowRight size={20} />
-                  )}
+                <span className="whitespace-nowrap tracking-wide text-sm">
+                  {item.label}
+                </span>
+              )}
+
+              {!isOpen && !isMobileOpen && (
+                <div className="absolute left-full ml-4 px-3 py-1.5 bg-gray-800 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap shadow-xl">
+                  {item.label}
+                  <div className="absolute top-1/2 -left-1 -mt-1 border-4 border-transparent border-r-gray-800" />
                 </div>
               )}
-            </button>
+            </Link>
+          ))}
+        </div>
 
-            {/* Dropdown Items */}
-            <div
-              className={`
-                overflow-hidden transition-all duration-300 ease-in-out
-                ${
-                  employeeOpen && (isOpen || isMobileOpen)
-                    ? "max-h-40 opacity-100 mt-1"
-                    : "max-h-0 opacity-0"
-                }
-              `}
-            >
-              <div className="flex flex-col gap-1 pl-11 pr-2">
-                <Link
-                  to="/admin/employees"
-                  className={`
-                    p-3 rounded-xl text-sm transition-colors
-                    ${
-                      isActive("/admin/employees")
-                        ? "text-k-orange bg-orange-50 font-medium"
-                        : "text-gray-500 hover:text-k-orange hover:bg-orange-50/50"
-                    }
-                  `}
-                  onClick={closeMobile}
-                >
-                  All Employees
-                </Link>
-                <Link
-                  to="/admin/employees/create"
-                  className={`
-                    p-3 rounded-xl text-sm transition-colors
-                    ${
-                      isActive("/admin/employees/create")
-                        ? "text-k-orange bg-orange-50 font-medium"
-                        : "text-gray-500 hover:text-k-orange hover:bg-orange-50/50"
-                    }
-                  `}
-                  onClick={closeMobile}
-                >
-                  Create Employee
-                </Link>
-                <Link
-                  to="/admin/employment/create"
-                  className={`
-                    p-3 rounded-xl text-sm transition-colors
-                    ${
-                      isActive("/admin/employment/create")
-                        ? "text-k-orange bg-orange-50 font-medium"
-                        : "text-gray-500 hover:text-k-orange hover:bg-orange-50/50"
-                    }
-                  `}
-                  onClick={closeMobile}
-                >
-                  Create Employment
-                </Link>
-              </div>
+        <div className="p-4 border-t border-gray-50 bg-gray-50/30 rounded-br-3xl">
+          <div
+            className={`flex items-center gap-3 ${
+              !(isOpen || isMobileOpen) && "justify-center"
+            }`}
+          >
+            <div className="w-10 h-10 rounded-full bg-white border-2 border-white shadow-sm flex items-center justify-center text-k-orange font-bold shrink-0 overflow-hidden">
+              <img
+                src="https://avatar.iran.liara.run/public/job/admin/male"
+                alt="Admin"
+                className="w-full h-full object-cover"
+              />
             </div>
+            {(isOpen || isMobileOpen) && (
+              <div className="flex-1 min-w-0 animate-in fade-in duration-300">
+                <p className="text-sm font-bold text-gray-800 truncate">
+                  System Admin
+                </p>
+                <p className="text-xs text-gray-500 truncate font-medium">
+                  Administrator
+                </p>
+              </div>
+            )}
           </div>
-
-          {/* Create User */}
-          <Link
-            to="/admin/create-user"
-            className={`
-              flex items-center gap-3 p-3.5 rounded-2xl transition-all duration-200 group
-              ${
-                isActive("/admin/create-user")
-                  ? "bg-k-orange text-white"
-                  : "text-gray-600 hover:bg-orange-50 hover:text-k-orange"
-              }
-            `}
-            onClick={closeMobile}
-          >
-            <MdPersonAdd size={24} className="shrink-0" />
-            <span
-              className={`font-medium whitespace-nowrap transition-all duration-300 ${
-                isOpen || isMobileOpen
-                  ? "opacity-100 translate-x-0"
-                  : "opacity-0 -translate-x-4 hidden lg:block"
-              }`}
-            >
-              Create User
-            </span>
-          </Link>
-
-          {/* Departments */}
-          <Link
-            to="/admin/departments"
-            className={`
-              flex items-center gap-3 p-3.5 rounded-2xl transition-all duration-200 group
-              ${
-                isActive("/admin/departments")
-                  ? "bg-k-orange text-white"
-                  : "text-gray-600 hover:bg-orange-50 hover:text-k-orange"
-              }
-            `}
-            onClick={closeMobile}
-          >
-            <MdApartment size={24} className="shrink-0" />
-            <span
-              className={`font-medium whitespace-nowrap transition-all duration-300 ${
-                isOpen || isMobileOpen
-                  ? "opacity-100 translate-x-0"
-                  : "opacity-0 -translate-x-4 hidden lg:block"
-              }`}
-            >
-              Departments
-            </span>
-          </Link>
-
-          {/* Settings */}
-          <Link
-            to="/admin/settings"
-            className={`
-              flex items-center gap-3 p-3.5 rounded-2xl transition-all duration-200 group
-              ${
-                isActive("/admin/settings")
-                  ? "bg-k-orange text-white"
-                  : "text-gray-600 hover:bg-orange-50 hover:text-k-orange"
-              }
-            `}
-            onClick={closeMobile}
-          >
-            <MdSettings size={24} className="shrink-0" />
-            <span
-              className={`font-medium whitespace-nowrap transition-all duration-300 ${
-                isOpen || isMobileOpen
-                  ? "opacity-100 translate-x-0"
-                  : "opacity-0 -translate-x-4 hidden lg:block"
-              }`}
-            >
-              Settings
-            </span>
-          </Link>
         </div>
       </div>
     </>

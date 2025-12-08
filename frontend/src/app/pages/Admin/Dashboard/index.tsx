@@ -27,6 +27,7 @@ export default function AdminDashboard() {
   const stats = useSelector(selectDashboardStats);
   const isLoading = useSelector(selectDashboardLoading);
 
+  // Fetch stats on mount
   useEffect(() => {
     dispatch(actions.fetchStatsRequest());
   }, [dispatch, actions]);
@@ -39,7 +40,12 @@ export default function AdminDashboard() {
   const genderLabels = ["Male", "Female"];
   const genderSeries = [60, 40];
 
-  const et = stats?.employmentType || {};
+  const et = stats?.employmentType || {
+    fullTime: 45,
+    partTime: 20,
+    contract: 15,
+    outsourced: 20,
+  };
 
   const employmentLabels = ["Full-Time", "Part-Time", "Contract", "Outsourced"];
 

@@ -24,6 +24,7 @@ interface FormFieldProps {
   children?: ReactNode;
   className?: string;
   inputClassName?: string;
+  suffix?: ReactNode;
   [key: string]: any;
 }
 
@@ -42,6 +43,7 @@ export default function FormField({
   children, // For select options if passed as children
   className = "",
   inputClassName = "",
+  suffix,
   ...props
 }: FormFieldProps) {
   const baseInputClasses = `w-full h-12 px-4 font-base text-base text-k-dark-grey bg-white/70 backdrop-blur-sm border rounded-xl transition-all duration-200 placeholder:text-k-medium-grey placeholder:opacity-70 focus:outline-none ${
@@ -133,6 +135,11 @@ export default function FormField({
           </div>
         )}
         {renderInput()}
+        {suffix && (
+          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10">
+            {suffix}
+          </div>
+        )}
       </div>
       {(error || helperText) && (
         <span
