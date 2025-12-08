@@ -12,7 +12,9 @@ interface FormFieldProps {
   type?: string;
   name: string;
   value?: string | number;
-  onChange?: (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
+  onChange?: (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => void;
   placeholder?: string;
   error?: string;
   helperText?: string;
@@ -103,9 +105,9 @@ export default function FormField({
         onChange={onChange}
         placeholder={placeholder}
         onClick={(e) => type === "date" && e.target.showPicker?.()}
-        className={`${baseInputClasses} ${inputClassName} ${Icon ? "pl-11" : ""} ${
-          type === "date" ? "cursor-pointer" : ""
-        }`}
+        className={`${baseInputClasses} ${inputClassName} ${
+          Icon ? "pl-11" : ""
+        } ${type === "date" ? "cursor-pointer" : ""}`}
         aria-invalid={error ? "true" : "false"}
         aria-describedby={helperText ? `${name}-helper` : undefined}
         {...props}
@@ -143,4 +145,3 @@ export default function FormField({
     </div>
   );
 }
-
