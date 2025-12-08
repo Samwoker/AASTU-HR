@@ -1,213 +1,159 @@
-import { useState, useEffect } from "react";
 import {
-  MdDashboard,
-  MdAccountCircle,
-  MdWork,
-  MdCalendarToday,
-  MdReceipt,
-  MdMenu,
-  MdHistory,
+  MdOutlineDashboard,
+  MdOutlineAccountCircle,
+  MdOutlineWorkOutline,
+  MdOutlineCalendarToday,
+  MdOutlineReceipt,
+  MdChevronLeft,
+  MdChevronRight,
+  MdClose,
+  MdOutlineHistory,
 } from "react-icons/md";
 import { Link, useLocation } from "react-router-dom";
+import { useSidebar } from "../../context/SidebarContext";
 
 export default function EmployeeSidebar() {
-  const [open, setOpen] = useState(true);
-  const [mobileOpen, setMobileOpen] = useState(false);
-
+  const { isOpen, toggle, isMobileOpen, closeMobile } = useSidebar();
   const location = useLocation();
 
-  const isActive = (path: string) => location.pathname.startsWith(path);
+  const isActive = (path: string) => location.pathname === path;
+
+  const navItems = [
+    {
+      path: "/employee/dashboard",
+      label: "Dashboard",
+      icon: MdOutlineDashboard,
+    },
+    {
+      path: "/employee/profile",
+      label: "My Profile",
+      icon: MdOutlineAccountCircle,
+    },
+    {
+      path: "/employee/leave",
+      label: "Leave Application",
+      icon: MdOutlineCalendarToday,
+    },
+    {
+      path: "/employee/leave-recall",
+      label: "Leave Recall",
+      icon: MdOutlineHistory,
+    },
+    { path: "/employee/tasks", label: "My Tasks", icon: MdOutlineWorkOutline },
+    { path: "/employee/payslip", label: "Payslips", icon: MdOutlineReceipt },
+  ];
 
   return (
     <>
-      {/* Mobile Menu Button */}
-      <button
-        className="md:hidden fixed top-4 left-4 z-50 p-3 bg-white shadow rounded-full"
-        onClick={() => setMobileOpen(!mobileOpen)}
-      >
-        <MdMenu className="text-2xl text-[#DB5E00]" />
-      </button>
+      {/* Overlay for mobile */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden backdrop-blur-sm transition-opacity"
+          onClick={closeMobile}
+        />
+      )}
 
+      {/* Sidebar */}
       <div
         className={`
-          h-screen bg-white shadow-lg border-r border-gray-200 flex flex-col transition-all duration-300
-          ${open ? "w-80" : "w-24"}
-
-          fixed top-0 left-0 z-40
-          md:sticky md:top-0
-
-          ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+          h-screen bg-white shadow-xl border-r border-gray-100 flex flex-col transition-all duration-300 z-40
+          fixed top-0 left-0
+          ${
+            isMobileOpen
+              ? "translate-x-0 w-72"
+              : "-translate-x-full lg:translate-x-0"
+          }
+          ${isOpen ? "lg:w-72" : "lg:w-24"}
         `}
       >
-        {/* LOGO + SWITCH */}
-        <div className="pt-8 pb-6 px-4 flex flex-col items-center relative">
-          {open && (
-            <img
-              src="/kacha-logo.jpg"
-              alt="Kacha Logo"
-              className="h-14 w-auto object-contain mx-auto"
-            />
-          )}
+        {/* Close button for mobile */}
+        <button
+          onClick={closeMobile}
+          className="lg:hidden absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors cursor-pointer z-50"
+        >
+          <MdClose size={24} />
+        </button>
 
-          {/* SWITCH BUTTON */}
+        <div className="pt-8 pb-6 px-4 flex flex-col items-center relative">
+          <img
+            src="/kacha-logo.jpg"
+            alt="Kacha Logo"
+            className={`w-auto object-contain mx-auto transition-all duration-300 ${
+              isOpen || isMobileOpen ? "h-12" : "h-8"
+            }`}
+          />
+
+          {/* Toggle button - hidden on mobile */}
           <button
-            onClick={() => setOpen(!open)}
-            className={`
-              hidden md:flex absolute right-3 top-3
-              w-12 h-6 rounded-full
-              transition-all duration-300
-              shadow-inner flex items-center px-1 cursor-pointer
-              ${open ? "bg-[#DB5E00]" : "bg-[#FFCC00]"}
-            `}
+            onClick={toggle}
+            className="hidden lg:flex absolute -right-4 top-10 w-8 h-8 items-center justify-center bg-white border border-gray-100 rounded-full shadow-md text-k-medium-grey hover:text-k-orange transition-colors z-50 cursor-pointer"
           >
-            <div
-              className={`
-                w-5 h-5 rounded-full bg-white shadow transition-all duration-300
-                ${open ? "translate-x-6" : "translate-x-0"}
-              `}
-            ></div>
+            {isOpen ? (
+              <MdChevronLeft size={22} />
+            ) : (
+              <MdChevronRight size={22} />
+            )}
           </button>
         </div>
 
-        {/* NAVIGATION */}
-        <div className="flex-1 mt-4 px-4 space-y-2 overflow-y-auto">
-          {/* Dashboard */}
-          <Link
-            to="/employee/dashboard"
-            className={`
-              group flex items-center gap-5 p-4 rounded-lg text-lg font-semibold transition
-              ${
-                isActive("/employee/dashboard")
-                  ? "bg-[#DB5E00] text-white"
-                  : "text-gray-700 hover:bg-[#FFCC00] hover:text-white"
-              }
-            `}
-            onClick={() => setMobileOpen(false)}
-          >
-            <MdDashboard
-              className={`text-3xl ${
-                isActive("/employee/dashboard")
-                  ? "text-white"
-                  : "text-[#DB5E00] group-hover:text-white"
-              }`}
-            />
-            {open && <span>Dashboard</span>}
-          </Link>
+        <div className="flex-1 mt-6 px-4 space-y-2 overflow-y-auto custom-scrollbar">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`
+                group flex items-center gap-4 p-3.5 rounded-2xl font-medium transition-colors
+                ${isOpen || isMobileOpen ? "" : "justify-center"}
+                ${
+                  isActive(item.path)
+                    ? "bg-k-orange text-white"
+                    : "text-gray-500 hover:bg-orange-50 hover:text-k-orange"
+                }
+              `}
+              onClick={closeMobile}
+            >
+              <item.icon className="text-2xl shrink-0" />
 
-          {/* Profile */}
-          <Link
-            to="/employee/profile"
-            className={`
-              group flex items-center gap-5 p-4 rounded-lg text-lg font-semibold transition
-              ${
-                isActive("/employee/profile")
-                  ? "bg-[#DB5E00] text-white"
-                  : "text-gray-700 hover:bg-[#FFCC00] hover:text-white"
-              }
-            `}
-            onClick={() => setMobileOpen(false)}
-          >
-            <MdAccountCircle
-              className={`text-3xl ${
-                isActive("/employee/profile")
-                  ? "text-white"
-                  : "text-[#DB5E00] group-hover:text-white"
-              }`}
-            />
-            {open && <span>My Profile</span>}
-          </Link>
+              {(isOpen || isMobileOpen) && (
+                <span className="whitespace-nowrap tracking-wide text-sm">
+                  {item.label}
+                </span>
+              )}
 
-          {/* Tasks */}
-          <Link
-            to="/employee/tasks"
-            className={`
-              group flex items-center gap-5 p-4 rounded-lg text-lg font-semibold transition
-              ${
-                isActive("/employee/tasks")
-                  ? "bg-[#DB5E00] text-white"
-                  : "text-gray-700 hover:bg-[#FFCC00] hover:text-white"
-              }
-            `}
-            onClick={() => setMobileOpen(false)}
-          >
-            <MdWork
-              className={`text-3xl ${
-                isActive("/employee/tasks")
-                  ? "text-white"
-                  : "text-[#DB5E00] group-hover:text-white"
-              }`}
-            />
-            {open && <span>My Tasks</span>}
-          </Link>
+              {!isOpen && !isMobileOpen && (
+                <div className="absolute left-full ml-4 px-3 py-1.5 bg-gray-800 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap shadow-xl">
+                  {item.label}
+                  <div className="absolute top-1/2 -left-1 -mt-1 border-4 border-transparent border-r-gray-800" />
+                </div>
+              )}
+            </Link>
+          ))}
+        </div>
 
-          {/* Leave */}
-          <Link
-            to="/employee/leave"
-            className={`
-              group flex items-center gap-5 p-4 rounded-lg text-lg font-semibold transition
-              ${
-                isActive("/employee/leave")
-                  ? "bg-[#DB5E00] text-white"
-                  : "text-gray-700 hover:bg-[#FFCC00] hover:text-white"
-              }
-            `}
-            onClick={() => setMobileOpen(false)}
+        <div className="p-4 border-t border-gray-50 bg-gray-50/30 rounded-br-3xl">
+          <div
+            className={`flex items-center gap-3 ${
+              !(isOpen || isMobileOpen) && "justify-center"
+            }`}
           >
-            <MdCalendarToday
-              className={`text-3xl ${
-                isActive("/employee/leave")
-                  ? "text-white"
-                  : "text-[#DB5E00] group-hover:text-white"
-              }`}
-            />
-            {open && <span>Leave Request</span>}
-          </Link>
-
-          {/* Leave Recall */}
-          <Link
-            to="/employee/leave-recall"
-            className={`
-              group flex items-center gap-5 p-4 rounded-lg text-lg font-semibold transition
-              ${
-                isActive("/employee/leave-recall")
-                  ? "bg-[#DB5E00] text-white"
-                  : "text-gray-700 hover:bg-[#FFCC00] hover:text-white"
-              }
-            `}
-            onClick={() => setMobileOpen(false)}
-          >
-            <MdHistory
-              className={`text-3xl ${
-                isActive("/employee/leave-recall")
-                  ? "text-white"
-                  : "text-[#DB5E00] group-hover:text-white"
-              }`}
-            />
-            {open && <span>Leave Recall</span>}
-          </Link>
-
-          {/* Payslip */}
-          <Link
-            to="/employee/payslip"
-            className={`
-              group flex items-center gap-5 p-4 rounded-lg text-lg font-semibold transition
-              ${
-                isActive("/employee/payslip")
-                  ? "bg-[#DB5E00] text-white"
-                  : "text-gray-700 hover:bg-[#FFCC00] hover:text-white"
-              }
-            `}
-            onClick={() => setMobileOpen(false)}
-          >
-            <MdReceipt
-              className={`text-3xl ${
-                isActive("/employee/payslip")
-                  ? "text-white"
-                  : "text-[#DB5E00] group-hover:text-white"
-              }`}
-            />
-            {open && <span>Payslips</span>}
-          </Link>
+            <div className="w-10 h-10 rounded-full bg-white border-2 border-white shadow-sm flex items-center justify-center text-k-orange font-bold shrink-0 overflow-hidden">
+              <img
+                src="https://avatar.iran.liara.run/public/boy"
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            {(isOpen || isMobileOpen) && (
+              <div className="flex-1 min-w-0 animate-in fade-in duration-300">
+                <p className="text-sm font-bold text-gray-800 truncate">
+                  Tesfamichael Tafere
+                </p>
+                <p className="text-xs text-gray-500 truncate font-medium">
+                  Software Engineer
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </>

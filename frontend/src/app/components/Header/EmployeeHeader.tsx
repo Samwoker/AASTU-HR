@@ -1,9 +1,18 @@
-import { MdNotifications } from "react-icons/md";
+import { MdNotifications, MdMenu } from "react-icons/md";
+import { useSidebar } from "../../context/SidebarContext";
 
 export default function EmployeeHeader() {
+  const { toggleMobile } = useSidebar();
+
   return (
-    <div className="w-full h-20 bg-white shadow-md flex items-center justify-between px-4 md:px-8 relative md:hidden">
+    <div className="w-full h-20 bg-white shadow-md flex items-center justify-between px-4 md:px-8 relative lg:hidden">
       <div className="flex items-center gap-4 md:gap-6">
+        <button
+          onClick={toggleMobile}
+          className="p-2 text-gray-600 hover:bg-gray-100 rounded-full"
+        >
+          <MdMenu size={28} />
+        </button>
 
         <h2 className="text-lg md:text-xl font-semibold text-gray-700 whitespace-nowrap">
           Welcome, Tesfamichael Tafere
