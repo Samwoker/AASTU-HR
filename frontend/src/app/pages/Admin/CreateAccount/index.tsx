@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import AdminLayout from "../../../components/DefaultLayout/AdminLayout";
-import Button from "../../../components/Core/ui/Button";
-import FormInput from "../../../components/Core/ui/FormInput";
-import FormSelect from "../../../components/Core/ui/FormSelect";
+import Button from "../../../components/common/Button";
+import FormField from "../../../components/common/FormField";
 import { FiMail, FiHash, FiLock } from "react-icons/fi";
 import { useCreateAccountSlice } from "./slice";
 import {
@@ -61,7 +60,7 @@ export default function CreateEmployeeAccount() {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -74,7 +73,7 @@ export default function CreateEmployeeAccount() {
         email: form.email,
         password: form.password,
         role: form.role,
-      }),
+      })
     );
   };
 
@@ -90,17 +89,17 @@ export default function CreateEmployeeAccount() {
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <FormInput
+          <FormField
             label="Employee ID"
             name="employeeId"
             placeholder="e.g. EMP102"
             value={form.employeeId}
             onChange={handleChange}
             required
-            icon={<FiHash />}
+            icon={FiHash}
           />
 
-          <FormInput
+          <FormField
             label="Employee Email"
             type="email"
             name="email"
@@ -108,35 +107,37 @@ export default function CreateEmployeeAccount() {
             value={form.email}
             onChange={handleChange}
             required
-            icon={<FiMail />}
+            icon={FiMail}
           />
 
           <div>
             <label className="block mb-1 font-medium text-gray-700">
               Password <span className="text-red-500">*</span>
             </label>
-            <div className="flex gap-3">
-              <FormInput
-                containerClassName="w-full"
+            <div className="flex gap-3 items-end">
+              <FormField
+                className="w-full"
                 type="text"
                 name="password"
                 placeholder="Auto-generated or manual"
                 value={form.password}
                 onChange={handleChange}
                 required
-                icon={<FiLock />}
+                icon={FiLock}
               />
-              <button
+              <Button
                 type="button"
                 onClick={generateRandomPassword}
-                className="bg-[#FFCC00] hover:bg-[#e6b800] text-black px-4 py-2 rounded-xl font-medium shadow transition h-[42px]"
+                variant="secondary"
+                className="mb-0.5" // Alignment tweak if needed, or just rely on flex
               >
                 Generate
-              </button>
+              </Button>
             </div>
           </div>
 
-          <FormSelect
+          <FormField
+            type="select"
             label="Role"
             name="role"
             value={form.role}
@@ -147,11 +148,9 @@ export default function CreateEmployeeAccount() {
           <div className="pt-4">
             <Button
               type="submit"
+              loading={loading}
               disabled={loading}
-              className={`w-full py-3 font-semibold rounded-xl shadow ${loading
-                ? "bg-gray-300 cursor-not-allowed"
-                : "bg-[#FFCC00] hover:bg-[#e6b800] text-black"
-                }`}
+              fullWidth
             >
               {loading ? "Creating..." : "Create Account"}
             </Button>

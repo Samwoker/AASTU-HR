@@ -2,13 +2,17 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useEmployeesSlice } from "./slice";
-import { selectAllEmployees, selectEmployeesLoading, selectEmployeesPagination } from './slice/selectors';
-import AdminLayout from '../../../components/DefaultLayout/AdminLayout';
-import Table from '../../../components/Core/ui/Table';
-import Button from '../../../components/Core/ui/Button';
-import { FiPlus, FiUser, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-import { routeConstants } from '../../../../utils/constants';
-import { Employee } from './slice/types';
+import {
+  selectAllEmployees,
+  selectEmployeesLoading,
+  selectEmployeesPagination,
+} from "./slice/selectors";
+import AdminLayout from "../../../components/DefaultLayout/AdminLayout";
+import Table from "../../../components/Core/ui/Table";
+import Button from "../../../components/common/Button";
+import { FiPlus, FiUser, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { routeConstants } from "../../../../utils/constants";
+import { Employee } from "./slice/types";
 
 export default function Employees() {
   const dispatch = useDispatch();
@@ -25,7 +29,12 @@ export default function Employees() {
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
-      dispatch(actions.fetchAllEmployeesRequest({ page: newPage, limit: pagination.limit }));
+      dispatch(
+        actions.fetchAllEmployeesRequest({
+          page: newPage,
+          limit: pagination.limit,
+        })
+      );
     }
   };
 
@@ -36,9 +45,9 @@ export default function Employees() {
           <h1 className="text-3xl font-bold text-gray-800">All Employees</h1>
           <Button
             onClick={() => navigate(routeConstants.createEmployee)}
-            className="bg-[#FFCC00] hover:bg-[#e6b800] text-black font-semibold px-6 py-2 rounded-xl flex items-center gap-2 shadow-md transition-all"
+            icon={FiPlus}
           >
-            <FiPlus /> Add Employee
+            Add Employee
           </Button>
         </div>
 
@@ -91,7 +100,14 @@ export default function Employees() {
           {!isLoading && employees.length > 0 && (
             <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50">
               <div className="text-sm text-gray-500">
-                Showing page <span className="font-bold text-gray-900">{pagination.page}</span> of <span className="font-bold text-gray-900">{pagination.totalPages}</span>
+                Showing page{" "}
+                <span className="font-bold text-gray-900">
+                  {pagination.page}
+                </span>{" "}
+                of{" "}
+                <span className="font-bold text-gray-900">
+                  {pagination.totalPages}
+                </span>
               </div>
               <div className="flex gap-2">
                 <Button

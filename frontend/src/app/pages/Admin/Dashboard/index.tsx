@@ -74,7 +74,7 @@ export default function AdminDashboard() {
 
   return (
     <AdminLayout>
-      <h1 className="text-2xl md:text-3xl font-bold text-[#333] mb-8">
+      <h1 className="text-2xl md:text-3xl font-bold text-k-dark-grey mb-8">
         Admin Dashboard
       </h1>
 

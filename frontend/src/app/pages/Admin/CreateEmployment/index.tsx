@@ -1,10 +1,17 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import AdminLayout from "../../../components/DefaultLayout/AdminLayout";
-import Button from "../../../components/Core/ui/Button";
-import FormInput from "../../../components/Core/ui/FormInput";
-import FormSelect from "../../../components/Core/ui/FormSelect";
-import { FiCalendar, FiDollarSign, FiUser, FiBriefcase, FiLayers, FiLoader, FiChevronDown } from "react-icons/fi";
+import Button from "../../../components/common/Button";
+import FormField from "../../../components/common/FormField";
+import {
+  FiCalendar,
+  FiDollarSign,
+  FiUser,
+  FiBriefcase,
+  FiLayers,
+  FiLoader,
+  FiChevronDown,
+} from "react-icons/fi";
 import ToastService from "../../../../utils/ToastService";
 
 // Slices
@@ -19,7 +26,10 @@ import {
   selectCreateEmploymentSuccess,
 } from "./slice/selectors";
 import { selectAllJobTitles } from "../Settings/JobTitles/slice/selectors";
-import { selectDepartments, selectDepartmentsLoading } from "../Departments/slice/selectors";
+import {
+  selectDepartments,
+  selectDepartmentsLoading,
+} from "../Departments/slice/selectors";
 import makeCall from "../../../API";
 import apiRoutes from "../../../API/apiRoutes";
 
@@ -57,7 +67,8 @@ export default function CreateEmployment() {
 
   // Department State
   const [filteredDepartments, setFilteredDepartments] = useState<string[]>([]);
-  const [showDepartmentSuggestions, setShowDepartmentSuggestions] = useState(false);
+  const [showDepartmentSuggestions, setShowDepartmentSuggestions] =
+    useState(false);
 
   const employmentTypes = ["Full Time", "Part-Time", "Contract", "Outsourced"];
 
@@ -92,13 +103,16 @@ export default function CreateEmployment() {
 
   // Filter job titles for autocomplete
   useEffect(() => {
-    const uniqueTitles = Array.from(new Set(jobTitles
-      .map(j => j?.title)
-      .filter(t => typeof t === 'string' && t.trim() !== '')
-    ));
+    const uniqueTitles = Array.from(
+      new Set(
+        jobTitles
+          .map((j) => j?.title)
+          .filter((t) => typeof t === "string" && t.trim() !== "")
+      )
+    );
 
     if (jobTitleInput.title) {
-      const filtered = uniqueTitles.filter(t =>
+      const filtered = uniqueTitles.filter((t) =>
         t.toLowerCase().includes(jobTitleInput.title.toLowerCase())
       );
       setFilteredTitles(filtered);
@@ -111,14 +125,18 @@ export default function CreateEmployment() {
   useEffect(() => {
     if (jobTitleInput.title) {
       const levelsForTitle = jobTitles
-        .filter(j => j.title.toLowerCase() === jobTitleInput.title.toLowerCase() && j.level)
-        .map(j => j.level as string)
-        .filter(l => typeof l === 'string' && l.trim() !== '');
+        .filter(
+          (j) =>
+            j.title.toLowerCase() === jobTitleInput.title.toLowerCase() &&
+            j.level
+        )
+        .map((j) => j.level as string)
+        .filter((l) => typeof l === "string" && l.trim() !== "");
 
       const uniqueLevels = Array.from(new Set(levelsForTitle));
 
       if (jobTitleInput.level) {
-        const filtered = uniqueLevels.filter(l =>
+        const filtered = uniqueLevels.filter((l) =>
           l.toLowerCase().includes(jobTitleInput.level.toLowerCase())
         );
         setFilteredLevels(filtered);
@@ -132,10 +150,13 @@ export default function CreateEmployment() {
 
   // Filter departments for autocomplete
   useEffect(() => {
-    const uniqueDepts = Array.from(new Set((departments || [])
-      .map((d: any) => d?.name)
-      .filter((name: any) => typeof name === 'string' && name.trim() !== '')
-    ));
+    const uniqueDepts = Array.from(
+      new Set(
+        (departments || [])
+          .map((d: any) => d?.name)
+          .filter((name: any) => typeof name === "string" && name.trim() !== "")
+      )
+    );
 
     if (form.department) {
       const filtered = uniqueDepts.filter((d: any) =>
@@ -152,28 +173,28 @@ export default function CreateEmployment() {
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-    if (name === 'department') setShowDepartmentSuggestions(true);
+    if (name === "department") setShowDepartmentSuggestions(true);
   };
 
   const handleJobTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setJobTitleInput(prev => ({ ...prev, [name]: value }));
-    if (name === 'title') setShowTitleSuggestions(true);
-    if (name === 'level') setShowLevelSuggestions(true);
+    setJobTitleInput((prev) => ({ ...prev, [name]: value }));
+    if (name === "title") setShowTitleSuggestions(true);
+    if (name === "level") setShowLevelSuggestions(true);
   };
 
   const selectTitleSuggestion = (title: string) => {
-    setJobTitleInput(prev => ({ ...prev, title }));
+    setJobTitleInput((prev) => ({ ...prev, title }));
     setShowTitleSuggestions(false);
   };
 
   const selectLevelSuggestion = (level: string) => {
-    setJobTitleInput(prev => ({ ...prev, level }));
+    setJobTitleInput((prev) => ({ ...prev, level }));
     setShowLevelSuggestions(false);
   };
 
   const selectDepartmentSuggestion = (department: string) => {
-    setForm(prev => ({ ...prev, department }));
+    setForm((prev) => ({ ...prev, department }));
     setShowDepartmentSuggestions(false);
   };
 
@@ -185,7 +206,8 @@ export default function CreateEmployment() {
 
       // --- Job Title Logic ---
       const existingJob = jobTitles.find(
-        j => j.title.toLowerCase() === jobTitleInput.title.toLowerCase() &&
+        (j) =>
+          j.title.toLowerCase() === jobTitleInput.title.toLowerCase() &&
           j.level?.toLowerCase() === jobTitleInput.level.toLowerCase()
       );
 
@@ -194,10 +216,10 @@ export default function CreateEmployment() {
       } else {
         ToastService.info("Creating new job title...");
         const response: any = await makeCall({
-          method: 'POST',
+          method: "POST",
           route: apiRoutes.jobTitles,
           body: { title: jobTitleInput.title, level: jobTitleInput.level },
-          isSecureRoute: true
+          isSecureRoute: true,
         });
 
         if (response?.data?.data?.jobTitle?.id) {
@@ -211,20 +233,21 @@ export default function CreateEmployment() {
 
       // --- Department Logic ---
       // Check if department exists
-      const existingDept = departments.find((d: any) =>
-        d.name.toLowerCase() === form.department.toLowerCase()
+      const existingDept = departments.find(
+        (d: any) => d.name.toLowerCase() === form.department.toLowerCase()
       );
 
       if (!existingDept) {
         ToastService.info(`Creating new department: ${form.department}...`);
         const deptResponse: any = await makeCall({
-          method: 'POST',
+          method: "POST",
           route: apiRoutes.departments,
           body: { name: form.department },
-          isSecureRoute: true
+          isSecureRoute: true,
         });
 
-        if (deptResponse?.data?.status === "success") { // Adjust check based on backend response
+        if (deptResponse?.data?.status === "success") {
+          // Adjust check based on backend response
           ToastService.success("New department created!");
           dispatch(departmentActions.fetchDepartmentsStart());
         } else {
@@ -239,13 +262,10 @@ export default function CreateEmployment() {
           job_title_id: finalJobTitleId,
         })
       );
-
     } catch (err: any) {
       ToastService.error(err.message || "Failed to process request");
     }
   };
-
-
 
   return (
     <AdminLayout>
@@ -256,26 +276,25 @@ export default function CreateEmployment() {
 
         <div className="bg-white shadow-xl rounded-2xl p-8 border border-gray-100">
           <form onSubmit={handleSubmit} className="space-y-8">
-
             {/* Section: Employee & Manager */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormInput
+              <FormField
                 label="Employee ID"
                 name="employee_id"
                 value={form.employee_id}
                 onChange={handleChange}
                 required
                 placeholder="e.g. EMP-2024-001"
-                icon={<FiUser />}
+                icon={FiUser}
               />
 
-              <FormInput
+              <FormField
                 label="Manager ID (Optional)"
                 name="manager_id"
                 value={form.manager_id}
                 onChange={handleChange}
                 placeholder="e.g. EMP-2023-050"
-                icon={<FiUser />}
+                icon={FiUser}
               />
             </div>
 
@@ -287,7 +306,7 @@ export default function CreateEmployment() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
                 <div className="relative">
-                  <FormInput
+                  <FormField
                     label="Job Title"
                     name="title"
                     value={jobTitleInput.title}
@@ -296,7 +315,6 @@ export default function CreateEmployment() {
                     placeholder="Software Engineer"
                     autoComplete="off"
                     onFocus={() => setShowTitleSuggestions(true)}
-                  // onBlur={() => setTimeout(() => setShowTitleSuggestions(false), 200)} // Delay to allow click
                   />
                   {showTitleSuggestions && filteredTitles.length > 0 && (
                     <ul className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto mt-1">
@@ -314,13 +332,13 @@ export default function CreateEmployment() {
                 </div>
 
                 <div className="relative">
-                  <FormInput
+                  <FormField
                     label="Job Level"
                     name="level"
                     value={jobTitleInput.level}
                     onChange={handleJobTitleChange}
                     placeholder="e.g. Senior, Junior, L4"
-                    icon={<FiLayers />}
+                    icon={FiLayers}
                     autoComplete="off"
                     onFocus={() => setShowLevelSuggestions(true)}
                   />
@@ -342,56 +360,69 @@ export default function CreateEmployment() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="relative">
-                  <FormInput
+                  <FormField
                     label="Department"
                     name="department"
                     value={form.department}
                     onChange={handleChange}
                     required
-                    placeholder={departmentsLoading ? "Loading departments..." : "Type or select department..."}
+                    placeholder={
+                      departmentsLoading
+                        ? "Loading departments..."
+                        : "Type or select department..."
+                    }
                     autoComplete="off"
                     onFocus={() => setShowDepartmentSuggestions(true)}
                     disabled={departmentsLoading}
-                    icon={departmentsLoading ? <FiLoader className="animate-spin" /> : <FiChevronDown className="text-gray-400" />}
+                    icon={() =>
+                      departmentsLoading ? (
+                        <FiLoader className="animate-spin" />
+                      ) : (
+                        <FiChevronDown className="text-gray-400" />
+                      )
+                    }
                   />
-                  {showDepartmentSuggestions && !departmentsLoading && filteredDepartments.length > 0 && (
-                    <ul className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto mt-1">
-                      {filteredDepartments.map((dept: any, idx) => (
-                        <li
-                          key={idx}
-                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-700"
-                          onClick={() => selectDepartmentSuggestion(dept)}
-                        >
-                          {dept}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  {showDepartmentSuggestions &&
+                    !departmentsLoading &&
+                    filteredDepartments.length > 0 && (
+                      <ul className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto mt-1">
+                        {filteredDepartments.map((dept: any, idx) => (
+                          <li
+                            key={idx}
+                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-700"
+                            onClick={() => selectDepartmentSuggestion(dept)}
+                          >
+                            {dept}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                 </div>
 
-                <FormSelect
+                <FormField
+                  type="select"
                   label="Employment Type"
                   name="employment_type"
                   value={form.employment_type}
                   onChange={handleChange}
-                  options={employmentTypes}
+                  options={employmentTypes.map((t) => ({ label: t, value: t }))}
                 />
               </div>
             </div>
 
             {/* Section: Compensation */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormInput
+              <FormField
                 label="Start Date"
                 type="date"
                 name="start_date"
                 value={form.start_date}
                 onChange={handleChange}
                 required
-                icon={<FiCalendar />}
+                icon={FiCalendar}
               />
 
-              <FormInput
+              <FormField
                 label="Gross Salary"
                 type="number"
                 name="gross_salary"
@@ -399,18 +430,17 @@ export default function CreateEmployment() {
                 placeholder="e.g. 10000"
                 onChange={handleChange}
                 required
-                icon={<FiDollarSign />}
+                icon={FiDollarSign}
               />
             </div>
 
             <div className="pt-6">
               <Button
                 type="submit"
+                loading={loading}
                 disabled={loading}
-                className={`w-full py-4 text-lg font-bold rounded-xl shadow-lg transition-all transform hover:scale-[1.01] ${loading
-                  ? "bg-gray-300 cursor-not-allowed"
-                  : "bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-black"
-                  }`}
+                fullWidth
+                className="text-lg font-bold py-4 h-auto"
               >
                 {loading ? "Processing..." : "Create Employment Record"}
               </Button>
