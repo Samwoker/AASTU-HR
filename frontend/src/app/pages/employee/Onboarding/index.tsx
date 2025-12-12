@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import StepPersonalInfo from "../../../components/employees/wizard/StepPersonalInfo";
 import StepContactInfo from "../../../components/employees/wizard/StepContactInfo";
@@ -13,7 +13,7 @@ import { MdCheck, MdArrowBack, MdArrowForward, MdError } from "react-icons/md";
 import toast from "react-hot-toast";
 import employeeService from "../../../services/employeeService";
 
-// Define types for the form data
+// Type definitions
 interface Phone {
   number: string;
   type: string;
@@ -25,69 +25,105 @@ interface Education {
   fieldOfStudy: string;
   institution: string;
   programType: string;
-  hasCostSharing: boolean;
-  costSharingDocument?: File | null;
-  [key: string]: any;
+  hasCostSharing?: boolean;
+  costSharingDocument?: File | string | null;
 }
 
 interface WorkExperience {
   companyName: string;
   startDate: string;
-  [key: string]: any;
+  endDate?: string;
+  position?: string;
 }
 
 interface Certification {
   name: string;
-  certificateDocument?: File | null;
-  [key: string]: any;
+  issuingOrganization?: string;
+  issueDate?: string;
+  certificateDocument?: File | string | null;
 }
 
 interface Documents {
-  cv: File[];
-  certificates: File[];
-  experienceLetters: File[];
-  photo: File[];
-  taxForms: File[];
-  pensionForms: File[];
-  [key: string]: File[];
+  cv: (File | string)[];
+  certificates: (File | string)[];
+  experienceLetters: (File | string)[];
+  photo: (File | string)[];
+  taxForms: (File | string)[];
+  pensionForms: (File | string)[];
 }
 
-export interface OnboardingFormData {
+interface FormData {
+  // Personal Info
   fullName: string;
   gender: string;
   dateOfBirth: string;
   tinNumber: string;
   pensionNumber: string;
   placeOfWork: string;
+  // Contact Info
   region: string;
   city: string;
   subCity: string;
   woreda: string;
   phones: Phone[];
+  // Education
   education: Education[];
+  // Work Experience
   workExperience: WorkExperience[];
+  // Certifications
   certifications: Certification[];
+  // Documents
   documents: Documents;
-  [key: string]: any;
 }
 
-const STEPS = [
-  { id: 1, title: "Personal Info", component: StepPersonalInfo },
-  { id: 2, title: "Contact Info", component: StepContactInfo },
-  { id: 3, title: "Education", component: StepEducation },
-  { id: 4, title: "Work Experience", component: StepWorkExperience },
-  { id: 5, title: "Certifications", component: StepCertifications },
-  { id: 6, title: "Documents", component: StepDocuments },
-  { id: 7, title: "Review", component: StepReview },
+interface ExtractedData {
+  personalInfo?: Partial<FormData>;
+  contactInfo?: {
+    region?: string;
+    city?: string;
+    subCity?: string;
+    woreda?: string;
+    phones?: Phone[];
+  };
+  education?: Education[];
+  workExperience?: WorkExperience[];
+  certifications?: Certification[];
+  documents?: Partial<Documents>;
+}
+
+interface StepComponentProps {
+  formData: FormData;
+  handleChange: (field: string, value: unknown) => void;
+  updateFormData: (section: string, data: unknown) => void;
+  errors: Record<string, string | null>;
+  onEditStep?: (stepId: number) => void;
+}
+
+type StepComponentType = React.ComponentType<StepComponentProps>;
+
+interface Step {
+  id: number;
+  title: string;
+  component: StepComponentType;
+}
+
+const STEPS: Step[] = [
+  { id: 1, title: "Personal Info", component: StepPersonalInfo as StepComponentType },
+  { id: 2, title: "Contact Info", component: StepContactInfo as StepComponentType },
+  { id: 3, title: "Education", component: StepEducation as StepComponentType },
+  { id: 4, title: "Work Experience", component: StepWorkExperience as StepComponentType },
+  { id: 5, title: "Certifications", component: StepCertifications as StepComponentType },
+  { id: 6, title: "Documents", component: StepDocuments as StepComponentType },
+  { id: 7, title: "Review", component: StepReview as StepComponentType },
 ];
 
-export default function EmployeeRegistrationWizard() {
+export default function EmployeeOnboarding() {
   const [showModal, setShowModal] = useState(true);
   const [wizardStarted, setWizardStarted] = useState(false);
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [formData, setFormData] = useState<OnboardingFormData>({
+  const [errors, setErrors] = useState<Record<string, string | null>>({});
+  const [formData, setFormData] = useState<FormData>({
     // Personal Info (flat structure)
     fullName: "",
     gender: "",
@@ -123,15 +159,14 @@ export default function EmployeeRegistrationWizard() {
     },
   });
 
-  const validateStep = (step: number) => {
+  const validateStep = (step: number): boolean => {
     const newErrors: Record<string, string> = {};
     let isValid = true;
 
     if (step === 1) {
       if (!formData.fullName) newErrors.fullName = "Full Name is required";
       if (!formData.gender) newErrors.gender = "Gender is required";
-      if (!formData.dateOfBirth)
-        newErrors.dateOfBirth = "Date of Birth is required";
+      if (!formData.dateOfBirth) newErrors.dateOfBirth = "Date of Birth is required";
     }
 
     if (step === 2) {
@@ -149,43 +184,33 @@ export default function EmployeeRegistrationWizard() {
     if (step === 3) {
       formData.education.forEach((edu, index) => {
         if (!edu.level) newErrors[`edu_level_${index}`] = "Level is required";
-        if (!edu.fieldOfStudy)
-          newErrors[`edu_field_${index}`] = "Field of Study is required";
-        if (!edu.institution)
-          newErrors[`edu_inst_${index}`] = "Institution is required";
-        if (!edu.programType)
-          newErrors[`edu_prog_${index}`] = "Program Type is required";
+        if (!edu.fieldOfStudy) newErrors[`edu_field_${index}`] = "Field of Study is required";
+        if (!edu.institution) newErrors[`edu_inst_${index}`] = "Institution is required";
+        if (!edu.programType) newErrors[`edu_prog_${index}`] = "Program Type is required";
 
         if (edu.hasCostSharing && !edu.costSharingDocument) {
-          newErrors[`edu_cost_doc_${index}`] =
-            "Cost Sharing Document is required";
+          newErrors[`edu_cost_doc_${index}`] = "Cost Sharing Document is required";
         }
       });
     }
 
     if (step === 4) {
       formData.workExperience.forEach((exp, index) => {
-        if (!exp.companyName)
-          newErrors[`exp_company_${index}`] = "Company Name is required";
-        if (!exp.startDate)
-          newErrors[`exp_start_${index}`] = "Start Date is required";
+        if (!exp.companyName) newErrors[`exp_company_${index}`] = "Company Name is required";
+        if (!exp.startDate) newErrors[`exp_start_${index}`] = "Start Date is required";
       });
     }
 
     if (step === 5) {
       formData.certifications.forEach((cert, index) => {
-        if (!cert.name)
-          newErrors[`cert_name_${index}`] = "Certificate Name is required";
+        if (!cert.name) newErrors[`cert_name_${index}`] = "Certificate Name is required";
       });
     }
 
     if (step === 6) {
       if (!formData.documents.cv || formData.documents.cv.length === 0)
         newErrors.cv = "CV/Resume is required";
-      if (
-        !formData.documents.certificates ||
-        formData.documents.certificates.length === 0
-      )
+      if (!formData.documents.certificates || formData.documents.certificates.length === 0)
         newErrors.certificates = "Educational Certificates are required";
       if (!formData.documents.photo || formData.documents.photo.length === 0)
         newErrors.photo = "Photo/ID is required";
@@ -203,7 +228,7 @@ export default function EmployeeRegistrationWizard() {
 
   const handleNext = () => {
     if (currentStep === STEPS.length) {
-      handleSubmit();
+      navigate("/employee/dashboard");
       return;
     }
 
@@ -213,9 +238,7 @@ export default function EmployeeRegistrationWizard() {
         window.scrollTo(0, 0);
       }
     } else {
-      // Show validation error toast
       toast.error("Please fill in all required fields correctly");
-      // Scroll to top to see errors
       window.scrollTo(0, 0);
     }
   };
@@ -238,92 +261,51 @@ export default function EmployeeRegistrationWizard() {
         const submissionData = JSON.parse(JSON.stringify(formData));
 
         // Helper to upload a single file
-        const uploadIfFile = async (fileOrUrl: any) => {
-          // Check if it's a File object (has name, size, type) - simplified check
-          // In a real browser environment, instanceof File is better, but this works for now
-          if (fileOrUrl && typeof fileOrUrl === "object" && fileOrUrl.name) {
+        const uploadIfFile = async (fileOrUrl: File | string | null): Promise<string | null> => {
+          if (fileOrUrl && typeof fileOrUrl === "object" && (fileOrUrl as File).name) {
             try {
-              // Upload as raw for PDFs/docs, auto for others
-              // const isDoc =
-              //   fileOrUrl.type.includes("pdf") ||
-              //   fileOrUrl.type.includes("document");
-              // const options = isDoc ? { resourceType: "raw" } : {};
-              // Note: We reverted fileUploadService to simple version, so no options supported currently.
-              // Just call uploadFile(fileOrUrl)
-              // If we re-enable raw support later, we can pass options.
-
-              // Import uploadFile dynamically or ensure it's imported at top
-              const { uploadFile } = await import(
-                "../../../services/fileUploadService"
-              );
-              return await uploadFile(fileOrUrl);
+              const { uploadFile } = await import("../../../services/fileUploadService");
+              return await uploadFile(fileOrUrl as File);
             } catch (err) {
-              console.error(`Failed to upload file ${fileOrUrl.name}`, err);
-              throw new Error(`Failed to upload ${fileOrUrl.name}`);
+              console.error(`Failed to upload file ${(fileOrUrl as File).name}`, err);
+              throw new Error(`Failed to upload ${(fileOrUrl as File).name}`);
             }
           }
-          return fileOrUrl; // Return as is if it's already a URL or null
+          return fileOrUrl as string | null;
         };
 
         // 1. Upload Main Documents (all as arrays now)
-        if (
-          formData.documents.cv &&
-          Array.isArray(formData.documents.cv) &&
-          formData.documents.cv.length > 0
-        ) {
+        if (formData.documents.cv && Array.isArray(formData.documents.cv) && formData.documents.cv.length > 0) {
           submissionData.documents.cv = await Promise.all(
             formData.documents.cv.map((file) => uploadIfFile(file))
           );
         }
 
-        if (
-          formData.documents.certificates &&
-          Array.isArray(formData.documents.certificates) &&
-          formData.documents.certificates.length > 0
-        ) {
+        if (formData.documents.certificates && Array.isArray(formData.documents.certificates) && formData.documents.certificates.length > 0) {
           submissionData.documents.certificates = await Promise.all(
             formData.documents.certificates.map((file) => uploadIfFile(file))
           );
         }
 
-        if (
-          formData.documents.photo &&
-          Array.isArray(formData.documents.photo) &&
-          formData.documents.photo.length > 0
-        ) {
+        if (formData.documents.photo && Array.isArray(formData.documents.photo) && formData.documents.photo.length > 0) {
           submissionData.documents.photo = await Promise.all(
             formData.documents.photo.map((file) => uploadIfFile(file))
           );
         }
 
-        if (
-          formData.documents.experienceLetters &&
-          Array.isArray(formData.documents.experienceLetters) &&
-          formData.documents.experienceLetters.length > 0
-        ) {
+        if (formData.documents.experienceLetters && Array.isArray(formData.documents.experienceLetters) && formData.documents.experienceLetters.length > 0) {
           submissionData.documents.experienceLetters = await Promise.all(
-            formData.documents.experienceLetters.map((file) =>
-              uploadIfFile(file)
-            )
+            formData.documents.experienceLetters.map((file) => uploadIfFile(file))
           );
         }
 
-        // Handle arrays of files (taxForms, pensionForms) if they exist
-        if (
-          formData.documents.taxForms &&
-          Array.isArray(formData.documents.taxForms) &&
-          formData.documents.taxForms.length > 0
-        ) {
+        if (formData.documents.taxForms && Array.isArray(formData.documents.taxForms) && formData.documents.taxForms.length > 0) {
           submissionData.documents.taxForms = await Promise.all(
             formData.documents.taxForms.map((file) => uploadIfFile(file))
           );
         }
 
-        if (
-          formData.documents.pensionForms &&
-          Array.isArray(formData.documents.pensionForms) &&
-          formData.documents.pensionForms.length > 0
-        ) {
+        if (formData.documents.pensionForms && Array.isArray(formData.documents.pensionForms) && formData.documents.pensionForms.length > 0) {
           submissionData.documents.pensionForms = await Promise.all(
             formData.documents.pensionForms.map((file) => uploadIfFile(file))
           );
@@ -332,13 +314,11 @@ export default function EmployeeRegistrationWizard() {
         // 2. Upload Education Documents
         if (formData.education && formData.education.length > 0) {
           submissionData.education = await Promise.all(
-            formData.education.map(async (edu: any) => {
+            formData.education.map(async (edu) => {
               if (edu.costSharingDocument) {
                 return {
                   ...edu,
-                  costSharingDocument: await uploadIfFile(
-                    edu.costSharingDocument
-                  ),
+                  costSharingDocument: await uploadIfFile(edu.costSharingDocument as File | string),
                 };
               }
               return edu;
@@ -349,13 +329,11 @@ export default function EmployeeRegistrationWizard() {
         // 3. Upload Certification Documents
         if (formData.certifications && formData.certifications.length > 0) {
           submissionData.certifications = await Promise.all(
-            formData.certifications.map(async (cert: any) => {
+            formData.certifications.map(async (cert) => {
               if (cert.certificateDocument) {
                 return {
                   ...cert,
-                  certificateDocument: await uploadIfFile(
-                    cert.certificateDocument
-                  ),
+                  certificateDocument: await uploadIfFile(cert.certificateDocument as File | string),
                 };
               }
               return cert;
@@ -368,16 +346,13 @@ export default function EmployeeRegistrationWizard() {
         await employeeService.onboardEmployee(submissionData);
         toast.success("Application submitted successfully!");
 
-        // Redirect to dashboard after a brief delay
         setTimeout(() => {
           navigate("/employee/dashboard");
         }, 1000);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Submission error:", error);
-        const message =
-          error.response?.data?.message ||
-          error.message ||
-          "Failed to submit application. Please try again.";
+        const errorObj = error as { response?: { data?: { message?: string } }; message?: string };
+        const message = errorObj.response?.data?.message || errorObj.message || "Failed to submit application. Please try again.";
         toast.error(message);
       } finally {
         setIsSubmitting(false);
@@ -387,68 +362,44 @@ export default function EmployeeRegistrationWizard() {
     }
   };
 
-  const updateFormData = (section: string, data: any) => {
+  const updateFormData = (section: string, data: unknown) => {
     setFormData((prev) => ({
       ...prev,
-      [section]: data, // Or merge depending on structure
+      [section]: data,
     }));
-    // Clear errors for this section on change (simplified)
     setErrors({});
   };
 
-  // Helper to update specific fields directly
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: string, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
+      setErrors((prev) => ({ ...prev, [field]: null }));
     }
   };
 
   // Modal handlers
-  const handleAutoFill = (extractedData: any) => {
+  const handleAutoFill = (extractedData: ExtractedData) => {
     console.log("Auto-fill data received:", extractedData);
 
-    // Flatten and merge extracted data with form data
     setFormData((prev) => ({
       ...prev,
-      // Personal Info - flatten from nested structure
       fullName: extractedData.personalInfo?.fullName || prev.fullName,
       gender: extractedData.personalInfo?.gender || prev.gender,
       dateOfBirth: extractedData.personalInfo?.dateOfBirth || prev.dateOfBirth,
       tinNumber: extractedData.personalInfo?.tinNumber || prev.tinNumber,
-      pensionNumber:
-        extractedData.personalInfo?.pensionNumber || prev.pensionNumber,
+      pensionNumber: extractedData.personalInfo?.pensionNumber || prev.pensionNumber,
       placeOfWork: extractedData.personalInfo?.placeOfWork || prev.placeOfWork,
 
-      // Contact Info - flatten from nested structure
       region: extractedData.contactInfo?.region || prev.region,
       city: extractedData.contactInfo?.city || prev.city,
       subCity: extractedData.contactInfo?.subCity || prev.subCity,
       woreda: extractedData.contactInfo?.woreda || prev.woreda,
-      phones:
-        extractedData.contactInfo?.phones?.length > 0
-          ? extractedData.contactInfo.phones
-          : prev.phones,
+      phones: extractedData.contactInfo?.phones?.length ? extractedData.contactInfo.phones : prev.phones,
 
-      // Education, Work Experience, Certifications - direct arrays
-      education:
-        extractedData.education && extractedData.education.length > 0
-          ? extractedData.education
-          : prev.education,
-      workExperience:
-        extractedData.workExperience && extractedData.workExperience.length > 0
-          ? extractedData.workExperience
-          : prev.workExperience,
-      certifications:
-        extractedData.certifications && extractedData.certifications.length > 0
-          ? extractedData.certifications
-          : prev.certifications,
+      education: extractedData.education?.length ? extractedData.education : prev.education,
+      workExperience: extractedData.workExperience?.length ? extractedData.workExperience : prev.workExperience,
+      certifications: extractedData.certifications?.length ? extractedData.certifications : prev.certifications,
 
-      // Documents
       documents: {
         ...prev.documents,
         ...(extractedData.documents || {}),
@@ -512,7 +463,6 @@ export default function EmployeeRegistrationWizard() {
                     key={step.id}
                     className="flex flex-col items-center cursor-pointer z-30"
                     onClick={() => {
-                      // Optional: Allow clicking to go back to completed steps
                       if (isCompleted) setCurrentStep(step.id);
                     }}
                   >
@@ -591,13 +541,15 @@ export default function EmployeeRegistrationWizard() {
 
             <Button
               variant="primary"
-              onClick={handleNext}
+              onClick={currentStep === STEPS.length ? handleSubmit : handleNext}
               icon={currentStep === STEPS.length ? MdCheck : MdArrowForward}
               iconPosition="right"
               loading={isSubmitting && currentStep === STEPS.length}
             >
               {currentStep === STEPS.length
-                ? "Submit Application"
+                ? "Finish"
+                : currentStep === STEPS.length - 1
+                ? "Review and Submit"
                 : "Next Step"}
             </Button>
           </div>
