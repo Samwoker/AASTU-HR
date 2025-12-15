@@ -19,6 +19,7 @@ import {
   MdPersonOutline,
   MdRemoveCircleOutline,
 } from "react-icons/md";
+import { authActions } from "../../../slice/authSlice";
 
 export default function AdminDashboard() {
   const dispatch = useDispatch();
@@ -31,6 +32,11 @@ export default function AdminDashboard() {
   useEffect(() => {
     dispatch(actions.fetchStatsRequest());
   }, [dispatch, actions]);
+
+  // Refresh logged-in user info
+  useEffect(() => {
+    dispatch(authActions.getMeRequest());
+  }, [dispatch]);
 
   const totalEmployees = stats?.totalEmployees ?? 0;
   const activeEmployees = stats?.activeEmployees ?? 0;
