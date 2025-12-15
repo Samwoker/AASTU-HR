@@ -1,6 +1,7 @@
 import React, { ChangeEvent, ReactNode, ComponentType } from "react";
 import { MdArrowDropDown } from "react-icons/md";
 import { IconType } from "react-icons";
+import { Filter } from "./Filter";
 
 interface Option {
   label: string;
@@ -54,6 +55,41 @@ export default function FormField({
 
   const renderInput = () => {
     if (type === "select") {
+      // Use the new Filter component if options are provided
+      if (options.length > 0) {
+        const handleFilterChange = (newValue: string) => {
+          if (onChange) {
+            const syntheticEvent = {
+              target: {
+                name: name,
+                value: newValue,
+              },
+            } as ChangeEvent<HTMLSelectElement>;
+            onChange(syntheticEvent);
+          }
+        };
+
+        const filterOptions = options.map((opt) => ({
+          label: opt.label,
+          value: String(opt.value),
+        }));
+
+        return (
+          <Filter
+            value={String(value)}
+            onChange={handleFilterChange}
+            options={filterOptions}
+            placeholder={placeholder || "Select option"}
+            className={`${
+              error
+                ? "border-error focus:ring-red-200"
+                : "border-gray-200 focus:ring-orange-200"
+            } ${inputClassName}`}
+          />
+        );
+      }
+
+      // Fallback to native select if children are used
       return (
         <div className="relative">
           <select
@@ -68,12 +104,7 @@ export default function FormField({
             aria-describedby={helperText ? `${name}-helper` : undefined}
             {...props}
           >
-            {children ||
-              options.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
+            {children}
           </select>
           <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-k-medium-grey pointer-events-none">
             <MdArrowDropDown size={24} />

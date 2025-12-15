@@ -1,4 +1,13 @@
-import React from "react";
+import type { ComponentType, InputHTMLAttributes, ReactNode } from "react";
+
+type InputProps = {
+  label?: string;
+  icon?: ComponentType<any>;
+  suffix?: ReactNode;
+  error?: boolean;
+  helperText?: string;
+  required?: boolean;
+} & Omit<InputHTMLAttributes<HTMLInputElement>, "size">;
 
 export default function Input({
   label,
@@ -11,8 +20,9 @@ export default function Input({
   helperText,
   required = false,
   icon: Icon,
+  suffix,
   ...props
-}) {
+}: InputProps) {
   return (
     <div className="flex flex-col gap-2 w-full">
       {label && (
@@ -37,8 +47,8 @@ export default function Input({
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          className={`w-full h-12 px-4 ${
-            Icon ? "pl-11" : ""
+          className={`w-full h-12 px-4 ${Icon ? "pl-11" : ""} ${
+            suffix ? "pr-11" : ""
           } font-base text-base text-k-dark-grey bg-white/70 backdrop-blur-sm border rounded-xl transition-all duration-200 placeholder:text-k-medium-grey placeholder:opacity-70 focus:outline-none ${
             error
               ? "border-error focus:border-error focus:ring-4 focus:ring-red-200"
@@ -48,6 +58,12 @@ export default function Input({
           aria-describedby={helperText ? `${name}-helper` : undefined}
           {...props}
         />
+
+        {suffix && (
+          <div className="absolute right-4 flex items-center z-10">
+            {suffix}
+          </div>
+        )}
       </div>
       {(error || helperText) && (
         <span
