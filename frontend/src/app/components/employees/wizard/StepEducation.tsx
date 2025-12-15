@@ -1,14 +1,34 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import FormField from "../../common/FormField";
 import Button from "../../common/Button";
 import Checkbox from "../../common/Checkbox";
-import { MdAdd, MdDelete, MdSchool, MdCloudUpload } from "react-icons/md";
+import {
+  MdAdd,
+  MdDelete,
+  MdSchool,
+  MdCloudUpload,
+  MdCheck,
+  MdError,
+  MdCancel,
+} from "react-icons/md";
+import toast from "react-hot-toast";
 
 export default function StepEducation({
   formData,
   updateFormData,
   errors = {},
 }) {
+  const abortControllersRef = useRef<Record<string, AbortController>>({});
+
+  // Cleanup abort controllers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(abortControllersRef.current).forEach((controller) => {
+        controller.abort();
+      });
+    };
+  }, []);
+
   const handleEducationChange = (index, field, value) => {
     const newEducation = [...formData.education];
     newEducation[index][field] = value;
@@ -21,11 +41,75 @@ export default function StepEducation({
     updateFormData("education", newEducation);
   };
 
-  const handleFileChange = (index, e) => {
-    const file = e.target.files[0];
-    if (file) {
-      handleEducationChange(index, "costSharingDocument", file);
+  const cancelUpload = (uploadId: string) => {
+    const controller = abortControllersRef.current[uploadId];
+    if (controller) {
+      controller.abort();
+      delete abortControllersRef.current[uploadId];
+      toast("Upload cancelled");
     }
+  };
+
+  const handleFileChange = async (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const uploadId = `edu-${index}-${Date.now()}`;
+      const abortController = new AbortController();
+      abortControllersRef.current[uploadId] = abortController;
+
+      try {
+        // Show uploading state with uploadId for cancellation
+        handleEducationChange(index, "costSharingDocument", {
+          file,
+          uploading: true,
+          uploadId,
+        });
+
+        const { uploadFile } = await import(
+          "../../../services/fileUploadService"
+        );
+        const url = await uploadFile(file, {
+          signal: abortController.signal,
+          timeout: 5 * 60 * 1000, // 5 minutes timeout
+        });
+
+        // Check if upload was cancelled before updating state
+        if (abortController.signal.aborted) {
+          return;
+        }
+
+        // Update with URL
+        handleEducationChange(index, "costSharingDocument", {
+          file,
+          url,
+          uploading: false,
+        });
+
+        toast.success(`"${file.name}" uploaded successfully`);
+      } catch (error: any) {
+        // Don't show error toast if upload was cancelled
+        if (error?.message === "Upload cancelled") {
+          handleEducationChange(index, "costSharingDocument", null);
+          return;
+        }
+
+        const errorMessage = error?.message || "Upload failed";
+        toast.error(`Failed to upload "${file.name}": ${errorMessage}`);
+        handleEducationChange(index, "costSharingDocument", {
+          file,
+          error: errorMessage,
+          uploading: false,
+        });
+      } finally {
+        delete abortControllersRef.current[uploadId];
+      }
+    }
+
+    // Reset input
+    e.target.value = "";
   };
 
   const addEducation = () => {
@@ -212,9 +296,168 @@ export default function StepEducation({
                         />
                       </label>
                       {edu.costSharingDocument ? (
-                        <span className="text-sm text-success font-medium truncate max-w-xs">
-                          {edu.costSharingDocument.name}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {typeof edu.costSharingDocument === "object" &&
+                          "file" in edu.costSharingDocument ? (
+                            <>
+                              {edu.costSharingDocument.uploading ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-k-orange">
+                                    Uploading...
+                                  </span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      const doc =
+                                        edu.costSharingDocument as any;
+                                      if (doc.uploadId) {
+                                        cancelUpload(doc.uploadId);
+                                      }
+                                    }}
+                                    className="text-xs text-error hover:underline flex items-center gap-1"
+                                    title="Cancel upload"
+                                  >
+                                    <MdCancel size={14} />
+                                    Cancel
+                                  </button>
+                                </div>
+                              ) : edu.costSharingDocument.error ? (
+                                <div className="flex items-center gap-2">
+                                  <MdError className="text-error" size={16} />
+                                  <span className="text-sm text-error truncate max-w-xs">
+                                    {edu.costSharingDocument.error}
+                                  </span>
+                                  <button
+                                    onClick={async () => {
+                                      const doc =
+                                        edu.costSharingDocument as any;
+                                      if (doc.file) {
+                                        const uploadId = `edu-${index}-retry-${Date.now()}`;
+                                        const abortController =
+                                          new AbortController();
+                                        abortControllersRef.current[uploadId] =
+                                          abortController;
+
+                                        try {
+                                          handleEducationChange(
+                                            index,
+                                            "costSharingDocument",
+                                            {
+                                              ...doc,
+                                              uploading: true,
+                                              uploadId,
+                                            }
+                                          );
+                                          const { uploadFile } = await import(
+                                            "../../../services/fileUploadService"
+                                          );
+                                          const url = await uploadFile(
+                                            doc.file,
+                                            {
+                                              signal: abortController.signal,
+                                              timeout: 5 * 60 * 1000,
+                                            }
+                                          );
+
+                                          if (abortController.signal.aborted) {
+                                            return;
+                                          }
+
+                                          handleEducationChange(
+                                            index,
+                                            "costSharingDocument",
+                                            {
+                                              file: doc.file,
+                                              url,
+                                              uploading: false,
+                                            }
+                                          );
+                                          toast.success(
+                                            `"${doc.file.name}" uploaded successfully`
+                                          );
+                                        } catch (error: any) {
+                                          if (
+                                            error?.message ===
+                                            "Upload cancelled"
+                                          ) {
+                                            handleEducationChange(
+                                              index,
+                                              "costSharingDocument",
+                                              null
+                                            );
+                                            return;
+                                          }
+
+                                          const errorMessage =
+                                            error?.message || "Upload failed";
+                                          handleEducationChange(
+                                            index,
+                                            "costSharingDocument",
+                                            {
+                                              ...doc,
+                                              error: errorMessage,
+                                              uploading: false,
+                                            }
+                                          );
+                                          toast.error(
+                                            `Failed to upload "${doc.file.name}": ${errorMessage}`
+                                          );
+                                        } finally {
+                                          delete abortControllersRef.current[
+                                            uploadId
+                                          ];
+                                        }
+                                      }
+                                    }}
+                                    className="text-xs text-k-orange hover:underline"
+                                  >
+                                    Retry
+                                  </button>
+                                </div>
+                              ) : edu.costSharingDocument.url ? (
+                                <div className="flex items-center gap-2">
+                                  <MdCheck className="text-success" size={16} />
+                                  <span className="text-sm text-success font-medium truncate max-w-xs">
+                                    {edu.costSharingDocument.file?.name ||
+                                      "Uploaded"}
+                                  </span>
+                                  <a
+                                    href={edu.costSharingDocument.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-xs text-k-orange hover:underline whitespace-nowrap"
+                                  >
+                                    View
+                                  </a>
+                                </div>
+                              ) : (
+                                <span className="text-sm text-gray-600 truncate max-w-xs">
+                                  {edu.costSharingDocument.file?.name ||
+                                    "File selected"}
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-success font-medium truncate max-w-xs">
+                                {typeof edu.costSharingDocument === "string"
+                                  ? "Uploaded"
+                                  : "File selected"}
+                              </span>
+                              {typeof edu.costSharingDocument === "string" && (
+                                <a
+                                  href={edu.costSharingDocument}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-xs text-k-orange hover:underline whitespace-nowrap"
+                                >
+                                  View
+                                </a>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-sm text-gray-500">
                           No file chosen

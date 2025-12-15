@@ -35,6 +35,34 @@ const FileList = ({ files, label }) => {
   if (fileArray.length === 0)
     return <ReviewItem label={label} value="Not uploaded" />;
 
+  const getFileName = (file: any): string => {
+    if (typeof file === 'string') {
+      // If it's a URL, extract filename from URL or show "Uploaded file"
+      return file.split('/').pop() || 'Uploaded file';
+    }
+    return file.name || 'File';
+  };
+
+  const getFileSize = (file: any): string => {
+    // If it's a string (URL), we don't have size info
+    if (typeof file === 'string') {
+      return 'Uploaded';
+    }
+    // If it's a FileItem object with file property
+    if (file.file && file.file.size) {
+      return `${(file.file.size / 1024 / 1024).toFixed(2)} MB`;
+    }
+    // If it's a File object directly
+    if (file.size) {
+      return `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+    }
+    // If it has url, it's uploaded but we don't have size
+    if (file.url) {
+      return 'Uploaded';
+    }
+    return 'N/A';
+  };
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
       <span className="text-sm font-medium text-k-medium-grey">{label}</span>
@@ -45,9 +73,11 @@ const FileList = ({ files, label }) => {
             className="flex items-center gap-2 text-sm text-k-dark-grey bg-white p-2 rounded border border-gray-200"
           >
             <MdInsertDriveFile className="text-k-orange flex-shrink-0" />
-            <span className="truncate">{file.name}</span>
+            <span className="truncate flex-1" title={getFileName(file)}>
+              {getFileName(file)}
+            </span>
             <span className="text-xs text-gray-400 ml-auto flex-shrink-0">
-              {(file.size / 1024 / 1024).toFixed(2)} MB
+              {getFileSize(file)}
             </span>
           </div>
         ))}
