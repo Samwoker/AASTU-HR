@@ -15,9 +15,11 @@
     "@google/generative-ai": "^0.24.1",
     "@mui/icons-material": "^7.3.5",
     "@mui/material": "^7.3.5",
+    "@radix-ui/react-select": "^2.2.6",
     "@reduxjs/toolkit": "^2.10.1",
     "apexcharts": "^5.3.6",
     "axios": "^1.13.2",
+    "clsx": "^2.1.1",
     "react": "^19.2.0",
     "react-apexcharts": "^1.9.0",
     "react-dom": "^19.2.0",
@@ -28,7 +30,8 @@
     "react-toastify": "^11.0.5",
     "recharts": "^3.4.1",
     "redux-injectors": "^2.1.0",
-    "redux-saga": "^1.4.2"
+    "redux-saga": "^1.4.2",
+    "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
