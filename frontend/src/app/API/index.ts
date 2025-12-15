@@ -17,9 +17,7 @@ const makeCall = async (config: IAPICallConfig): Promise<AxiosResponse> => {
     };
 
     if (isSecureRoute) {
-      const token =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjIiLCJjb21wYW55X2lkIjoiMSIsInJvbGVfaWQiOiIxIiwiaWF0IjoxNzY0ODcxNTAxLCJleHAiOjE3NjQ5NTc5MDF9.nf8Azl1c1IbcWMyLDMBbIo9wQ2iv3jcwjZtWFCo1nWI";
-      // const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token');
       if (token) {
         headers["Authorization"] = `Bearer ${token}`;
       }
