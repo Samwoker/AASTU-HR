@@ -8,15 +8,27 @@ import {
   MdChevronRight,
   MdClose,
   MdOutlineHistory,
+  MdLogout,
 } from "react-icons/md";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSidebar } from "../../context/SidebarContext";
+import { useDispatch } from "react-redux";
+import { authActions } from "../../slice/authSlice";
+import toast from "react-hot-toast";
 
 export default function EmployeeSidebar() {
   const { isOpen, toggle, isMobileOpen, closeMobile } = useSidebar();
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleLogout = () => {
+    dispatch(authActions.logout());
+    toast.success("Logged out successfully");
+    navigate("/login");
+  };
 
   const navItems = [
     {
@@ -130,8 +142,9 @@ export default function EmployeeSidebar() {
           ))}
         </div>
 
-        <div className="p-4 border-t border-gray-50 bg-gray-50/30 rounded-br-3xl">
-          <div
+        <div className="p-4 border-t border-gray-50 bg-gray-50/30 rounded-br-3xl space-y-3">
+          {/* Profile Section - Commented Out */}
+          {/* <div
             className={`flex items-center gap-3 ${
               !(isOpen || isMobileOpen) && "justify-center"
             }`}
@@ -153,7 +166,31 @@ export default function EmployeeSidebar() {
                 </p>
               </div>
             )}
-          </div>
+          </div> */}
+
+          {/* Sign Out Button */}
+          <button
+            onClick={handleLogout}
+            className={`
+              w-full group flex items-center gap-4 p-3 rounded-xl font-medium transition-colors
+              ${isOpen || isMobileOpen ? "" : "justify-center"}
+              text-gray-500 hover:bg-red-50 hover:text-red-600
+            `}
+            title="Sign Out"
+          >
+            <MdLogout className="text-xl shrink-0" />
+            {(isOpen || isMobileOpen) && (
+              <span className="whitespace-nowrap tracking-wide text-sm">
+                Sign Out
+              </span>
+            )}
+            {!isOpen && !isMobileOpen && (
+              <div className="absolute left-full ml-4 px-3 py-1.5 bg-gray-800 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap shadow-xl">
+                Sign Out
+                <div className="absolute top-1/2 -left-1 -mt-1 border-4 border-transparent border-r-gray-800" />
+              </div>
+            )}
+          </button>
         </div>
       </div>
     </>
