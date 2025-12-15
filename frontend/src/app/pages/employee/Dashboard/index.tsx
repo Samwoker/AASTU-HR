@@ -6,8 +6,61 @@ import AnnouncementCard from "../../../components/dashboard/AnnouncementCard";
 import PaySlipWidget from "../../../components/dashboard/PaySlipWidget";
 import CompanyOverviewChart from "../../../components/dashboard/CompanyOverviewChart";
 import PageHeader from "../../../components/common/PageHeader";
+import { useSelector } from "react-redux";
+import { selectAuthUser } from "../../../slice/authSlice/selectors";
+import { getRoleNameById } from "../../../../utils/constants";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { authActions } from "../../../slice/authSlice";
+import { useNavigate } from "react-router-dom";
 
 export default function EmployeeDashboard() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const user = useSelector(selectAuthUser) as any;
+
+  useEffect(() => {
+    dispatch(authActions.getMeRequest());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (user?.role_id !== 3) return;
+    const status = user?.onboarding_status;
+    if (["PENDING", "IN_PROGRESS"].includes(status)) {
+      navigate("/employee/onboarding", { replace: true });
+    }
+  }, [navigate, user]);
+
+  const displayName = (() => {
+    const fullName =
+      user?.full_name ||
+      user?.fullName ||
+      user?.name ||
+      user?.employee?.full_name ||
+      user?.employee?.fullName ||
+      null;
+
+    if (fullName && String(fullName).trim()) return String(fullName).trim();
+
+    const first = user?.first_name || user?.firstName || null;
+    const last = user?.last_name || user?.lastName || null;
+    const composed = [first, last].filter(Boolean).join(" ").trim();
+    if (composed) return composed;
+
+    const email = user?.email;
+    if (email && typeof email === "string") {
+      const prefix = email.split("@")[0];
+      if (prefix) return prefix;
+    }
+
+    return "Employee";
+  })();
+
+  const roleLabel =
+    (user?.role?.name || user?.role_name || user?.roleName) ??
+    getRoleNameById(user?.role_id);
+
   return (
     <EmployeeLayout>
       <PageHeader>
@@ -22,9 +75,9 @@ export default function EmployeeDashboard() {
             </div>
             <div>
               <h1 className="text-2xl md:text-3xl font-bold mb-1">
-                Tesfamichael Tafere
+                {displayName}
               </h1>
-              <p className="text-gray-300 font-medium">Software Engineer</p>
+              <p className="text-gray-300 font-medium">{String(roleLabel)}</p>
             </div>
           </div>
         </div>
