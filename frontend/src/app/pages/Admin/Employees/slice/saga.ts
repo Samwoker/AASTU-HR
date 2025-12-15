@@ -17,14 +17,12 @@ export function* fetchAllEmployees(action: ReturnType<typeof employeesActions.fe
     const employees = employeesRes?.data?.data?.employees || [];
 
     // Extract total count from count endpoint
-    // Structure: { status: "success", data: { count: 16 } }
     let total = 0;
     if (typeof countRes?.data?.data?.count === 'number') {
       total = countRes.data.data.count;
     } else if (typeof countRes?.data?.count === 'number') {
       total = countRes.data.count;
     } else {
-      // Fallback to list length if count fails (though this breaks pagination for >1 page)
       total = employees.length;
     }
 
@@ -39,6 +37,23 @@ export function* fetchAllEmployees(action: ReturnType<typeof employeesActions.fe
   }
 }
 
+export function* fetchCompletedEmployees() {
+  try {
+    const response: any = yield call(makeCall, { 
+      method: 'GET', 
+      route: apiRoutes.completedEmployees, 
+      isSecureRoute: true 
+    });
+
+    const completedEmployees = response?.data?.data?.completedEmployees || [];
+
+    yield put(employeesActions.fetchCompletedEmployeesSuccess(completedEmployees));
+  } catch (error: any) {
+    yield put(employeesActions.fetchCompletedEmployeesFailure(error.message || 'Failed to fetch completed employees'));
+  }
+}
+
 export function* employeesSaga() {
   yield takeLatest(employeesActions.fetchAllEmployeesRequest.type, fetchAllEmployees);
+  yield takeLatest(employeesActions.fetchCompletedEmployeesRequest.type, fetchCompletedEmployees);
 }

@@ -9,6 +9,16 @@ export const selectAllEmployees = createSelector(
   (state) => state.employees,
 );
 
+export const selectCompletedEmployees = createSelector(
+  [selectSlice],
+  (state) => state.completedEmployees,
+);
+
+export const selectSelectedEmployee = createSelector(
+  [selectSlice],
+  (state) => state.selectedEmployee,
+);
+
 export const selectEmployeesLoading = createSelector(
   [selectSlice],
   (state) => state.loading,
