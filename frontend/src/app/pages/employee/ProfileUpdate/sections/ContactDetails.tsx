@@ -1,54 +1,95 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import FormField from "../../../../components/common/FormField";
 import Button from "../../../../components/common/Button";
 import { MdSave, MdAdd, MdDelete, MdPhone, MdEdit } from "react-icons/md";
 import toast from "react-hot-toast";
+import onboardingService from "../../../../services/onboardingService";
 
-export default function ContactDetails() {
+export default function ContactDetails({ initialData, onRefresh }) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    region: "Addis Ababa",
-    city: "Addis Ababa",
-    subCity: "Bole",
-    woreda: "03",
-    houseNumber: "1234",
-    phones: [
-      { number: "0911234567", type: "Private", isPrimary: true },
-      { number: "0922345678", type: "Work", isPrimary: false }
-    ]
+    region: "",
+    city: "",
+    subCity: "",
+    woreda: "",
+    houseNumber: "",
+    phones: [{ number: "", type: "Private", isPrimary: true }],
   });
+
+  useEffect(() => {
+    if (!isEditing && initialData) {
+      setFormData((prev) => ({
+        ...prev,
+        ...initialData,
+        phones:
+          Array.isArray(initialData.phones) && initialData.phones.length > 0
+            ? initialData.phones
+            : prev.phones,
+      }));
+    }
+  }, [initialData, isEditing]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handlePhoneChange = (index, field, value) => {
     const newPhones = [...formData.phones];
     newPhones[index][field] = value;
-    setFormData(prev => ({ ...prev, phones: newPhones }));
+    setFormData((prev) => ({ ...prev, phones: newPhones }));
   };
 
   const addPhone = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      phones: [...prev.phones, { number: "", type: "Private", isPrimary: false }]
+      phones: [
+        ...prev.phones,
+        { number: "", type: "Private", isPrimary: false },
+      ],
     }));
   };
 
   const removePhone = (index) => {
     if (formData.phones.length > 1) {
       const newPhones = formData.phones.filter((_, i) => i !== index);
-      setFormData(prev => ({ ...prev, phones: newPhones }));
+      setFormData((prev) => ({ ...prev, phones: newPhones }));
     }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // TODO: Implement API call
-    console.log("Updating contact details:", formData);
-    toast.success("Contact details updated successfully");
-    setIsEditing(false);
+
+    const save = async () => {
+      const loadingToast = toast.loading("Saving contact details...");
+      try {
+        await onboardingService.updateContactInfo({
+          region: formData.region || undefined,
+          city: formData.city || undefined,
+          subCity: formData.subCity || undefined,
+          woreda: formData.woreda || undefined,
+          phones: (formData.phones || []).map((phone) => ({
+            number: phone.number,
+            type: phone.type || "Private",
+            isPrimary: !!phone.isPrimary,
+          })),
+        });
+        toast.dismiss(loadingToast);
+        toast.success("Contact details updated successfully");
+        setIsEditing(false);
+        if (onRefresh) await onRefresh();
+      } catch (error) {
+        toast.dismiss(loadingToast);
+        const err = error as any;
+        toast.error(
+          err?.response?.data?.message ||
+            err?.message ||
+            "Failed to update contact details"
+        );
+      }
+    };
+
+    save();
   };
 
   return (
@@ -56,8 +97,8 @@ export default function ContactDetails() {
       <div className="flex justify-between items-center mb-6 border-b pb-4">
         <h2 className="text-xl font-bold text-k-dark-grey">Contact Details</h2>
         {!isEditing && (
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             icon={MdEdit}
             onClick={() => setIsEditing(true)}
@@ -100,7 +141,7 @@ export default function ContactDetails() {
             onChange={handleChange}
             disabled={!isEditing}
           />
-          
+
           <FormField
             label="House Number"
             name="houseNumber"
@@ -112,12 +153,14 @@ export default function ContactDetails() {
 
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-k-dark-grey">Phone Numbers</h3>
+            <h3 className="text-lg font-semibold text-k-dark-grey">
+              Phone Numbers
+            </h3>
             {isEditing && (
-              <Button 
-                type="button" 
-                variant="text" 
-                size="sm" 
+              <Button
+                type="button"
+                variant="text"
+                size="sm"
                 onClick={addPhone}
                 icon={MdAdd}
                 className="text-k-orange hover:bg-orange-50"
@@ -129,12 +172,17 @@ export default function ContactDetails() {
 
           <div className="space-y-4">
             {formData.phones.map((phone, index) => (
-              <div key={index} className="flex gap-4 items-start bg-gray-50 p-4 rounded-xl">
+              <div
+                key={index}
+                className="flex gap-4 items-start bg-gray-50 p-4 rounded-xl"
+              >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
                   <FormField
                     label="Phone Number"
                     value={phone.number}
-                    onChange={(e) => handlePhoneChange(index, "number", e.target.value)}
+                    onChange={(e) =>
+                      handlePhoneChange(index, "number", e.target.value)
+                    }
                     disabled={!isEditing}
                     icon={MdPhone}
                     placeholder="09..."
@@ -143,7 +191,9 @@ export default function ContactDetails() {
                     label="Type"
                     type="select"
                     value={phone.type}
-                    onChange={(e) => handlePhoneChange(index, "type", e.target.value)}
+                    onChange={(e) =>
+                      handlePhoneChange(index, "type", e.target.value)
+                    }
                     disabled={!isEditing}
                     options={[
                       { value: "Private", label: "Private" },
@@ -168,18 +218,14 @@ export default function ContactDetails() {
 
         {isEditing && (
           <div className="flex justify-end gap-4 pt-4 border-t">
-            <Button 
-              variant="secondary" 
-              type="button" 
+            <Button
+              variant="secondary"
+              type="button"
               onClick={() => setIsEditing(false)}
             >
               Cancel
             </Button>
-            <Button 
-              variant="primary" 
-              type="submit" 
-              icon={MdSave}
-            >
+            <Button variant="primary" type="submit" icon={MdSave}>
               Save Changes
             </Button>
           </div>

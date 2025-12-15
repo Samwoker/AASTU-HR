@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   MdPerson,
   MdContactPhone,
@@ -24,11 +24,275 @@ import Button from "../../../components/common/Button";
 import toast from "react-hot-toast";
 import EmployeeLayout from "../../../components/DefaultLayout/EmployeeLayout";
 import PageHeader from "../../../components/common/PageHeader";
+import onboardingService from "../../../services/onboardingService";
+import { useSelector } from "react-redux";
+import { selectAuthUser } from "../../../slice/authSlice/selectors";
+import { getRoleNameById } from "../../../../utils/constants";
 
 export default function ProfileUpdateLayout() {
   const [activeSection, setActiveSection] = useState("personal");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+
+  const user = useSelector(selectAuthUser) as any;
+
+  const displayName = (() => {
+    const fullName =
+      user?.full_name ||
+      user?.fullName ||
+      user?.name ||
+      user?.employee?.full_name ||
+      user?.employee?.fullName ||
+      null;
+
+    if (fullName && String(fullName).trim()) return String(fullName).trim();
+
+    const first = user?.first_name || user?.firstName || null;
+    const last = user?.last_name || user?.lastName || null;
+    const composed = [first, last].filter(Boolean).join(" ").trim();
+    if (composed) return composed;
+
+    const email = user?.email;
+    if (email && typeof email === "string") {
+      const prefix = email.split("@")[0];
+      if (prefix) return prefix;
+    }
+
+    return "Employee";
+  })();
+
+  const roleLabel = getRoleNameById(user?.role_id);
+
+  const [profileData, setProfileData] = useState<any>({
+    personal: {
+      fullName: "",
+      gender: "",
+      dateOfBirth: "",
+      tinNumber: "",
+      pensionNumber: "",
+      placeOfWork: "Head Office",
+    },
+    contact: {
+      region: "",
+      city: "",
+      subCity: "",
+      woreda: "",
+      houseNumber: "",
+      phones: [{ number: "", type: "Private", isPrimary: true }],
+    },
+    education: [],
+    workExperience: [],
+    certifications: [],
+    documents: {
+      cv: [],
+      certificates: [],
+      photo: [],
+      experienceLetters: [],
+      taxForms: [],
+      pensionForms: [],
+    },
+  });
+
+  const loadProfile = useCallback(async () => {
+    setIsLoadingProfile(true);
+    try {
+      const response = await onboardingService.getStatus();
+      const data = response?.data || {};
+
+      const next: any = {
+        personal: { ...profileData.personal },
+        contact: { ...profileData.contact },
+        education: Array.isArray(profileData.education)
+          ? [...profileData.education]
+          : [],
+        workExperience: Array.isArray(profileData.workExperience)
+          ? [...profileData.workExperience]
+          : [],
+        certifications: Array.isArray(profileData.certifications)
+          ? [...profileData.certifications]
+          : [],
+        documents: { ...profileData.documents },
+      };
+
+      if (data.employee) {
+        next.personal = {
+          ...next.personal,
+          fullName: data.employee.full_name || next.personal.fullName,
+          gender: data.employee.gender || next.personal.gender,
+          dateOfBirth: data.employee.date_of_birth
+            ? new Date(data.employee.date_of_birth).toISOString().split("T")[0]
+            : next.personal.dateOfBirth,
+          tinNumber: data.employee.tin_number || next.personal.tinNumber,
+          pensionNumber:
+            data.employee.pension_number || next.personal.pensionNumber,
+          placeOfWork: data.employee.place_of_work || next.personal.placeOfWork,
+        };
+      }
+
+      if (data.contact) {
+        const phones =
+          data.contact.phones?.map((phone: any) => ({
+            number: phone.phone_number || phone.number || "",
+            type: phone.phone_type || phone.type || "Private",
+            isPrimary: phone.is_primary || phone.isPrimary || false,
+          })) || [];
+
+        const address = data.contact.addresses?.[0] || {};
+
+        next.contact = {
+          ...next.contact,
+          region: address.region || next.contact.region,
+          city: address.city || next.contact.city,
+          subCity: address.sub_city || address.subCity || next.contact.subCity,
+          woreda: address.woreda || next.contact.woreda,
+          houseNumber:
+            address.house_number ||
+            address.houseNumber ||
+            next.contact.houseNumber,
+          phones: phones.length > 0 ? phones : next.contact.phones,
+        };
+      }
+
+      if (Array.isArray(data.education)) {
+        next.education = data.education.map((edu: any) => ({
+          level: edu.educationLevel?.name || edu.level || "",
+          fieldOfStudy:
+            edu.fieldOfStudy?.name ||
+            edu.fieldOfStudy ||
+            edu.field_of_study ||
+            "",
+          institution:
+            edu.institution?.name ||
+            edu.institution ||
+            edu.institution_name ||
+            "",
+          programType: edu.program_type || edu.programType || "Regular",
+          hasCostSharing: edu.has_cost_sharing || edu.hasCostSharing || false,
+          costSharingDocument:
+            edu.cost_sharing_document_url || edu.costSharingDocument || null,
+          startDate:
+            edu.start_date || edu.startDate
+              ? new Date(edu.start_date || edu.startDate)
+                  .toISOString()
+                  .split("T")[0]
+              : "",
+          endDate:
+            edu.end_date || edu.endDate
+              ? new Date(edu.end_date || edu.endDate)
+                  .toISOString()
+                  .split("T")[0]
+              : "",
+          graduationYear: edu.graduation_year || edu.graduationYear || "",
+          isCurrent: edu.is_current || edu.isCurrent || false,
+        }));
+      }
+
+      if (Array.isArray(data.workExperience)) {
+        next.workExperience = data.workExperience.map((exp: any) => ({
+          companyName:
+            exp.previousCompanyName ||
+            exp.previous_company_name ||
+            exp.companyName ||
+            "",
+          jobTitle:
+            exp.job_title_id ||
+            exp.previous_job_title_id ||
+            exp.jobTitleId ||
+            exp.jobTitle ||
+            "",
+          previousJobTitle:
+            exp.previous_job_title_text ||
+            exp.position ||
+            exp.previousJobTitle ||
+            exp.jobTitle ||
+            "",
+          level: exp.previousLevel || exp.level || "",
+          department: exp.departmentName || exp.department || "",
+          startDate:
+            exp.start_date || exp.startDate
+              ? new Date(exp.start_date || exp.startDate)
+                  .toISOString()
+                  .split("T")[0]
+              : "",
+          endDate:
+            exp.end_date || exp.endDate
+              ? new Date(exp.end_date || exp.endDate)
+                  .toISOString()
+                  .split("T")[0]
+              : "",
+          isCurrent: exp.is_current || exp.isCurrent || false,
+        }));
+      }
+
+      if (Array.isArray(data.certifications)) {
+        next.certifications = data.certifications.map((cert: any) => ({
+          name: cert.name || "",
+          issuingOrganization:
+            cert.issuing_organization || cert.issuingOrganization || "",
+          issueDate: cert.issue_date
+            ? new Date(cert.issue_date).toISOString().split("T")[0]
+            : "",
+          expirationDate: cert.expiration_date
+            ? new Date(cert.expiration_date).toISOString().split("T")[0]
+            : "",
+          credentialId: cert.credential_id || cert.credentialId || "",
+          credentialUrl: cert.credential_url || cert.credentialUrl || "",
+          certificateDocument:
+            cert.credential_url || cert.certificateDocument || null,
+        }));
+      }
+
+      if (data.documents) {
+        const docs = data.documents;
+        next.documents = {
+          ...next.documents,
+          cv: Array.isArray(docs.cv) ? docs.cv : docs.cv ? [docs.cv] : [],
+          certificates: Array.isArray(docs.certificates)
+            ? docs.certificates
+            : docs.certificates
+            ? [docs.certificates]
+            : [],
+          photo: Array.isArray(docs.photo)
+            ? docs.photo
+            : docs.photo
+            ? [docs.photo]
+            : [],
+          experienceLetters: Array.isArray(docs.experienceLetters)
+            ? docs.experienceLetters
+            : docs.experienceLetters
+            ? [docs.experienceLetters]
+            : [],
+          taxForms: Array.isArray(docs.taxForms)
+            ? docs.taxForms
+            : docs.taxForms
+            ? [docs.taxForms]
+            : [],
+          pensionForms: Array.isArray(docs.pensionForms)
+            ? docs.pensionForms
+            : docs.pensionForms
+            ? [docs.pensionForms]
+            : [],
+        };
+      }
+
+      setProfileData(next);
+    } catch (error: any) {
+      console.error("Failed to load profile:", error);
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Failed to load profile"
+      );
+    } finally {
+      setIsLoadingProfile(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -48,23 +312,58 @@ export default function ProfileUpdateLayout() {
   const renderSection = () => {
     switch (activeSection) {
       case "personal":
-        return <PersonalDetails />;
+        return (
+          <PersonalDetails
+            initialData={profileData.personal}
+            onRefresh={loadProfile}
+          />
+        );
       case "contact":
-        return <ContactDetails />;
+        return (
+          <ContactDetails
+            initialData={profileData.contact}
+            onRefresh={loadProfile}
+          />
+        );
       case "education":
-        return <EducationWrapper />;
+        return (
+          <EducationWrapper
+            initialEducation={profileData.education}
+            onRefresh={loadProfile}
+          />
+        );
       case "workExperience":
-        return <WorkExperienceWrapper />;
+        return (
+          <WorkExperienceWrapper
+            initialWorkExperience={profileData.workExperience}
+            onRefresh={loadProfile}
+          />
+        );
       case "certifications":
-        return <CertificationsWrapper />;
+        return (
+          <CertificationsWrapper
+            initialCertifications={profileData.certifications}
+            onRefresh={loadProfile}
+          />
+        );
       case "financial":
         return <FinancialDetails />;
       case "job":
         return <JobDetails />;
       case "documents":
-        return <DocumentsWrapper />;
+        return (
+          <DocumentsWrapper
+            initialDocuments={profileData.documents}
+            onRefresh={loadProfile}
+          />
+        );
       default:
-        return <PersonalDetails />;
+        return (
+          <PersonalDetails
+            initialData={profileData.personal}
+            onRefresh={loadProfile}
+          />
+        );
     }
   };
 
@@ -104,11 +403,9 @@ export default function ProfileUpdateLayout() {
                   </button>
                 </div>
                 <h2 className="text-xl font-bold text-k-dark-grey">
-                  Tesfamichael Tafere
+                  {displayName}
                 </h2>
-                <p className="text-k-medium-grey text-sm mb-4">
-                  Software Engineer
-                </p>
+                <p className="text-k-medium-grey text-sm mb-4">{roleLabel}</p>
                 <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">
                   Active Employee
                 </div>
@@ -121,7 +418,15 @@ export default function ProfileUpdateLayout() {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 min-w-0 w-full">{renderSection()}</div>
+            <div className="flex-1 min-w-0 w-full">
+              {isLoadingProfile ? (
+                <div className="bg-white rounded-2xl shadow-sm p-6 text-k-medium-grey">
+                  Loading profile...
+                </div>
+              ) : (
+                renderSection()
+              )}
+            </div>
           </div>
         </div>
 
