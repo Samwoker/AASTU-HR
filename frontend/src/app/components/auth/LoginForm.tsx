@@ -1,13 +1,23 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import Input from "../common/Input";
 import Button from "../common/Button";
 import Checkbox from "../common/Checkbox";
 import { MdEmail, MdLock } from "react-icons/md";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import toast from "react-hot-toast";
 import kachaLogo from "../../../assets/images/kacha_logo.jpg";
-import { login, reset } from "../../features/auth/authSlice";
+import { useAuthSlice } from "../../slice/authSlice";
+import {
+  selectAuthUser,
+  selectAuthLoading,
+  selectAuthIsError,
+  selectAuthIsSuccess,
+  selectAuthMessage,
+} from "../../slice/authSlice/selectors";
+import { useSelector } from "react-redux";
+import onboardingService from "../../services/onboardingService";
 
 interface LoginFormProps {
   title?: string;
@@ -25,45 +35,83 @@ export default function LoginForm({
     password: "",
     rememberMe: false,
   });
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { actions: authActions } = useAuthSlice();
 
-  const { user, isLoading, isError, isSuccess, message } = useSelector(
-    (state) => state.auth
-  );
+  const user = useSelector(selectAuthUser);
+  const isLoading = useSelector(selectAuthLoading);
+  const isError = useSelector(selectAuthIsError);
+  const isSuccess = useSelector(selectAuthIsSuccess);
+  const message = useSelector(selectAuthMessage);
 
   useEffect(() => {
-    if (isError) {
+    if (isError && message) {
       toast.error(message);
+      dispatch(authActions.reset());
     }
 
-    if (isSuccess || user) {
-      // Show success toast
-      if (isSuccess) {
-        toast.success(`Welcome back, ${user?.email || 'User'}!`);
-      }
-      
-      // Determine redirect path based on user role_id
-      let path = redirectPath;
-      if (!path) {
-        // If no custom redirect path, route based on role_id
-        // role_id: 1 = SUPER_ADMIN, others = regular employees
-        if (user?.role_id === 1) {
-          path = "/admin/dashboard";
+    if (isSuccess && user) {
+      const handleRedirect = async () => {
+        // Determine redirect path based on user role_id
+        let path = redirectPath;
+
+        if (!path) {
+          // If no custom redirect path, route based on role_id
+          // role_id mapping: 1 = Admin, 2 = HR, 3 = Employee
+          if (user?.role_id === 1 || user?.role_id === 2) {
+            path = "/admin/dashboard";
+            toast.success(`Welcome back, ${user?.email || "User"}!`);
+            navigate(path);
+          } else {
+            // For employees, check onboarding status first
+            try {
+              const response = await onboardingService.getStatus();
+
+              if (response.data?.onboarding_status === "COMPLETED") {
+                // Onboarding completed - go directly to dashboard
+                path = "/employee/dashboard";
+                toast.success(`Welcome back, ${user?.email || "User"}!`);
+              } else {
+                // Onboarding not completed - go to onboarding page
+                path = "/employee/onboarding";
+              }
+
+              navigate(path);
+            } catch (error: any) {
+              // If status check fails, default to onboarding page
+              console.error("Failed to check onboarding status:", error);
+              path = "/employee/onboarding";
+              navigate(path);
+            }
+          }
         } else {
-          path = "/employee/onboarding";
+          toast.success(`Welcome back, ${user?.email || "User"}!`);
+          navigate(path);
         }
-      }
-      navigate(path);
+
+        dispatch(authActions.reset());
+      };
+
+      handleRedirect();
     }
+  }, [
+    user,
+    isError,
+    isSuccess,
+    message,
+    navigate,
+    dispatch,
+    redirectPath,
+    authActions,
+  ]);
 
-    dispatch(reset());
-  }, [user, isError, isSuccess, message, navigate, dispatch, redirectPath]);
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -75,7 +123,7 @@ export default function LoginForm({
   };
 
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors: Record<string, string> = {};
 
     if (!formData.email) {
       newErrors.email = "Email is required";
@@ -93,7 +141,7 @@ export default function LoginForm({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -101,7 +149,12 @@ export default function LoginForm({
       return;
     }
 
-    dispatch(login(formData));
+    dispatch(
+      authActions.loginRequest({
+        email: formData.email,
+        password: formData.password,
+      })
+    );
   };
 
   return (
@@ -139,7 +192,7 @@ export default function LoginForm({
 
           <Input
             label="Password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             name="password"
             value={formData.password}
             onChange={handleChange}
@@ -148,6 +201,16 @@ export default function LoginForm({
             error={!!errors.password}
             helperText={errors.password}
             required
+            suffix={
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="text-k-medium-grey hover:text-k-dark-grey transition-colors"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+              </button>
+            }
           />
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -157,12 +220,12 @@ export default function LoginForm({
               checked={formData.rememberMe}
               onChange={handleChange}
             />
-            <a
-              href="#forgot-password"
+            <Link
+              to="/forgot-password"
               className="text-sm font-medium text-k-orange hover:text-k-dark-grey transition-colors duration-200"
             >
               Reset Password?
-            </a>
+            </Link>
           </div>
 
           <Button type="submit" variant="primary" fullWidth loading={isLoading}>
