@@ -57,10 +57,15 @@ export default function CreateEmploymentForm({
 
   const [form, setForm] = useState({
     employee_id: "",
-    department: "",
+    department_name: "",
+    department_id: "",
     employment_type: "Full Time",
     start_date: "",
     gross_salary: "",
+    basic_salary: "",
+    transportation_allowance: "",
+    housing_allowance: "",
+    meal_allowance: "",
     manager_id: "",
   });
 
@@ -90,10 +95,15 @@ export default function CreateEmploymentForm({
       ToastService.success("Employment record created successfully!");
       setForm({
         employee_id: "",
-        department: "",
+        department_name: "",
+        department_id: "",
         employment_type: "Full Time",
         start_date: "",
         gross_salary: "",
+        basic_salary: "",
+        transportation_allowance: "",
+        housing_allowance: "",
+        meal_allowance: "",
         manager_id: "",
       });
       setJobTitleInput({ title: "", level: "" });
@@ -165,15 +175,15 @@ export default function CreateEmploymentForm({
       )
     );
 
-    if (form.department) {
+    if (form.department_name) {
       const filtered = uniqueDepts.filter((d: any) =>
-        d.toLowerCase().includes(form.department.toLowerCase())
+        d.toLowerCase().includes(form.department_name.toLowerCase())
       );
       setFilteredDepartments(filtered);
     } else {
       setFilteredDepartments(uniqueDepts);
     }
-  }, [form.department, departments]);
+  }, [form.department_name, departments]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -182,7 +192,10 @@ export default function CreateEmploymentForm({
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-    if (name === "department") setShowDepartmentSuggestions(true);
+    if (name === "department_name") {
+      setShowDepartmentSuggestions(true);
+      setForm((prev) => ({ ...prev, department_id: "" }));
+    }
   };
 
   const handleJobTitleChange = (
@@ -207,7 +220,14 @@ export default function CreateEmploymentForm({
   };
 
   const selectDepartmentSuggestion = (department: string) => {
-    setForm((prev) => ({ ...prev, department }));
+    const existingDept = (departments || []).find(
+      (d: any) => d?.name?.toLowerCase() === department.toLowerCase()
+    );
+    setForm((prev) => ({
+      ...prev,
+      department_name: department,
+      department_id: existingDept?.id ? String(existingDept.id) : "",
+    }));
     setShowDepartmentSuggestions(false);
   };
 
@@ -216,6 +236,7 @@ export default function CreateEmploymentForm({
 
     try {
       let finalJobTitleId: number | undefined;
+      let finalDepartmentId: number | undefined;
 
       // --- Job Title Logic ---
       const existingJob = jobTitles.find(
@@ -244,35 +265,62 @@ export default function CreateEmploymentForm({
         }
       }
 
+      if (!finalJobTitleId) {
+        throw new Error("Job title is required");
+      }
+
       // --- Department Logic ---
-      // Check if department exists
-      const existingDept = departments.find(
-        (d: any) => d.name.toLowerCase() === form.department.toLowerCase()
-      );
+      if (form.department_id) {
+        finalDepartmentId = Number(form.department_id);
+      }
 
-      if (!existingDept) {
-        ToastService.info(`Creating new department: ${form.department}...`);
-        const deptResponse: any = await makeCall({
-          method: "POST",
-          route: apiRoutes.departments,
-          body: { name: form.department },
-          isSecureRoute: true,
-        });
+      if (!finalDepartmentId && form.department_name) {
+        const existingDept = (departments || []).find(
+          (d: any) =>
+            d?.name?.toLowerCase() === form.department_name.toLowerCase()
+        );
 
-        if (deptResponse?.data?.status === "success") {
-          // Adjust check based on backend response
-          ToastService.success("New department created!");
-          dispatch(departmentActions.fetchDepartmentsStart());
+        if (existingDept?.id) {
+          finalDepartmentId = existingDept.id;
         } else {
-          throw new Error("Failed to create new department");
+          ToastService.info(
+            `Creating new department: ${form.department_name}...`
+          );
+          const deptResponse: any = await makeCall({
+            method: "POST",
+            route: apiRoutes.departments,
+            body: { name: form.department_name },
+            isSecureRoute: true,
+          });
+
+          const createdDeptId = deptResponse?.data?.data?.department?.id;
+          if (createdDeptId) {
+            finalDepartmentId = createdDeptId;
+            ToastService.success("New department created!");
+            dispatch(departmentActions.fetchDepartmentsStart());
+          } else {
+            throw new Error("Failed to create new department");
+          }
         }
+      }
+
+      if (!finalDepartmentId) {
+        throw new Error("Department is required");
       }
 
       dispatch(
         createActions.createEmploymentRequest({
-          ...form,
+          employee_id: form.employee_id,
+          employment_type: form.employment_type,
+          start_date: form.start_date,
           gross_salary: parseFloat(form.gross_salary),
+          basic_salary: parseFloat(form.basic_salary),
+          transportation_allowance: parseFloat(form.transportation_allowance),
+          housing_allowance: parseFloat(form.housing_allowance),
+          meal_allowance: parseFloat(form.meal_allowance),
+          department_id: finalDepartmentId,
           job_title_id: finalJobTitleId,
+          manager_id: form.manager_id || undefined,
         })
       );
     } catch (err: any) {
@@ -365,8 +413,8 @@ export default function CreateEmploymentForm({
       <div className="relative">
         <FormField
           label="Department"
-          name="department"
-          value={form.department}
+          name="department_name"
+          value={form.department_name}
           onChange={handleChange}
           required
           placeholder="e.g. Engineering"
@@ -397,7 +445,7 @@ export default function CreateEmploymentForm({
         )}
       </div>
 
-      {/* Section: Employment Type & Salary */}
+      {/* Section: Employment Type & Compensation */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField
           label="Employment Type"
@@ -418,6 +466,50 @@ export default function CreateEmploymentForm({
           onChange={handleChange}
           required
           placeholder="e.g. 50000"
+          icon={FiDollarSign}
+        />
+
+        <FormField
+          label="Basic Salary"
+          type="number"
+          name="basic_salary"
+          value={form.basic_salary}
+          onChange={handleChange}
+          required
+          placeholder="e.g. 15000"
+          icon={FiDollarSign}
+        />
+
+        <FormField
+          label="Transportation Allowance"
+          type="number"
+          name="transportation_allowance"
+          value={form.transportation_allowance}
+          onChange={handleChange}
+          required
+          placeholder="e.g. 5000"
+          icon={FiDollarSign}
+        />
+
+        <FormField
+          label="Housing Allowance"
+          type="number"
+          name="housing_allowance"
+          value={form.housing_allowance}
+          onChange={handleChange}
+          required
+          placeholder="e.g. 3000"
+          icon={FiDollarSign}
+        />
+
+        <FormField
+          label="Meal Allowance"
+          type="number"
+          name="meal_allowance"
+          value={form.meal_allowance}
+          onChange={handleChange}
+          required
+          placeholder="e.g. 2000"
           icon={FiDollarSign}
         />
       </div>

@@ -5,7 +5,6 @@ import {
   FiUserX,
   FiCalendar,
   FiLayers,
-  FiUserPlus,
 } from "react-icons/fi";
 
 interface StatCardProps {
@@ -57,10 +56,9 @@ export function EmployeeStats({
   inactiveCount,
   departmentsCount = 4,
   onLeaveCount = 2,
-  newJoinersCount = 5,
 }: StaffStatsProps) {
   return (
-    <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 mb-8">
+    <section className="grid gap-4 mb-8 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
       <StatCard
         icon={<FiUsers className="h-6 w-6" />}
         label="Total Staff"
@@ -91,12 +89,6 @@ export function EmployeeStats({
         label="On Leave"
         value={onLeaveCount.toString()}
         helper="Currently away"
-      />
-      <StatCard
-        icon={<FiUserPlus className="h-6 w-6" />}
-        label="New Joiners"
-        value={newJoinersCount.toString()}
-        helper="This month"
       />
     </section>
   );

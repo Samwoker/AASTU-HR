@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Button from "../../common/Button";
 import FormField from "../../common/FormField";
-import { FiMail, FiHash, FiLock } from "react-icons/fi";
+import { FiMail, FiLock } from "react-icons/fi";
 import { useCreateAccountSlice } from "../../../pages/Admin/CreateAccount/slice";
 import {
   selectCreateAccountLoading,
@@ -28,7 +28,6 @@ export default function CreateUserForm({
   const success = useSelector(selectCreateAccountSuccess);
 
   const [form, setForm] = useState({
-    employeeId: "",
     email: "",
     password: "",
     role: USER_ROLES.EMPLOYEE,
@@ -39,7 +38,6 @@ export default function CreateUserForm({
     if (success) {
       ToastService.success("Account created successfully!");
       setForm({
-        employeeId: "",
         email: "",
         password: "",
         role: USER_ROLES.EMPLOYEE,
@@ -79,7 +77,6 @@ export default function CreateUserForm({
     e.preventDefault();
     dispatch(
       actions.createAccountRequest({
-        employee_id: form.employeeId,
         email: form.email,
         password: form.password,
         role: form.role,
@@ -89,16 +86,6 @@ export default function CreateUserForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <FormField
-        label="Employee ID"
-        name="employeeId"
-        placeholder="e.g. EMP102"
-        value={form.employeeId}
-        onChange={handleChange}
-        required
-        icon={FiHash}
-      />
-
       <FormField
         label="Email Address"
         type="email"
@@ -123,7 +110,7 @@ export default function CreateUserForm({
           <button
             type="button"
             onClick={generateRandomPassword}
-            className="text-xs bg-gray-100 hover:bg-gray-200 text-k-dark-grey px-3 py-1.5 rounded-lg transition-colors"
+            className="text-xs bg-k-yellow hover:opacity-80 text-k-dark-grey px-3 py-1.5 rounded-lg transition-colors cursor-pointer font-medium"
           >
             Generate
           </button>
