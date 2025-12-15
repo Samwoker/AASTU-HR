@@ -1,19 +1,19 @@
 import React, { useState } from "react";
 import FormField from "../common/FormField";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
   Legend,
   LineChart,
-  Line
+  Line,
 } from "recharts";
 
 const dataDepartment = [
@@ -44,16 +44,18 @@ const dataStatus = [
   { name: "Probation", value: 5 },
 ];
 
-const COLORS = ["#db602c", "#fecd30", "#333333", "#888888", "#28a745"];
-const GENDER_COLORS = ["#333333", "#db602c"];
-const STATUS_COLORS = ["#28a745", "#fecd30", "#db602c"]; 
+const COLORS = ["#e55400", "#fecd30", "#333333", "#888888", "#28a745"];
+const GENDER_COLORS = ["#333333", "#e55400"];
+const STATUS_COLORS = ["#28a745", "#fecd30", "#e55400"];
 export default function CompanyOverviewChart() {
   const [filter, setFilter] = useState("department");
 
   return (
     <div className="bg-white rounded-2xl shadow-sm p-6 h-full animate-[slideUp_0.3s_ease-out]">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-bold text-k-dark-grey grow">Company Overview</h3>
+        <h3 className="text-lg font-bold text-k-dark-grey grow">
+          Company Overview
+        </h3>
         <div className="w-48">
           <FormField
             label="Filter By"
@@ -77,24 +79,37 @@ export default function CompanyOverviewChart() {
               data={dataDepartment}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="name" 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: '#888', fontSize: 12 }} 
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="#f0f0f0"
+              />
+              <XAxis
+                dataKey="name"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "#888", fontSize: 12 }}
                 dy={10}
               />
-              <YAxis 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: '#888', fontSize: 12 }} 
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "#888", fontSize: 12 }}
               />
-              <Tooltip 
-                cursor={{ fill: '#f9fafb' }}
-                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+              <Tooltip
+                cursor={{ fill: "#f9fafb" }}
+                contentStyle={{
+                  borderRadius: "8px",
+                  border: "none",
+                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                }}
               />
-              <Bar dataKey="employees" fill="#db602c" radius={[4, 4, 0, 0]} barSize={40} />
+              <Bar
+                dataKey="employees"
+                fill="#e55400"
+                radius={[4, 4, 0, 0]}
+                barSize={40}
+              />
             </BarChart>
           )}
 
@@ -111,10 +126,19 @@ export default function CompanyOverviewChart() {
                 dataKey="value"
               >
                 {dataGender.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={GENDER_COLORS[index % GENDER_COLORS.length]} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={GENDER_COLORS[index % GENDER_COLORS.length]}
+                  />
                 ))}
               </Pie>
-              <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+              <Tooltip
+                contentStyle={{
+                  borderRadius: "8px",
+                  border: "none",
+                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                }}
+              />
               <Legend verticalAlign="bottom" height={36} iconType="circle" />
             </PieChart>
           )}
@@ -132,10 +156,19 @@ export default function CompanyOverviewChart() {
                 dataKey="value"
               >
                 {dataStatus.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={STATUS_COLORS[index % STATUS_COLORS.length]} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={STATUS_COLORS[index % STATUS_COLORS.length]}
+                  />
                 ))}
               </Pie>
-              <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+              <Tooltip
+                contentStyle={{
+                  borderRadius: "8px",
+                  border: "none",
+                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                }}
+              />
               <Legend verticalAlign="bottom" height={36} iconType="circle" />
             </PieChart>
           )}
@@ -145,31 +178,48 @@ export default function CompanyOverviewChart() {
               data={dataHiringTrends}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="name" 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: '#888', fontSize: 12 }} 
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="#f0f0f0"
+              />
+              <XAxis
+                dataKey="name"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "#888", fontSize: 12 }}
                 dy={10}
               />
-              <YAxis 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: '#888', fontSize: 12 }} 
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "#888", fontSize: 12 }}
               />
-              <Tooltip 
-                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+              <Tooltip
+                contentStyle={{
+                  borderRadius: "8px",
+                  border: "none",
+                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                }}
               />
-              <Line type="monotone" dataKey="hires" stroke="#db602c" strokeWidth={3} dot={{ r: 4, fill: '#db602c', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
+              <Line
+                type="monotone"
+                dataKey="hires"
+                stroke="#e55400"
+                strokeWidth={3}
+                dot={{ r: 4, fill: "#e55400", strokeWidth: 2, stroke: "#fff" }}
+                activeDot={{ r: 6 }}
+              />
             </LineChart>
           )}
         </ResponsiveContainer>
       </div>
-      
+
       <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between text-sm text-gray-500">
         <span>Total Employees: 118</span>
-        <span className="text-k-orange font-medium cursor-pointer hover:underline">View Detailed Report</span>
+        <span className="text-k-orange font-medium cursor-pointer hover:underline">
+          View Detailed Report
+        </span>
       </div>
     </div>
   );

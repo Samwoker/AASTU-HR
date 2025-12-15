@@ -57,25 +57,25 @@ export default function LeaveBalanceCard() {
             label="Annual Leave"
             used={10}
             total={60}
-            colorClass="bg-[#db602c]"
+            colorClass="bg-[#e55400]"
           />
           <LeaveBar
             label="Sick Leave"
             used={5}
             total={20}
-            colorClass="bg-[#db602c]"
+            colorClass="bg-[#e55400]"
           />
           <LeaveBar
             label="Maternity Leave"
             used={0}
             total={120}
-            colorClass="bg-[#db602c]"
+            colorClass="bg-[#e55400]"
           />
           <LeaveBar
             label="Paternity Leave"
             used={10}
             total={20}
-            colorClass="bg-[#db602c]"
+            colorClass="bg-[#e55400]"
           />
         </div>
       </div>
