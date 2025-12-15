@@ -1,27 +1,22 @@
-import { toast, ToastOptions } from "react-toastify";
-
-const defaultOptions: ToastOptions = {
-  position: "top-center",
-  autoClose: 3000,
-  hideProgressBar: false,
-  closeOnClick: true,
-  pauseOnHover: true,
-  draggable: true,
-  theme: "colored",
-};
+import toast from "react-hot-toast";
 
 const ToastService = {
   success: (message: string) => {
-    toast.success(message, defaultOptions);
+    toast.success(message);
   },
   error: (message: string) => {
-    toast.error(message, defaultOptions);
+    toast.error(message);
   },
   info: (message: string) => {
-    toast.info(message, defaultOptions);
+    toast(message);
   },
   warning: (message: string) => {
-    toast.warning(message, defaultOptions);
+    toast(message, {
+      icon: "⚠️",
+    });
+  },
+  loading: (message: string) => {
+    return toast.loading(message);
   },
 };
 

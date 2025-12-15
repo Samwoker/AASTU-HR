@@ -1,27 +1,43 @@
-import { routeConstants } from '../constants';
-import AdminDashboard from '../../app/pages/Admin/Dashboard';
-import CreateUser from '../../app/pages/Admin/CreateAccount';
-import CreateEmployment from '../../app/pages/Admin/CreateEmployment';
-import CreateEmployee from '../../app/pages/Admin/CreateEmployee';
-import Departments from '../../app/pages/Admin/Departments';
-import Employees from '../../app/pages/Admin/Employees';
-import EmployeeDashboard from '../../app/pages/employee/Dashboard';
-import Login from '../../app/pages/Authentication/Login';
-import EmployeeLogin from '../../app/pages/Authentication/EmployeeLogin';
-import AdminLogin from '../../app/pages/Authentication/AdminLogin';
-import EmployeeOnboarding from '../../app/pages/employee/Onboarding';
-import LeaveApplication from '../../app/pages/employee/LeaveApplication';
-import LeaveRecall from '../../app/pages/employee/LeaveRecall';
-import ProfileUpdateLayout from '../../app/pages/employee/ProfileUpdate/ProfileUpdateLayout';
-import Settings from '../../app/pages/Admin/Settings';
-import NotFound from '../../app/pages/ErrorDisplayPage/NotFound';
-import NoAuthorized from '../../app/pages/ErrorDisplayPage/NoAuthorized';
-import { IRoute } from './types';
+import { routeConstants } from "../constants";
+import AdminDashboard from "../../app/pages/Admin/Dashboard";
+import CreateUser from "../../app/pages/Admin/CreateAccount";
+import CreateEmployment from "../../app/pages/Admin/CreateEmployment";
+import CreateEmployee from "../../app/pages/Admin/CreateEmployee";
+import Departments from "../../app/pages/Admin/Departments";
+import Employees from "../../app/pages/Admin/Employees";
+import EmployeeDetail from "../../app/pages/Admin/EmployeeDetail";
+import SubmittedUsers from "../../app/pages/Admin/SubmittedUsers";
+import SubmittedUserDetail from "../../app/pages/Admin/SubmittedUserDetail";
+import PendingUsers from "../../app/pages/Admin/PendingUsers";
+import EmployeeDashboard from "../../app/pages/employee/Dashboard";
+import Login from "../../app/pages/Authentication/Login";
+import EmployeeLogin from "../../app/pages/Authentication/EmployeeLogin";
+import AdminLogin from "../../app/pages/Authentication/AdminLogin";
+import ForgotPassword from "../../app/pages/Authentication/ForgotPassword";
+import ResetPassword from "../../app/pages/Authentication/ResetPassword";
+import EmployeeOnboarding from "../../app/pages/employee/Onboarding";
+import LeaveApplication from "../../app/pages/employee/LeaveApplication";
+import LeaveRecall from "../../app/pages/employee/LeaveRecall";
+import ProfileUpdateLayout from "../../app/pages/employee/ProfileUpdate/ProfileUpdateLayout";
+import Settings from "../../app/pages/Admin/Settings";
+import NotFound from "../../app/pages/ErrorDisplayPage/NotFound";
+import NoAuthorized from "../../app/pages/ErrorDisplayPage/NoAuthorized";
+import { IRoute } from "./types";
 
 export const routes: IRoute[] = [
   {
     path: routeConstants.login,
     element: <Login />,
+    isAuthenticated: false,
+  },
+  {
+    path: routeConstants.forgotPassword,
+    element: <ForgotPassword />,
+    isAuthenticated: false,
+  },
+  {
+    path: routeConstants.resetPassword,
+    element: <ResetPassword />,
     isAuthenticated: false,
   },
   {
@@ -62,6 +78,26 @@ export const routes: IRoute[] = [
   {
     path: routeConstants.employees,
     element: <Employees />,
+    isAuthenticated: true,
+  },
+  {
+    path: routeConstants.employeeDetail,
+    element: <EmployeeDetail />,
+    isAuthenticated: true,
+  },
+  {
+    path: routeConstants.submittedUsers,
+    element: <SubmittedUsers />,
+    isAuthenticated: true,
+  },
+  {
+    path: routeConstants.submittedUserDetail,
+    element: <SubmittedUserDetail />,
+    isAuthenticated: true,
+  },
+  {
+    path: routeConstants.pendingUsers,
+    element: <PendingUsers />,
     isAuthenticated: true,
   },
   {
