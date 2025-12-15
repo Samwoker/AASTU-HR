@@ -5,7 +5,6 @@ export interface CreateAccountState {
 }
 
 export interface CreateAccountPayload {
-  employee_id: string;
   email: string;
   password: string;
   role: string;

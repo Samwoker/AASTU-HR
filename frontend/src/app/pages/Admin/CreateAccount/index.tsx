@@ -27,6 +27,18 @@ export default function CreateEmployeeAccount() {
     role: USER_ROLES.EMPLOYEE,
   });
 
+  // Map role names to role IDs
+  // Note: These should match your backend role IDs
+  // Admin = 1, HR = 2, Employee = 3 (aligned with backend)
+  const getRoleId = (roleName: string): number => {
+    const roleMap: Record<string, number> = {
+      [USER_ROLES.ADMIN]: 1,
+      [USER_ROLES.HR]: 2,
+      [USER_ROLES.EMPLOYEE]: 3,
+    };
+    return roleMap[roleName] || 3; // Default to Employee if not found
+  };
+
   // Reset form on success
   useEffect(() => {
     if (success) {
@@ -69,14 +81,45 @@ export default function CreateEmployeeAccount() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(
-      actions.createAccountRequest({
-        employee_id: form.employeeId,
-        email: form.email,
-        password: form.password,
-        role: form.role,
-      })
-    );
+
+    // Validate required fields
+    if (
+      !form.employeeId?.trim() ||
+      !form.email?.trim() ||
+      !form.password?.trim() ||
+      !form.role
+    ) {
+      ToastService.error("Please fill in all required fields");
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email.trim())) {
+      ToastService.error("Please enter a valid email address");
+      return;
+    }
+
+    // Validate password length (minimum 8 characters as per API)
+    if (form.password.length < 8) {
+      ToastService.error("Password must be at least 8 characters long");
+      return;
+    }
+
+    // Get role_id from the role name
+    const role_id = getRoleId(form.role);
+
+    const payload = {
+      employee_id: form.employeeId.trim(),
+      email: form.email.trim(),
+      password: form.password,
+      role_id: role_id,
+    };
+
+    console.log("Submitting account creation with payload:", payload);
+    console.log("role value:", form.role, "-> role_id:", role_id);
+
+    dispatch(actions.createAccountRequest(payload));
   };
 
   return (
