@@ -12,6 +12,7 @@ import Button from "../../../components/common/Button";
 import { MdCheck, MdArrowBack, MdArrowForward, MdError } from "react-icons/md";
 import toast from "react-hot-toast";
 import onboardingService from "../../../services/onboardingService";
+import api from "../../../services/api";
 import { useDispatch } from "react-redux";
 import { authActions } from "../../../slice/authSlice";
 
@@ -853,12 +854,28 @@ export default function EmployeeOnboarding() {
         "Application submitted successfully! Onboarding completed."
       );
 
-      // Refresh auth user (name/status) to avoid stale localStorage user
-      dispatch(authActions.getMeRequest());
+      try {
+        sessionStorage.setItem("onboardingRedirectOverride", "1");
+      } catch {
+        // ignore
+      }
 
-      setTimeout(() => {
-        navigate("/employee/dashboard");
-      }, 1000);
+      try {
+        const meResponse = await api.get("/users/me");
+        const payload: any = meResponse?.data;
+        const user =
+          payload?.data?.user || payload?.data || payload?.user || null;
+
+        if (user) {
+          dispatch(authActions.getMeSuccess(user));
+        } else {
+          dispatch(authActions.getMeRequest());
+        }
+      } catch {
+        dispatch(authActions.getMeRequest());
+      }
+
+      navigate("/employee/dashboard", { replace: true });
     } catch (error: unknown) {
       console.error("Submission error:", error);
       toast.dismiss(submittingToast);

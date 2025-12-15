@@ -27,6 +27,18 @@ export default function EmployeeDashboard() {
     if (!user) return;
     if (user?.role_id !== 3) return;
     const status = user?.onboarding_status;
+    try {
+      const override = sessionStorage.getItem("onboardingRedirectOverride");
+      if (override) {
+        if (status && !["PENDING", "IN_PROGRESS"].includes(status)) {
+          sessionStorage.removeItem("onboardingRedirectOverride");
+        }
+        return;
+      }
+    } catch {
+      // ignore
+    }
+
     if (["PENDING", "IN_PROGRESS"].includes(status)) {
       navigate("/employee/onboarding", { replace: true });
     }
