@@ -18,9 +18,15 @@ export const routeConstants = {
   employeeOnboarding: "/employee/onboarding",
   employeeLeave: "/employee/leave",
   employeeLeaveRecall: "/employee/leave-recall",
+  employeeLeaveCashOut: "/employee/leave-cash-out",
   employeeProfile: "/employee/profile",
   employeeDashboard: "/employee/dashboard",
   settings: "/admin/settings",
+  // Admin Leave Management
+  adminLeaves: "/admin/leaves",
+  adminLeaveTypes: "/admin/leave-types",
+  adminPublicHolidays: "/admin/public-holidays",
+  adminLeaveSettings: "/admin/leave-settings",
   notFound: "*",
   noAuthorized: "/no-authorized",
 };

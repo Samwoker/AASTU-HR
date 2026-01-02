@@ -8,6 +8,7 @@ import userReducer from "../app/slice/userSlice";
 import employeeReducer from "../app/slice/employeeSlice";
 import employmentReducer from "../app/slice/employmentSlice";
 import adminReducer from "../app/slice/adminSlice";
+import leaveReducer from "../app/slice/leaveSlice";
 
 export function configureAppStore(): Store {
   const reduxSagaOptions = {};
@@ -31,6 +32,7 @@ export function configureAppStore(): Store {
       employee: employeeReducer,
       employment: employmentReducer,
       admin: adminReducer,
+      leave: leaveReducer,
     }),
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({

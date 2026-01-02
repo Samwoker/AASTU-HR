@@ -10,24 +10,32 @@ import {
   MdOutlineHistory,
   MdLogout,
 } from "react-icons/md";
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSidebar } from "../../context/SidebarContext";
 import { useDispatch } from "react-redux";
 import { authActions } from "../../slice/authSlice";
 import toast from "react-hot-toast";
+import StatusModal from "../common/StatusModal";
 
 export default function EmployeeSidebar() {
   const { isOpen, toggle, isMobileOpen, closeMobile } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+    setIsLogoutModalOpen(true);
+  };
+
+  const handleLogoutConfirm = () => {
     dispatch(authActions.logout());
     toast.success("Logged out successfully");
     navigate("/login");
+    setIsLogoutModalOpen(false);
   };
 
   const navItems = [
@@ -170,9 +178,9 @@ export default function EmployeeSidebar() {
 
           {/* Sign Out Button */}
           <button
-            onClick={handleLogout}
+            onClick={handleLogoutClick}
             className={`
-              w-full group flex items-center gap-4 p-3 rounded-xl font-medium transition-colors
+              w-full group flex items-center gap-4 p-3 rounded-xl font-medium transition-colors cursor-pointer
               ${isOpen || isMobileOpen ? "" : "justify-center"}
               text-gray-500 hover:bg-red-50 hover:text-red-600
             `}
@@ -193,6 +201,18 @@ export default function EmployeeSidebar() {
           </button>
         </div>
       </div>
+
+      <StatusModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        type="warning"
+        title="Sign Out"
+        message="Are you sure you want to sign out?"
+        primaryButtonText="Sign Out"
+        onPrimaryAction={handleLogoutConfirm}
+        secondaryButtonText="Cancel"
+        onSecondaryAction={() => setIsLogoutModalOpen(false)}
+      />
     </>
   );
 }

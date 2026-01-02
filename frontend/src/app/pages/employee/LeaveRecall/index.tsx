@@ -1,63 +1,177 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import EmployeeLayout from "../../../components/DefaultLayout/EmployeeLayout";
-import { MdWarning, MdCheckCircle, MdCancel, MdHistory, MdInfo, MdPersonAdd, MdNotificationsActive } from "react-icons/md";
+import {
+  MdWarning,
+  MdHistory,
+  MdPersonAdd,
+  MdRefresh,
+} from "react-icons/md";
 import toast from "react-hot-toast";
 import Button from "../../../components/common/Button";
 import StatusModal from "../../../components/common/StatusModal";
 import Modal from "../../../components/common/Modal";
+import {
+  CancellableLeaveItem,
+  ActiveLeaveItem,
+  RecallNotificationItem,
+} from "../../../components/leave/LeaveRecallItems";
+import { useLeaveSlice, leaveActions } from "../../../slice/leaveSlice";
+import {
+  selectCancellableLeaves,
+  selectActiveLeavesForRecall,
+  selectMyRecallNotifications,
+  selectApplicationsLoading,
+  selectRecallsLoading,
+  selectLeaveLoading,
+  selectLeaveSuccess,
+  selectLeaveError,
+  selectLeaveMessage,
+} from "../../../slice/leaveSlice/selectors";
+import { LeaveApplication, LeaveRecall } from "../../../slice/leaveSlice/types";
 
 // Tab types
 const TAB_CANCEL = "cancel";
 const TAB_RECALL = "recall";
 
-import { CancellableLeaveItem, ActiveLeaveItem, RecallNotificationItem } from "../../../components/leave/LeaveRecallItems";
 
-export default function LeaveRecall() {
+
+// Helper to calculate days remaining
+const calculateDaysRemaining = (endDate: string): number => {
+  const end = new Date(endDate);
+  const today = new Date();
+  const diffTime = end.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return Math.max(0, diffDays);
+};
+
+// Helper function to format date
+// Helper function to format date
+const formatDate = (dateString: string): string => {
+  if (!dateString) return "-";
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  } catch (e) {
+    return dateString;
+  }
+};
+
+// Transform API data to component format
+const transformCancellableLeave = (leave: LeaveApplication) => ({
+  id: leave.id,
+  type: leave.leaveType?.name || "Leave",
+  startDate: formatDate(leave.start_date),
+  endDate: formatDate(leave.end_date),
+  duration: leave.requested_days,
+  approvedDate: formatDate(leave.created_at || ""),
+});
+
+const transformActiveLeave = (leave: LeaveApplication) => ({
+  id: leave.id,
+  type: leave.leaveType?.name || "Leave",
+  startDate: formatDate(leave.start_date),
+  endDate: formatDate(leave.end_date),
+  duration: leave.requested_days,
+  daysRemaining: calculateDaysRemaining(leave.end_date),
+});
+
+const transformRecallNotification = (recall: LeaveRecall) => ({
+  id: recall.id,
+  leaveType: recall.leaveApplication?.leaveType?.name || "Leave",
+  reason: recall.reason,
+  requestedDate: formatDate(recall.created_at || ""),
+  requestedBy: recall.recalledBy?.full_name || "Manager",
+});
+
+export default function LeaveRecallPage() {
+  useLeaveSlice();
+  const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState(TAB_CANCEL);
-  
-  // Leaves that can be cancelled (future approved leaves)
-  const [cancellableLeaves, setCancellableLeaves] = useState([
-    { id: 1, type: "Annual Leave", startDate: "2024-12-20", endDate: "2024-12-30", duration: 10, approvedDate: "2024-12-01" },
-    { id: 2, type: "Sick Leave", startDate: "2025-01-05", endDate: "2025-01-07", duration: 3, approvedDate: "2024-12-10" },
-  ]);
 
-  // Active leaves that can be recalled (currently on leave)
-  const [activeLeaves, setActiveLeaves] = useState([
-    { id: 3, type: "Annual Leave", startDate: "2024-12-01", endDate: "2024-12-15", duration: 15, daysRemaining: 7 },
-  ]);
+  // Redux selectors
+  const cancellableLeavesData = useSelector(selectCancellableLeaves);
+  const activeLeavesData = useSelector(selectActiveLeavesForRecall);
+  const recallNotificationsData = useSelector(selectMyRecallNotifications);
+  const applicationsLoading = useSelector(selectApplicationsLoading);
+  const recallsLoading = useSelector(selectRecallsLoading);
+  const loading = useSelector(selectLeaveLoading);
+  const success = useSelector(selectLeaveSuccess);
+  const error = useSelector(selectLeaveError);
+  const message = useSelector(selectLeaveMessage);
 
-  // Recall notifications from manager
-  const [recallNotifications, setRecallNotifications] = useState([
-    { id: 1, leaveType: "Annual Leave", reason: "Urgent project deadline requires your expertise", requestedDate: "2024-12-05", requestedBy: "Jane Smith (Manager)" },
-  ]);
-
+  // Local state
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showRecallForm, setShowRecallForm] = useState(false);
   const [showDeclineForm, setShowDeclineForm] = useState(false);
-  const [selectedLeave, setSelectedLeave] = useState(null);
-  const [selectedNotification, setSelectedNotification] = useState(null);
+  const [selectedLeave, setSelectedLeave] = useState<any>(null);
+  const [selectedNotification, setSelectedNotification] = useState<any>(null);
   const [recallReason, setRecallReason] = useState("");
   const [declineReason, setDeclineReason] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
+  // Fetch data on mount
+  useEffect(() => {
+    dispatch(leaveActions.getCancellableLeavesRequest());
+    dispatch(leaveActions.getActiveLeavesForRecallRequest());
+    dispatch(leaveActions.getMyRecallNotificationsRequest());
+  }, [dispatch]);
+
+  // Handle success/error
+  useEffect(() => {
+    if (success && message) {
+      setSuccessMessage(message);
+      setShowSuccessModal(true);
+      dispatch(leaveActions.resetState());
+    }
+    if (error) {
+      toast.error(error);
+      dispatch(leaveActions.resetState());
+    }
+  }, [success, error, message, dispatch]);
+
+  const handleRefresh = () => {
+    dispatch(leaveActions.getCancellableLeavesRequest());
+    dispatch(leaveActions.getActiveLeavesForRecallRequest());
+    dispatch(leaveActions.getMyRecallNotificationsRequest());
+  };
+
+  // Transform data for display (real API data, no mock fallback)
+  const cancellableLeaves = Array.isArray(cancellableLeavesData)
+    ? cancellableLeavesData.map(transformCancellableLeave)
+    : [];
+
+  const activeLeaves = Array.isArray(activeLeavesData)
+    ? activeLeavesData.map(transformActiveLeave)
+    : [];
+
+  const recallNotifications = Array.isArray(recallNotificationsData)
+    ? recallNotificationsData.map(transformRecallNotification)
+    : [];
+
   // Handle cancel click
-  const handleCancelClick = (leave) => {
+  const handleCancelClick = (leave: any) => {
     setSelectedLeave(leave);
     setShowCancelConfirm(true);
   };
 
   // Confirm cancellation
   const confirmCancel = () => {
-    setCancellableLeaves(prev => prev.filter(l => l.id !== selectedLeave.id));
+    if (selectedLeave) {
+      dispatch(leaveActions.cancelLeaveApplicationRequest(selectedLeave.id));
+    }
     setShowCancelConfirm(false);
     setSelectedLeave(null);
-    setSuccessMessage("Your leave has been cancelled successfully.");
-    setShowSuccessModal(true);
   };
 
   // Handle recall click (manager action)
-  const handleRecallClick = (leave) => {
+  const handleRecallClick = (leave: any) => {
     setSelectedLeave(leave);
     setShowRecallForm(true);
   };
@@ -68,20 +182,29 @@ export default function LeaveRecall() {
       toast.error("Please provide a reason for the recall");
       return;
     }
-    setActiveLeaves(prev => prev.filter(l => l.id !== selectedLeave.id));
+    if (selectedLeave) {
+      dispatch(
+        leaveActions.createRecallRequest({
+          leave_application_id: selectedLeave.id,
+          reason: recallReason,
+          recall_date: new Date().toISOString().split("T")[0],
+        })
+      );
+    }
     setShowRecallForm(false);
     setSelectedLeave(null);
     setRecallReason("");
-    setSuccessMessage("Recall request has been sent to the employee.");
-    setShowSuccessModal(true);
   };
 
   // Handle recall notification response
-  const handleRecallResponse = (notification, response) => {
-    if (response === 'accept') {
-      setRecallNotifications(prev => prev.filter(n => n.id !== notification.id));
-      setSuccessMessage("You have accepted the recall. Please report to work.");
-      setShowSuccessModal(true);
+  const handleRecallResponse = (notification: any, response: string) => {
+    if (response === "accept") {
+      dispatch(
+        leaveActions.respondToRecallRequest({
+          id: notification.id,
+          response: "ACCEPTED",
+        })
+      );
     } else {
       setSelectedNotification(notification);
       setShowDeclineForm(true);
@@ -94,26 +217,43 @@ export default function LeaveRecall() {
       toast.error("Please provide a reason for declining");
       return;
     }
-    setRecallNotifications(prev => prev.filter(n => n.id !== selectedNotification.id));
+    if (selectedNotification) {
+      dispatch(
+        leaveActions.respondToRecallRequest({
+          id: selectedNotification.id,
+          response: "DECLINED",
+          employee_response: declineReason,
+        })
+      );
+    }
     setShowDeclineForm(false);
     setSelectedNotification(null);
     setDeclineReason("");
-    setSuccessMessage("Your decline has been submitted to your manager.");
-    setShowSuccessModal(true);
   };
+
+  const isLoading = applicationsLoading || recallsLoading;
 
   return (
     <EmployeeLayout>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-k-dark-grey flex items-center gap-3">
-          <MdHistory className="text-k-orange" /> Leave Recall & Cancellation
-        </h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Cancel upcoming leaves or respond to recall requests from your manager.
-        </p>
+      <div className="mb-8 flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold text-k-dark-grey flex items-center gap-3">
+            <MdHistory className="text-k-orange" /> Leave Recall & Cancellation
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">
+            Cancel upcoming leaves or respond to recall requests from your
+            manager.
+          </p>
+        </div>
+        <button
+          onClick={handleRefresh}
+          className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+          title="Refresh"
+        >
+          <MdRefresh size={18} className={isLoading ? "animate-spin" : ""} />
+        </button>
       </div>
 
-     
       {/* Recall Notifications */}
       {recallNotifications.length > 0 && (
         <div className="mb-8">
@@ -121,11 +261,11 @@ export default function LeaveRecall() {
             Recall Requests ({recallNotifications.length})
           </h2>
           <div className="space-y-4">
-            {recallNotifications.map(notification => (
-              <RecallNotificationItem 
-                key={notification.id} 
-                notification={notification} 
-                onRespond={handleRecallResponse} 
+            {recallNotifications.map((notification) => (
+              <RecallNotificationItem
+                key={notification.id}
+                notification={notification}
+                onRespond={handleRecallResponse}
               />
             ))}
           </div>
@@ -134,22 +274,22 @@ export default function LeaveRecall() {
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-xl w-fit">
-        <button 
+        <button
           onClick={() => setActiveTab(TAB_CANCEL)}
           className={`px-6 py-2.5 rounded-lg font-medium text-sm transition-all ${
-            activeTab === TAB_CANCEL 
-              ? 'bg-white text-k-dark-grey shadow-sm' 
-              : 'text-gray-500 hover:text-gray-700'
+            activeTab === TAB_CANCEL
+              ? "bg-white text-k-dark-grey shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
           }`}
         >
           Cancel Leave ({cancellableLeaves.length})
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab(TAB_RECALL)}
           className={`px-6 py-2.5 rounded-lg font-medium text-sm transition-all ${
-            activeTab === TAB_RECALL 
-              ? 'bg-white text-k-dark-grey shadow-sm' 
-              : 'text-gray-500 hover:text-gray-700'
+            activeTab === TAB_RECALL
+              ? "bg-white text-k-dark-grey shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
           }`}
         >
           Recall Employee ({activeLeaves.length})
@@ -157,15 +297,35 @@ export default function LeaveRecall() {
       </div>
 
       {/* Tab Content */}
-      {activeTab === TAB_CANCEL ? (
+      {isLoading ? (
+        <div className="space-y-4">
+          {[1, 2].map((i) => (
+            <div
+              key={i}
+              className="bg-white p-6 rounded-xl shadow-sm animate-pulse"
+            >
+              <div className="flex justify-between">
+                <div className="flex gap-4">
+                  <div className="w-12 h-12 rounded-full bg-gray-200"></div>
+                  <div>
+                    <div className="h-5 w-32 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-4 w-48 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+                <div className="h-10 w-24 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : activeTab === TAB_CANCEL ? (
         <>
           {cancellableLeaves.length > 0 ? (
             <div className="space-y-4">
-              {cancellableLeaves.map(leave => (
-                <CancellableLeaveItem 
-                  key={leave.id} 
-                  leave={leave} 
-                  onCancel={handleCancelClick} 
+              {cancellableLeaves.map((leave) => (
+                <CancellableLeaveItem
+                  key={leave.id}
+                  leave={leave}
+                  onCancel={handleCancelClick}
                 />
               ))}
             </div>
@@ -174,8 +334,12 @@ export default function LeaveRecall() {
               <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
                 <MdHistory size={32} />
               </div>
-              <h3 className="text-lg font-medium text-gray-600">No leaves to cancel</h3>
-              <p className="text-gray-400 text-sm mt-1">Only approved future leaves will appear here.</p>
+              <h3 className="text-lg font-medium text-gray-600">
+                No leaves to cancel
+              </h3>
+              <p className="text-gray-400 text-sm mt-1">
+                Only approved future leaves will appear here.
+              </p>
             </div>
           )}
         </>
@@ -183,11 +347,11 @@ export default function LeaveRecall() {
         <>
           {activeLeaves.length > 0 ? (
             <div className="space-y-4">
-              {activeLeaves.map(leave => (
-                <ActiveLeaveItem 
-                  key={leave.id} 
-                  leave={leave} 
-                  onRecall={handleRecallClick} 
+              {activeLeaves.map((leave) => (
+                <ActiveLeaveItem
+                  key={leave.id}
+                  leave={leave}
+                  onRecall={handleRecallClick}
                 />
               ))}
             </div>
@@ -196,8 +360,12 @@ export default function LeaveRecall() {
               <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
                 <MdPersonAdd size={32} />
               </div>
-              <h3 className="text-lg font-medium text-gray-600">No active leaves</h3>
-              <p className="text-gray-400 text-sm mt-1">Employees currently on leave will appear here.</p>
+              <h3 className="text-lg font-medium text-gray-600">
+                No active leaves
+              </h3>
+              <p className="text-gray-400 text-sm mt-1">
+                Employees currently on leave will appear here.
+              </p>
             </div>
           )}
         </>
@@ -210,7 +378,7 @@ export default function LeaveRecall() {
         type="warning"
         title="Confirm Cancellation"
         message={`Are you sure you want to cancel your ${selectedLeave?.type}? This action cannot be undone.`}
-        primaryButtonText="Cancel Leave"
+        primaryButtonText={loading ? "Cancelling..." : "Cancel Leave"}
         onPrimaryAction={confirmCancel}
         secondaryButtonText="Go Back"
         onSecondaryAction={() => setShowCancelConfirm(false)}
@@ -219,7 +387,10 @@ export default function LeaveRecall() {
       {/* Recall Form Modal */}
       <Modal
         isOpen={showRecallForm}
-        onClose={() => { setShowRecallForm(false); setRecallReason(""); }}
+        onClose={() => {
+          setShowRecallForm(false);
+          setRecallReason("");
+        }}
         title="Recall Employee"
         size="md"
       >
@@ -229,10 +400,12 @@ export default function LeaveRecall() {
               <strong>Leave Type:</strong> {selectedLeave?.type}
             </p>
             <p className="text-sm text-gray-600 mt-1">
-              <strong>Period:</strong> {selectedLeave?.startDate} to {selectedLeave?.endDate}
+              <strong>Period:</strong> {selectedLeave?.startDate} to{" "}
+              {selectedLeave?.endDate}
             </p>
             <p className="text-sm text-gray-600 mt-1">
-              <strong>Days Remaining:</strong> {selectedLeave?.daysRemaining} days
+              <strong>Days Remaining:</strong> {selectedLeave?.daysRemaining}{" "}
+              days
             </p>
           </div>
 
@@ -240,27 +413,31 @@ export default function LeaveRecall() {
             <label className="block text-sm font-medium text-k-dark-grey mb-2">
               Reason for Recall <span className="text-red-500">*</span>
             </label>
-            <textarea 
+            <textarea
               value={recallReason}
               onChange={(e) => setRecallReason(e.target.value)}
-              rows="4"
+              rows={4}
               className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-k-orange focus:border-transparent transition-all resize-none outline-none"
               placeholder="Please provide a reason for recalling this employee..."
             />
           </div>
 
           <div className="flex gap-4 pt-2">
-            <Button 
-              onClick={() => { setShowRecallForm(false); setRecallReason(""); }}
+            <Button
+              onClick={() => {
+                setShowRecallForm(false);
+                setRecallReason("");
+              }}
               variant="secondary"
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={submitRecallRequest}
               variant="primary"
+              disabled={loading}
             >
-              Send Recall Request
+              {loading ? "Sending..." : "Send Recall Request"}
             </Button>
           </div>
         </div>
@@ -269,7 +446,10 @@ export default function LeaveRecall() {
       {/* Decline Reason Modal */}
       <Modal
         isOpen={showDeclineForm}
-        onClose={() => { setShowDeclineForm(false); setDeclineReason(""); }}
+        onClose={() => {
+          setShowDeclineForm(false);
+          setDeclineReason("");
+        }}
         title="Decline Recall Request"
         size="md"
       >
@@ -277,7 +457,8 @@ export default function LeaveRecall() {
           <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100 flex gap-3">
             <MdWarning className="text-yellow-600 text-xl shrink-0 mt-0.5" />
             <p className="text-sm text-yellow-800">
-              Declining a recall request requires a valid reason which will be reviewed by your manager.
+              Declining a recall request requires a valid reason which will be
+              reviewed by your manager.
             </p>
           </div>
 
@@ -285,27 +466,31 @@ export default function LeaveRecall() {
             <label className="block text-sm font-medium text-k-dark-grey mb-2">
               Reason for Declining <span className="text-red-500">*</span>
             </label>
-            <textarea 
+            <textarea
               value={declineReason}
               onChange={(e) => setDeclineReason(e.target.value)}
-              rows="4"
+              rows={4}
               className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-k-orange focus:border-transparent transition-all resize-none outline-none"
               placeholder="Please explain why you cannot return to work..."
             />
           </div>
 
           <div className="flex gap-4 pt-2">
-            <Button 
-              onClick={() => { setShowDeclineForm(false); setDeclineReason(""); }}
+            <Button
+              onClick={() => {
+                setShowDeclineForm(false);
+                setDeclineReason("");
+              }}
               variant="secondary"
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={submitDeclineReason}
               variant="primary"
+              disabled={loading}
             >
-              Submit Decline
+              {loading ? "Submitting..." : "Submit Decline"}
             </Button>
           </div>
         </div>
@@ -320,6 +505,8 @@ export default function LeaveRecall() {
         message={successMessage}
         primaryButtonText="Done"
         onPrimaryAction={() => setShowSuccessModal(false)}
+        secondaryButtonText=""
+        onSecondaryAction={() => {}}
       />
     </EmployeeLayout>
   );
