@@ -4,7 +4,10 @@ import { useDashboardSlice } from "./slice";
 import {
   selectDashboardStats,
   selectDashboardLoading,
+  selectDashboardFilters,
 } from "./slice/selectors";
+
+import AdvancedFilterPanel from "../../../components/common/AdvancedFilterPanel";
 
 import AdminLayout from "../../../components/DefaultLayout/AdminLayout";
 import StatCard from "../../../components/Core/ui/StatCard";
@@ -28,15 +31,21 @@ export default function AdminDashboard() {
   const stats = useSelector(selectDashboardStats);
   const isLoading = useSelector(selectDashboardLoading);
 
-  // Fetch stats on mount
+  const filters = useSelector(selectDashboardFilters);
+
+  // Fetch stats on mount and filter change
   useEffect(() => {
-    dispatch(actions.fetchStatsRequest());
-  }, [dispatch, actions]);
+    dispatch(actions.fetchStatsRequest(filters));
+  }, [dispatch, actions, filters]);
 
   // Refresh logged-in user info
   useEffect(() => {
     dispatch(authActions.getMeRequest());
   }, [dispatch]);
+
+  const handleFilterChange = (newFilters: any) => {
+    dispatch(actions.setFilters(newFilters));
+  };
 
   const totalEmployees = stats?.totalEmployees ?? 0;
   const activeEmployees = stats?.activeEmployees ?? 0;
@@ -89,6 +98,17 @@ export default function AdminDashboard() {
       <h1 className="text-2xl md:text-3xl font-bold text-k-dark-grey mb-8">
         Admin Dashboard
       </h1>
+
+      <div className="mb-8">
+        <AdvancedFilterPanel
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          showJobTitle={false}
+          showStatus={false}
+          showGender={false}
+          showEmploymentType={false}
+        />
+      </div>
 
       {/*  STAT CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">

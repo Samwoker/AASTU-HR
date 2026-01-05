@@ -14,8 +14,15 @@ export interface DashboardStats {
   employmentType?: EmploymentTypeStats;
 }
 
+export interface DashboardFilters {
+  department_id?: string;
+  start_date?: string;
+  end_date?: string;
+}
+
 export interface DashboardState {
   loading: boolean;
   error: string | null;
   stats: DashboardStats;
+  filters: DashboardFilters;
 }

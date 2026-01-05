@@ -12,13 +12,14 @@ export const initialState: DashboardState = {
     activeEmployees: 0,
     totalManagers: 0,
   },
+  filters: {},
 };
 
 const slice = createSlice({
   name: 'dashboard',
   initialState,
   reducers: {
-    fetchStatsRequest(state) {
+    fetchStatsRequest(state, _action: PayloadAction<any | undefined>) {
       state.loading = true;
       state.error = null;
     },
@@ -29,6 +30,12 @@ const slice = createSlice({
     fetchStatsFailure(state, action: PayloadAction<string>) {
       state.loading = false;
       state.error = action.payload;
+    },
+    setFilters(state, action: PayloadAction<any>) {
+      state.filters = { ...state.filters, ...action.payload };
+    },
+    clearFilters(state) {
+      state.filters = {};
     },
   },
 });

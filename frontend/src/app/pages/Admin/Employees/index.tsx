@@ -3,8 +3,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useEmployeesSlice } from "./slice";
 import {
-  selectCompletedEmployees,
+  selectAllEmployees,
   selectEmployeesLoading,
+  selectEmployeesFilters,
 } from "./slice/selectors";
 import { useSubmittedUsersSlice } from "../SubmittedUsers/slice";
 import {
@@ -18,16 +19,15 @@ import {
   selectPendingUsersLoading,
 } from "../PendingUsers/slice/selectors";
 import { useDashboardSlice } from "../Dashboard/slice";
-import { selectDashboardStats } from "../Dashboard/slice/selectors";
+
 import AdminLayout from "../../../components/DefaultLayout/AdminLayout";
 import Button from "../../../components/common/Button";
 import Modal from "../../../components/common/Modal";
-import CreateUserForm from "../../../components/Admin/Employees/CreateUserForm";
 import { ActionMenu } from "../../../components/common/ActionMenu";
-import { EmployeeStats } from "../../../components/Admin/Employees/EmployeeStats";
+
 import TabBar, { Tab } from "../../../components/common/TabBar";
 import DataTable, { TableColumn } from "../../../components/common/DataTable";
-import StatCard from "../../../components/common/StatCard";
+
 import {
   FiUserPlus,
   FiBriefcase,
@@ -35,17 +35,18 @@ import {
   FiPhone,
   FiEye,
   FiEdit,
-  FiTrash2,
-  FiClock,
-  FiCheck,
-  FiX,
   FiUserCheck,
   FiUsers,
+  FiCheck,
+  FiClock,
+  FiX,
   FiLoader,
 } from "react-icons/fi";
-import FilterDropdown, { FilterField } from "../../../components/common/FilterDropdown";
+import AdvancedFilterPanel from "../../../components/common/AdvancedFilterPanel";
 import ExportDropdown from "../../../components/common/ExportDropdown";
-import { CompletedEmployee } from "./slice/types";
+import FieldSelectorModal from "../../../components/common/FieldSelectorModal";
+import exportService, { ExportFormat } from "../../../services/exportService";
+import { Employee } from "./slice/types";
 import { SubmittedUser } from "../SubmittedUsers/slice/types";
 import { PendingUser } from "../PendingUsers/slice/types";
 import { routeConstants } from "../../../../utils/constants";
@@ -64,9 +65,10 @@ export default function Employees() {
   const { actions: dashboardActions } = useDashboardSlice();
 
   // Selectors - All Employees
-  const completedEmployees = useSelector(selectCompletedEmployees);
+  const allEmployees = useSelector(selectAllEmployees);
   const isLoading = useSelector(selectEmployeesLoading);
-  const stats = useSelector(selectDashboardStats);
+  const employeeFilters = useSelector(selectEmployeesFilters);
+
 
   // Selectors - Submitted Users
   const submittedUsers = useSelector(selectSubmittedUsers) || [];
@@ -79,7 +81,6 @@ export default function Employees() {
 
   // Local State
   const [activeTab, setActiveTab] = useState("all");
-  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
   const [approveModalOpen, setApproveModalOpen] = useState(false);
   const [userToApprove, setUserToApprove] = useState<SubmittedUser | null>(
     null
@@ -87,9 +88,9 @@ export default function Employees() {
 
   // Fetch data on mount and tab change
   useEffect(() => {
-    dispatch(dashboardActions.fetchStatsRequest());
+    dispatch(dashboardActions.fetchStatsRequest({}));
     if (activeTab === "all") {
-      dispatch(actions.fetchCompletedEmployeesRequest());
+      dispatch(actions.fetchAllEmployeesRequest({ page: 1, limit: 10, filters: employeeFilters }));
     } else if (activeTab === "submitted") {
       dispatch(submittedActions.fetchSubmittedUsersRequest());
     } else if (activeTab === "pending") {
@@ -102,21 +103,18 @@ export default function Employees() {
     pendingActions,
     dashboardActions,
     activeTab,
+    employeeFilters,
   ]);
 
   // Tabs configuration
   const tabs: Tab[] = [
-    { id: "all", label: "All Employees", count: completedEmployees.length },
-    { id: "submitted", label: "Submitted", count: submittedUsers.length },
-    { id: "pending", label: "Pending", count: pendingUsers.length },
+    { id: "all", label: "All Employees", count: allEmployees.length },
+    { id: "submitted", label: "Pending Approval", count: submittedUsers.length },
+    { id: "pending", label: "In Progress", count: pendingUsers.length },
   ];
 
   // Handlers
-  const handleViewProfile = (employee: CompletedEmployee) => {
-    dispatch(actions.setSelectedEmployee(employee));
-    navigate(`/admin/employees/${employee.employee_id}`);
-  };
-
+  
   const handleViewSubmittedProfile = (user: SubmittedUser) => {
     navigate(`/admin/users/submitted/${user.employee_id}`);
   };
@@ -235,11 +233,11 @@ export default function Employees() {
   };
 
   const getOnboardingStatusBadge = (status: string) => {
-    if (status === "PENDING") {
+    if (status === "PENDING_APPROVAL") {
       return (
-        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
           <FiClock className="w-3 h-3 mr-1" />
-          Pending
+          Pending Approval
         </span>
       );
     }
@@ -251,85 +249,69 @@ export default function Employees() {
     );
   };
 
-  // Pending users stats
-  const pendingNotStarted = pendingUsers.filter(
-    (u: PendingUser) => u.onboarding_status === "PENDING"
-  ).length;
-  const pendingInProgress = pendingUsers.filter(
-    (u: PendingUser) => u.onboarding_status === "IN_PROGRESS"
-  ).length;
+
 
   // Filters
   const [showExport, setShowExport] = useState(false);
-  const [showFilter, setShowFilter] = useState(false);
-  const [filters, setFilters] = useState<Record<string, string>>({
-    status: "All",
-    gender: "All",
-  });
+  const [showFieldSelector, setShowFieldSelector] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
-  const filterConfig: FilterField[] = [
-    {
-      key: "status",
-      label: "Status",
-      options: ["All", "Active", "Inactive"],
-    },
-    {
-      key: "gender",
-      label: "Gender",
-      options: ["All", "Male", "Female"],
-    },
-  ];
-
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+  const handleFilterChange = (filters: any) => {
+    dispatch(actions.setFilters(filters));
   };
 
-  const handleExport = (format: string) => {
-    console.log(`Exporting as ${format}`);
+  const handleExport = (_format: string) => {
+    // Open field selector modal when user selects a format
     setShowExport(false);
+    setShowFieldSelector(true);
   };
 
-  // Filter Logic
-  const filteredEmployees = completedEmployees.filter((emp) => {
-    const statusMatch =
-      filters.status === "All" ||
-      (filters.status === "Active" ? emp.is_active : !emp.is_active);
-    
-    const genderMatch =
-      filters.gender === "All" ||
-      (emp.employee?.gender === (filters.gender === "Male" ? "M" : "F")) ||
-      (filters.gender === "Female" && emp.employee?.gender === "Female") || // Handle potential "Female" string
-      (filters.gender === "Male" && emp.employee?.gender === "Male");
+  const handleFieldSelectorExport = async (format: ExportFormat, fields: string[]) => {
+    try {
+      setIsExporting(true);
+      const exportFilters: any = {};
+      if (employeeFilters.status && employeeFilters.status !== "All") {
+        exportFilters.status = employeeFilters.status.toLowerCase();
+      }
+      if (employeeFilters.gender && employeeFilters.gender !== "All") {
+        exportFilters.gender = employeeFilters.gender;
+      }
+      
+      const blob = await exportService.exportEmployees(format, fields, exportFilters);
+      const filename = `employees_export_${new Date().toISOString().split('T')[0]}.${exportService.getFileExtension(format)}`;
+      exportService.downloadFile(blob, filename);
+      ToastService.success(`Exported successfully as ${format.toUpperCase()}`);
+      setShowFieldSelector(false);
+    } catch (err: any) {
+      ToastService.error(err?.message || "Failed to export employees");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
-    return statusMatch && genderMatch;
-  });
+  // Filter Logic - Now handled server-side for basic filters, but client-side for strict onboarding check
+  const filteredEmployees = allEmployees.filter(
+    (emp) => emp.onboarding_status === "COMPLETED"
+  );
 
-  // Table columns for All Employees
-  const allEmployeesColumns: TableColumn<CompletedEmployee>[] = [
+  // Table columns for All Employees (Filtered View)
+  const employeesColumns: TableColumn<Employee>[] = [
     {
       key: "employee",
       header: "Employee",
       render: (emp) => (
         <div className="flex items-center gap-3">
-          {emp.employee?.documents?.photo?.[0] ? (
-            <img
-              src={emp.employee.documents.photo[0]}
-              alt={emp.employee.full_name}
-              className="w-10 h-10 rounded-full bg-gray-100 object-cover border-2 border-white shadow-sm"
-            />
-          ) : (
-            <img
-              src={getAvatarUrl(emp.employee?.gender, emp.employee_id)}
-              alt={emp.employee?.full_name}
-              className="w-10 h-10 rounded-full bg-gray-100 object-cover border-2 border-white shadow-sm"
-            />
-          )}
+          <img
+            src={getAvatarUrl(emp.gender || "N/A", emp.id)}
+            alt={emp.fullName}
+            className="w-10 h-10 rounded-full bg-gray-100 object-cover border-2 border-white shadow-sm"
+          />
           <div>
             <p className="font-medium text-k-dark-grey">
-              {emp.employee?.full_name || "N/A"}
+              {emp.fullName || "N/A"}
             </p>
             <p className="text-xs text-gray-500">
-              {getGenderLabel(emp.employee?.gender)}
+              {emp.gender || ""}
             </p>
           </div>
         </div>
@@ -340,39 +322,25 @@ export default function Employees() {
       header: "ID",
       render: (emp) => (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-          {emp.employee_id || "N/A"}
+          {emp.id}
         </span>
       ),
     },
     {
-      key: "contact",
-      header: "Contact",
+      key: "department",
+      header: "Department",
       render: (emp) => (
-        <div className="space-y-1">
-          {emp.email && (
-            <div className="flex items-center gap-1.5 text-xs text-gray-600">
-              <FiMail className="w-3 h-3" />
-              {emp.email}
-            </div>
-          )}
-          <div className="flex items-center gap-1.5 text-xs text-gray-500">
-            <FiPhone className="w-3 h-3" />
-            {getPrimaryPhone(emp.employee?.phones)}
-          </div>
+        <div className="text-sm text-gray-600">
+          {emp.department || "N/A"}
         </div>
       ),
     },
     {
-      key: "workInfo",
-      header: "Work Info",
+      key: "jobTitle",
+      header: "Job Title",
       render: (emp) => (
-        <div>
-          <div className="text-sm text-gray-600">
-            {emp.employee?.place_of_work || "Not Assigned"}
-          </div>
-          <div className="text-xs text-gray-400 mt-0.5">
-            Role: {emp.role?.name || "-"}
-          </div>
+        <div className="text-sm text-gray-600">
+          {emp.jobTitle || "N/A"}
         </div>
       ),
     },
@@ -382,12 +350,12 @@ export default function Employees() {
       render: (emp) => (
         <span
           className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-            emp.is_active
+            emp.status === "Active"
               ? "bg-green-100 text-green-700"
               : "bg-gray-100 text-gray-600"
           }`}
         >
-          {emp.is_active ? "Active" : "Inactive"}
+          {emp.status}
         </span>
       ),
     },
@@ -403,36 +371,26 @@ export default function Employees() {
               label: "View Profile",
               value: "view",
               icon: <FiEye className="w-4 h-4" />,
-              onClick: () => handleViewProfile(emp),
+              onClick: () => {
+                 // Assuming ID format is EMP-001, we might need to verify if backend expects mapped ID or this string ID
+                 // For now, navigating with internal ID if available, or just this ID
+                 navigate(`/admin/employees/${emp.id}`);
+              },
             },
             {
-              label: "Edit Details",
+              label: "Edit",
               value: "edit",
               icon: <FiEdit className="w-4 h-4" />,
-              onClick: () => {
-                // TODO: Implement edit functionality
-              },
-            },
-            {
-              label: "Delete",
-              value: "delete",
-              icon: <FiTrash2 className="w-4 h-4" />,
-              variant: "danger",
-              onClick: () => {
-                if (
-                  window.confirm(
-                    "Are you sure you want to delete this employee?"
-                  )
-                ) {
-                  // TODO: Implement delete functionality
-                }
-              },
+              onClick: () => {},
             },
           ]}
         />
       ),
     },
   ];
+
+  // allEmployeesColumns removed as we use employeesColumns for filtered view
+  /* const allEmployeesColumns: TableColumn<CompletedEmployee>[] = [...]; */
 
   // Table columns for Submitted Users
   const submittedColumns: TableColumn<SubmittedUser>[] = [
@@ -514,7 +472,7 @@ export default function Employees() {
       render: () => (
         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
           <FiClock className="w-3 h-3 mr-1" />
-          Submitted
+          Pending Approval
         </span>
       ),
     },
@@ -630,7 +588,7 @@ export default function Employees() {
       render: (user) => (
         <button
           onClick={() =>
-            user.onboarding_status === "PENDING"
+            user.onboarding_status === "IN_PROGRESS"
               ? handleUpdateEmployment(user.employee_id)
               : navigate(
                   `${routeConstants.createEmployment}?employeeId=${user.employee_id}`
@@ -639,7 +597,7 @@ export default function Employees() {
           className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg bg-orange-50 text-k-orange hover:bg-orange-100 transition-colors"
         >
           <FiBriefcase className="h-4 w-4" />
-          {user.onboarding_status === "PENDING"
+          {user.onboarding_status === "IN_PROGRESS"
             ? "Update Employment"
             : "Add Employment"}
         </button>
@@ -662,101 +620,28 @@ export default function Employees() {
           </div>
           <div className="flex flex-wrap gap-3">
             <Button
-              onClick={() => navigate("/admin/employment/create")}
-              icon={FiBriefcase}
-              variant="outline"
-            >
-              Add Employment
-            </Button>
-            <Button
-              onClick={() => setShowCreateUserModal(true)}
+              onClick={() => navigate(routeConstants.createEmployee)}
               icon={FiUserPlus}
               variant="primary"
             >
-              Create User
+              Add Employee
             </Button>
           </div>
         </div>
 
-        {/* Stats - Different for each tab */}
-        <div className="transition-opacity duration-200">
-          {activeTab === "all" && (
-            <EmployeeStats
-              totalStaff={
-                completedEmployees.length || stats?.totalEmployees || 0
-              }
-              activeCount={
-                completedEmployees.filter((e) => e.is_active).length ||
-                stats?.activeEmployees ||
-                0
-              }
-              inactiveCount={
-                completedEmployees.filter((e) => !e.is_active).length || 0
-              }
-            />
-          )}
 
-          {activeTab === "submitted" && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <StatCard
-                icon={FiClock}
-                label="Awaiting Review"
-                value={submittedUsers.length}
-                color="bg-k-orange"
-              />
-              <StatCard
-                icon={FiUserCheck}
-                label="Approved Today"
-                value="-"
-                color="bg-k-orange"
-              />
-              <StatCard
-                icon={FiX}
-                label="Rejected Today"
-                value="-"
-                color="bg-k-orange"
-              />
-            </div>
-          )}
-
-          {activeTab === "pending" && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <StatCard
-                icon={FiClock}
-                label="Not Started"
-                value={pendingNotStarted}
-                color="bg-k-orange"
-              />
-              <StatCard
-                icon={FiLoader}
-                label="In Progress"
-                value={pendingInProgress}
-                color="bg-k-orange"
-              />
-              <StatCard
-                icon={FiUsers}
-                label="Total Pending"
-                value={pendingUsers.length}
-                color="bg-k-orange"
-              />
-            </div>
-          )}
-        </div>
 
         {/* Tabs & Table */}
         <div className="bg-white rounded-2xl shadow-card p-6 overflow-hidden">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
             <TabBar tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
             
-            {/* Filter & Export (only for All Employees tab currently) */}
             {activeTab === "all" && (
-              <div className="flex gap-3">
-                <FilterDropdown
-                  isOpen={showFilter}
-                  onToggle={setShowFilter}
-                  filters={filters}
+              <div className="flex gap-3 w-full sm:w-auto">
+                <AdvancedFilterPanel
+                  filters={employeeFilters}
                   onFilterChange={handleFilterChange}
-                  config={filterConfig}
+                  className="w-full sm:w-auto"
                 />
                 <ExportDropdown
                   isOpen={showExport}
@@ -778,14 +663,14 @@ export default function Employees() {
               {activeTab === "all" && (
                 <DataTable
                   data={filteredEmployees}
-                  columns={allEmployeesColumns}
+                  columns={employeesColumns}
                   loading={isLoading}
                   keyExtractor={(emp) => emp.id}
                   emptyState={{
                     icon: FiUserPlus,
-                    title: "No approved employees found",
+                    title: "No employees found",
                     description:
-                      "Employees with completed onboarding will appear here.",
+                      "Try adjusting your filters or search criteria.",
                   }}
                   className="shadow-none"
                   itemLabel="employee"
@@ -841,17 +726,7 @@ export default function Employees() {
           </div>
         </div>
 
-        {/* Create User Modal */}
-        <Modal
-          isOpen={showCreateUserModal}
-          onClose={() => setShowCreateUserModal(false)}
-          title="Create New User Account"
-        >
-          <CreateUserForm
-            onSuccess={() => setShowCreateUserModal(false)}
-            onCancel={() => setShowCreateUserModal(false)}
-          />
-        </Modal>
+
 
         {/* Approve User Modal */}
         <Modal
@@ -888,6 +763,16 @@ export default function Employees() {
             </Button>
           </div>
         </Modal>
+
+        {/* Field Selector Modal for Export */}
+        <FieldSelectorModal
+          isOpen={showFieldSelector}
+          onClose={() => setShowFieldSelector(false)}
+          onExport={handleFieldSelectorExport}
+          type="employee"
+          title="Export Employees"
+          loading={isExporting}
+        />
       </div>
     </AdminLayout>
   );

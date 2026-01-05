@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../../components/DefaultLayout/AdminLayout";
 import {
   MdSettings,
   MdSave,
   MdRefresh,
-  MdArrowBack,
   MdCalendarToday,
   MdBusinessCenter,
   MdPeople,
@@ -18,6 +16,7 @@ import {
 } from "react-icons/md";
 import toast from "react-hot-toast";
 import Button from "../../../components/common/Button";
+import BackButton from "../../../components/common/BackButton";
 import InfoBanner from "../../../components/common/InfoBanner";
 import FormField from "../../../components/common/FormField";
 import { useLeaveSlice, leaveActions } from "../../../slice/leaveSlice";
@@ -145,7 +144,6 @@ interface LeaveSettingsFormData {
 export default function LeaveSettingsPage() {
   useLeaveSlice();
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   // Redux state
   const leaveSettings = useSelector(selectLeaveSettings);
@@ -322,15 +320,10 @@ export default function LeaveSettingsPage() {
     <AdminLayout>
       {/* Header */}
       <div className="mb-4">
-        <Button
-          onClick={() => navigate("/admin/leaves")}
-          variant="secondary"
-          size="sm"
-          className="!p-2"
-          icon={MdArrowBack}
-        >
-          Back to leave management
-        </Button>
+        <BackButton
+          to="/admin/leaves"
+          label="Back to Leave Management"
+        />
       </div>
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">

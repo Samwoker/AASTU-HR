@@ -43,6 +43,7 @@ import { SubmittedUser } from "../SubmittedUsers/slice/types";
 import ToastService from "../../../../utils/ToastService";
 import makeCall from "../../../API";
 import apiRoutes from "../../../API/apiRoutes";
+import adminService from "../../../services/adminService";
 
 import { useJobTitlesSlice } from "../Settings/JobTitles/slice";
 import { useDepartments } from "../Departments/slice";
@@ -60,7 +61,8 @@ type SectionId =
   | "workExperience"
   | "certifications"
   | "documents"
-  | "employment";
+  | "employment"
+  | "compensation";
 
 const SECTIONS = [
   { id: "personal" as SectionId, label: "Personal Details", icon: MdPerson },
@@ -72,6 +74,7 @@ const SECTIONS = [
   { id: "education" as SectionId, label: "Education", icon: MdSchool },
   { id: "workExperience" as SectionId, label: "Work Experience", icon: MdWork },
   { id: "employment" as SectionId, label: "Employment", icon: FiBriefcase },
+  { id: "compensation" as SectionId, label: "Compensation", icon: FiDollarSign },
   {
     id: "certifications" as SectionId,
     label: "Certifications",
@@ -96,6 +99,7 @@ export default function SubmittedUserDetail() {
   const jobTitles = useSelector(selectAllJobTitles) || [];
   const departments = useSelector(selectDepartments) || [];
   const departmentsLoading = useSelector(selectDepartmentsLoading);
+  const [allowanceTypes, setAllowanceTypes] = useState<any[]>([]);
 
   const [activeSection, setActiveSection] = useState<SectionId>("personal");
   const [user, setUser] = useState<SubmittedUser | null>(null);
@@ -111,6 +115,11 @@ export default function SubmittedUserDetail() {
   useEffect(() => {
     dispatch(jobTitleActions.fetchAllJobTitlesRequest());
     dispatch(departmentActions.fetchDepartmentsStart());
+
+    // Fetch allowance types
+    adminService.getAllowanceTypes().then(setAllowanceTypes).catch((err: any) => {
+        console.error("Failed to fetch allowance types", err);
+    });
   }, [dispatch, jobTitleActions, departmentActions]);
 
   // Find user from list
@@ -257,6 +266,13 @@ export default function SubmittedUserDetail() {
             departmentsLoading={departmentsLoading}
           />
         );
+      case "compensation":
+        return (
+          <CompensationSection
+            employee={employee}
+            allowanceTypes={allowanceTypes}
+          />
+        );
       default:
         return (
           <PersonalSection
@@ -277,7 +293,7 @@ export default function SubmittedUserDetail() {
             <BackButton
               to={routeConstants.submittedUsers}
               label="Back to Submitted Users"
-              className="text-gray-300 hover:text-white mb-4"
+              className="!text-gray-300 hover:!text-white"
             />
             <h1 className="text-3xl font-bold mb-2">Review Submission</h1>
             <p className="text-gray-300">
@@ -466,11 +482,6 @@ function EmploymentSection({
     job_title_id: "",
     employment_type: "Full Time",
     start_date: "",
-    gross_salary: "",
-    basic_salary: "",
-    transportation_allowance: "",
-    housing_allowance: "",
-    meal_allowance: "",
   });
 
   useEffect(() => {
@@ -494,31 +505,6 @@ function EmploymentSection({
           : "",
       employment_type: employment.employment_type || "Full Time",
       start_date: toDateInputValue(employment.start_date),
-      gross_salary:
-        employment.gross_salary !== undefined &&
-        employment.gross_salary !== null
-          ? String(employment.gross_salary)
-          : "",
-      basic_salary:
-        employment.basic_salary !== undefined &&
-        employment.basic_salary !== null
-          ? String(employment.basic_salary)
-          : "",
-      transportation_allowance:
-        employment.transportation_allowance !== undefined &&
-        employment.transportation_allowance !== null
-          ? String(employment.transportation_allowance)
-          : "",
-      housing_allowance:
-        employment.housing_allowance !== undefined &&
-        employment.housing_allowance !== null
-          ? String(employment.housing_allowance)
-          : "",
-      meal_allowance:
-        employment.meal_allowance !== undefined &&
-        employment.meal_allowance !== null
-          ? String(employment.meal_allowance)
-          : "",
     });
   }, [employment, employee?.id]);
 
@@ -551,10 +537,7 @@ function EmploymentSection({
       ToastService.error("Job title is required");
       return;
     }
-    if (!form.gross_salary || !form.basic_salary) {
-      ToastService.error("Salary fields are required");
-      return;
-    }
+
 
     try {
       setSaving(true);
@@ -562,11 +545,6 @@ function EmploymentSection({
         employee_id: form.employee_id,
         employment_type: form.employment_type,
         start_date: form.start_date,
-        gross_salary: parseFloat(form.gross_salary),
-        basic_salary: parseFloat(form.basic_salary),
-        transportation_allowance: parseFloat(form.transportation_allowance),
-        housing_allowance: parseFloat(form.housing_allowance),
-        meal_allowance: parseFloat(form.meal_allowance),
         department_id: Number(form.department_id),
         job_title_id: Number(form.job_title_id),
         manager_id: form.manager_id || undefined,
@@ -680,26 +658,6 @@ function EmploymentSection({
               : "-"
           }
         />
-        <InfoField
-          label="Gross Salary"
-          value={employment?.gross_salary ?? "-"}
-        />
-        <InfoField
-          label="Basic Salary"
-          value={employment?.basic_salary ?? "-"}
-        />
-        <InfoField
-          label="Transportation Allowance"
-          value={employment?.transportation_allowance ?? "-"}
-        />
-        <InfoField
-          label="Housing Allowance"
-          value={employment?.housing_allowance ?? "-"}
-        />
-        <InfoField
-          label="Meal Allowance"
-          value={employment?.meal_allowance ?? "-"}
-        />
         <InfoField label="Manager ID" value={employment?.manager_id || "-"} />
       </div>
 
@@ -780,53 +738,7 @@ function EmploymentSection({
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-              label="Gross Salary"
-              type="number"
-              name="gross_salary"
-              value={form.gross_salary}
-              onChange={handleChange}
-              required
-              icon={FiDollarSign}
-            />
-            <FormField
-              label="Basic Salary"
-              type="number"
-              name="basic_salary"
-              value={form.basic_salary}
-              onChange={handleChange}
-              required
-              icon={FiDollarSign}
-            />
-            <FormField
-              label="Transportation Allowance"
-              type="number"
-              name="transportation_allowance"
-              value={form.transportation_allowance}
-              onChange={handleChange}
-              required
-              icon={FiDollarSign}
-            />
-            <FormField
-              label="Housing Allowance"
-              type="number"
-              name="housing_allowance"
-              value={form.housing_allowance}
-              onChange={handleChange}
-              required
-              icon={FiDollarSign}
-            />
-            <FormField
-              label="Meal Allowance"
-              type="number"
-              name="meal_allowance"
-              value={form.meal_allowance}
-              onChange={handleChange}
-              required
-              icon={FiDollarSign}
-            />
-          </div>
+
 
           <div className="flex justify-end gap-3 pt-2">
             <Button
@@ -1331,6 +1243,82 @@ function InfoField({
     <div className="p-3 bg-gray-50 rounded-xl">
       <p className="text-sm text-gray-500 mb-1">{label}</p>
       <p className="font-medium text-k-dark-grey">{value || "N/A"}</p>
+    </div>
+  );
+}
+
+function CompensationSection({
+  employee,
+  allowanceTypes,
+}: {
+  employee: any;
+  allowanceTypes: any[];
+}) {
+  const latestEmployment = getLatestEmployment(employee?.employments || []);
+  const navigate = useNavigate();
+
+  if (!latestEmployment) {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm p-6">
+        <h2 className="text-xl font-bold text-k-dark-grey mb-6 border-b pb-4">
+          Compensation
+        </h2>
+        <p className="text-gray-500 text-center py-8">
+          No employment record found.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm p-6 animate-[slideUp_0.3s_ease-out]">
+      <div className="flex justify-between items-center mb-6 border-b pb-4">
+        <h2 className="text-xl font-bold text-k-dark-grey">Compensation</h2>
+        <Button
+          variant="outline"
+          type="button"
+          icon={FiDollarSign}
+          onClick={() =>
+            navigate(
+              `${routeConstants.createEmployment}?employeeId=${employee.id}&employmentId=${latestEmployment.id}`
+            )
+          }
+        >
+          Update Compensation
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <InfoField
+          label="Gross Salary"
+          value={latestEmployment.gross_salary ? `${Number(latestEmployment.gross_salary).toLocaleString()} ETB` : "-"}
+        />
+        <InfoField
+          label="Basic Salary"
+          value={latestEmployment.basic_salary ? `${Number(latestEmployment.basic_salary).toLocaleString()} ETB` : "-"}
+        />
+      </div>
+
+      <div className="border-t pt-6">
+        <h3 className="font-semibold text-k-dark-grey mb-4 flex items-center gap-2">
+          <FiDollarSign className="text-k-orange" /> Allowances
+        </h3>
+        {latestEmployment.allowances && latestEmployment.allowances.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {latestEmployment.allowances.map((a: any, index: number) => {
+              const typeName = a.allowanceType?.name || allowanceTypes.find((at: any) => at.id === a.allowance_type_id)?.name || "Allowance";
+              return (
+                <div key={a.id || index} className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <p className="text-sm text-gray-500 mb-1">{typeName}</p>
+                  <p className="font-bold text-k-dark-grey">{Number(a.amount).toLocaleString()} ETB</p>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-gray-500 text-sm italic">No allowances assigned.</p>
+        )}
+      </div>
     </div>
   );
 }

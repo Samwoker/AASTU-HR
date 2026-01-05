@@ -2,7 +2,7 @@ import React, { ComponentType } from "react";
 
 interface ButtonProps {
   children: React.ReactNode;
-  variant?: "primary" | "secondary" | "outline" | "link";
+  variant?: "primary" | "secondary" | "outline" | "link" | "danger";
   type?: "button" | "submit" | "reset";
   onClick?: () => void;
   disabled?: boolean;
@@ -34,10 +34,12 @@ export default function Button({
     primary:
       "text-white bg-[#e55400] shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 disabled:hover:translate-y-0 disabled:hover:shadow-lg",
     secondary:
-      "text-k-dark-grey bg-gray-100 border-2 border-gray-200 shadow-md hover:bg-gray-200 hover:-translate-y-0.5 hover:shadow-lg disabled:hover:translate-y-0 disabled:hover:bg-gray-100",
+      "text-k-dark-grey bg-white border-2 border-gray-200 shadow-md hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow-lg disabled:hover:translate-y-0 disabled:hover:bg-gray-100",
     outline:
       "text-k-dark-grey bg-white border-2 border-[#e55400] shadow-md hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow-lg disabled:hover:translate-y-0 disabled:hover:bg-white",
     link: "text-[#e55400] bg-transparent p-0 h-auto font-medium shadow-none hover:text-k-dark-grey hover:underline",
+    danger:
+      "text-white bg-red-500 shadow-md hover:bg-red-600 hover:-translate-y-0.5 hover:shadow-lg disabled:hover:translate-y-0 disabled:hover:bg-red-500",
   };
 
   const widthClass = fullWidth ? "w-full" : "";

@@ -33,3 +33,8 @@ export const selectEmployeesPagination = createSelector(
   [selectSlice],
   (state) => state.pagination,
 );
+
+export const selectEmployeesFilters = createSelector(
+  [selectSlice],
+  (state) => state.filters,
+);

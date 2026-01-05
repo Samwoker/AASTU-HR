@@ -18,3 +18,8 @@ export const selectDashboardError = createSelector(
   [selectSlice],
   (state) => state.error,
 );
+
+export const selectDashboardFilters = createSelector(
+  [selectSlice],
+  (state) => state.filters,
+);

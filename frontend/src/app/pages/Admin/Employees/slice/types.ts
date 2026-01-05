@@ -111,7 +111,7 @@ export interface CompletedEmployee {
   email: string;
   role_id: number;
   is_active: boolean;
-  onboarding_status: 'COMPLETED' | 'SUBMITTED' | 'PENDING' | 'IN_PROGRESS';
+  onboarding_status: 'COMPLETED' | 'PENDING_APPROVAL' | 'IN_PROGRESS';
   created_at: string;
   updated_at: string;
   employee: EmployeeDetails;
@@ -120,18 +120,19 @@ export interface CompletedEmployee {
 
 // Legacy Employee type for backwards compatibility
 export interface Employee {
-  id: string;
-  employee_id: string;
-  full_name: string;
-  email?: string;
-  gender: string;
-  date_of_birth: string;
-  tin_number?: string;
-  pension_number?: string;
-  place_of_work?: string;
-  company_id?: string;
-  created_at?: string;
-  updated_at?: string;
+  id: string; // "EMP-0001"
+  fullName: string;
+  department: string;
+  jobTitle: string;
+  status: string;
+  onboarding_status?: string;
+  gender?: string;
+  date_of_birth?: string;
+  manager?: {
+    id: string;
+    full_name: string;
+    jobTitle: string;
+  };
 }
 
 export interface Pagination {
@@ -141,6 +142,19 @@ export interface Pagination {
   totalPages: number;
 }
 
+export interface EmployeeFilters {
+  search?: string;
+  department_id?: string;
+  job_title_id?: string;
+  employment_type?: string;
+  status?: string;
+  gender?: string;
+  hire_date_from?: string;
+  hire_date_to?: string;
+  sortBy?: string;
+  order?: 'asc' | 'desc';
+}
+
 export interface EmployeesState {
   loading: boolean;
   error: string | null;
@@ -148,4 +162,5 @@ export interface EmployeesState {
   completedEmployees: CompletedEmployee[];
   selectedEmployee: CompletedEmployee | null;
   pagination: Pagination;
+  filters: EmployeeFilters;
 }

@@ -27,7 +27,12 @@ import {
   FiExternalLink,
   FiBriefcase,
   FiDollarSign,
+  FiTrendingUp,
+  FiTrendingDown,
+  FiRepeat,
+  FiMaximize2,
 } from "react-icons/fi";
+import { MdTimeline } from "react-icons/md";
 import {
   MdPerson,
   MdContactPhone,
@@ -41,6 +46,7 @@ import { CompletedEmployee } from "../Employees/slice/types";
 import ToastService from "../../../../utils/ToastService";
 import makeCall from "../../../API";
 import apiRoutes from "../../../API/apiRoutes";
+import adminService from "../../../services/adminService";
 
 import { useJobTitlesSlice } from "../Settings/JobTitles/slice";
 import { useDepartments } from "../Departments/slice";
@@ -50,6 +56,12 @@ import {
   selectDepartmentsLoading,
 } from "../Departments/slice/selectors";
 
+// Career Management imports
+import PromotionModal from "../../../components/Career/PromotionModal";
+import DemotionModal from "../../../components/Career/DemotionModal";
+import TransferModal from "../../../components/Career/TransferModal";
+import CareerHistoryTimeline from "../../../components/Career/CareerHistoryTimeline";
+
 // Section type definitions
 type SectionId =
   | "personal"
@@ -57,8 +69,10 @@ type SectionId =
   | "education"
   | "workExperience"
   | "employment"
+  | "compensation"
   | "certifications"
-  | "documents";
+  | "documents"
+  | "careerHistory";
 
 const SECTIONS = [
   { id: "personal" as SectionId, label: "Personal Details", icon: MdPerson },
@@ -70,12 +84,14 @@ const SECTIONS = [
   { id: "education" as SectionId, label: "Education", icon: MdSchool },
   { id: "workExperience" as SectionId, label: "Work Experience", icon: MdWork },
   { id: "employment" as SectionId, label: "Employment", icon: FiBriefcase },
+  { id: "compensation" as SectionId, label: "Compensation", icon: FiDollarSign },
   {
     id: "certifications" as SectionId,
     label: "Certifications",
     icon: MdVerifiedUser,
   },
   { id: "documents" as SectionId, label: "Documents", icon: MdUploadFile },
+  { id: "careerHistory" as SectionId, label: "Career History", icon: MdTimeline },
 ];
 
 export default function EmployeeDetail() {
@@ -93,9 +109,15 @@ export default function EmployeeDetail() {
   const jobTitles = useSelector(selectAllJobTitles) || [];
   const departments = useSelector(selectDepartments) || [];
   const departmentsLoading = useSelector(selectDepartmentsLoading);
+  const [allowanceTypes, setAllowanceTypes] = useState<any[]>([]);
 
   const [activeSection, setActiveSection] = useState<SectionId>("personal");
   const [employee, setEmployee] = useState<CompletedEmployee | null>(null);
+
+  // Career management modal states
+  const [showPromotionModal, setShowPromotionModal] = useState(false);
+  const [showDemotionModal, setShowDemotionModal] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
 
   // Fetch employees if not loaded
   useEffect(() => {
@@ -107,6 +129,11 @@ export default function EmployeeDetail() {
   useEffect(() => {
     dispatch(jobTitleActions.fetchAllJobTitlesRequest());
     dispatch(departmentActions.fetchDepartmentsStart());
+    
+    // Fetch allowance types
+    adminService.getAllowanceTypes().then(setAllowanceTypes).catch((err: any) => {
+        console.error("Failed to fetch allowance types", err);
+    });
   }, [dispatch, jobTitleActions, departmentActions]);
 
   // Find employee from list
@@ -220,6 +247,13 @@ export default function EmployeeDetail() {
             departmentsLoading={departmentsLoading}
           />
         );
+      case "compensation":
+        return (
+          <CompensationSection
+            employee={emp}
+            allowanceTypes={allowanceTypes}
+          />
+        );
       case "certifications":
         return (
           <CertificationsSection
@@ -228,6 +262,8 @@ export default function EmployeeDetail() {
         );
       case "documents":
         return <DocumentsSection documents={emp?.documents} />;
+      case "careerHistory":
+        return <CareerHistoryTimeline employeeId={employee.employee_id} />;
       default:
         return (
           <PersonalSection
@@ -239,6 +275,13 @@ export default function EmployeeDetail() {
     }
   };
 
+  // Get latest employment for career modals
+  const latestEmployment = emp?.employments?.[emp.employments.length - 1];
+
+  const handleCareerActionSuccess = () => {
+    dispatch(actions.fetchCompletedEmployeesRequest());
+  };
+
   return (
     <AdminLayout>
       <div className="min-h-screen pb-12">
@@ -248,7 +291,7 @@ export default function EmployeeDetail() {
             <BackButton
               to={routeConstants.employees}
               label="Back to Employees"
-              className="text-gray-300 hover:text-white mb-4"
+              className="!text-gray-300 hover:!text-white"
             />
             <h1 className="text-3xl font-bold mb-2">Employee Profile</h1>
             <p className="text-gray-300">
@@ -298,6 +341,43 @@ export default function EmployeeDetail() {
                 >
                   {employee.is_active ? "Active Employee" : "Inactive"}
                 </div>
+
+                {/* Full Profile Link */}
+                <button
+                  onClick={() => navigate(`/admin/employees/${employee.employee_id}/full-profile`)}
+                  className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-k-orange/10 text-k-orange rounded-xl text-sm font-medium hover:bg-k-orange/20 transition-colors"
+                >
+                  <FiMaximize2 className="w-4 h-4" />
+                  View Full Profile
+                </button>
+              </div>
+
+              {/* Career Actions */}
+              <div className="bg-white rounded-2xl shadow-sm p-4 mb-6">
+                <h3 className="text-sm font-semibold text-gray-600 mb-3">Career Actions</h3>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => setShowPromotionModal(true)}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 transition-colors"
+                  >
+                    <FiTrendingUp className="w-4 h-4" />
+                    Promote
+                  </button>
+                  <button
+                    onClick={() => setShowDemotionModal(true)}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors"
+                  >
+                    <FiTrendingDown className="w-4 h-4" />
+                    Demote
+                  </button>
+                  <button
+                    onClick={() => setShowTransferModal(true)}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors"
+                  >
+                    <FiRepeat className="w-4 h-4" />
+                    Transfer
+                  </button>
+                </div>
               </div>
 
               {/* Navigation */}
@@ -336,6 +416,38 @@ export default function EmployeeDetail() {
           </div>
         </div>
       </div>
+
+      {/* Career Management Modals */}
+      <PromotionModal
+        isOpen={showPromotionModal}
+        onClose={() => setShowPromotionModal(false)}
+        employeeId={employee.employee_id}
+        employeeName={emp?.full_name || employee.employee_id}
+        currentJobTitle={latestEmployment?.jobTitle?.title}
+        currentDepartment={latestEmployment?.department?.name}
+        currentSalary={latestEmployment?.gross_salary ? Number(latestEmployment.gross_salary) : 0}
+        onSuccess={handleCareerActionSuccess}
+      />
+
+      <DemotionModal
+        isOpen={showDemotionModal}
+        onClose={() => setShowDemotionModal(false)}
+        employeeId={employee.employee_id}
+        employeeName={emp?.full_name || employee.employee_id}
+        currentJobTitle={latestEmployment?.jobTitle?.title}
+        currentSalary={latestEmployment?.gross_salary ? Number(latestEmployment.gross_salary) : 0}
+        onSuccess={handleCareerActionSuccess}
+      />
+
+      <TransferModal
+        isOpen={showTransferModal}
+        onClose={() => setShowTransferModal(false)}
+        employeeId={employee.employee_id}
+        employeeName={emp?.full_name || employee.employee_id}
+        currentJobTitle={latestEmployment?.jobTitle?.title}
+        currentDepartment={latestEmployment?.department?.name}
+        onSuccess={handleCareerActionSuccess}
+      />
     </AdminLayout>
   );
 }
@@ -398,11 +510,6 @@ function EmploymentSection({
     job_title_id: "",
     employment_type: "Full Time",
     start_date: "",
-    gross_salary: "",
-    basic_salary: "",
-    transportation_allowance: "",
-    housing_allowance: "",
-    meal_allowance: "",
   });
 
   useEffect(() => {
@@ -426,31 +533,6 @@ function EmploymentSection({
           : "",
       employment_type: employment.employment_type || "Full Time",
       start_date: toDateInputValue(employment.start_date),
-      gross_salary:
-        employment.gross_salary !== undefined &&
-        employment.gross_salary !== null
-          ? String(employment.gross_salary)
-          : "",
-      basic_salary:
-        employment.basic_salary !== undefined &&
-        employment.basic_salary !== null
-          ? String(employment.basic_salary)
-          : "",
-      transportation_allowance:
-        employment.transportation_allowance !== undefined &&
-        employment.transportation_allowance !== null
-          ? String(employment.transportation_allowance)
-          : "",
-      housing_allowance:
-        employment.housing_allowance !== undefined &&
-        employment.housing_allowance !== null
-          ? String(employment.housing_allowance)
-          : "",
-      meal_allowance:
-        employment.meal_allowance !== undefined &&
-        employment.meal_allowance !== null
-          ? String(employment.meal_allowance)
-          : "",
     });
   }, [employment, employee?.id]);
 
@@ -483,10 +565,7 @@ function EmploymentSection({
       ToastService.error("Job title is required");
       return;
     }
-    if (!form.gross_salary || !form.basic_salary) {
-      ToastService.error("Salary fields are required");
-      return;
-    }
+
 
     try {
       setSaving(true);
@@ -494,11 +573,6 @@ function EmploymentSection({
         employee_id: form.employee_id,
         employment_type: form.employment_type,
         start_date: form.start_date,
-        gross_salary: parseFloat(form.gross_salary),
-        basic_salary: parseFloat(form.basic_salary),
-        transportation_allowance: parseFloat(form.transportation_allowance),
-        housing_allowance: parseFloat(form.housing_allowance),
-        meal_allowance: parseFloat(form.meal_allowance),
         department_id: Number(form.department_id),
         job_title_id: Number(form.job_title_id),
         manager_id: form.manager_id || undefined,
@@ -612,26 +686,6 @@ function EmploymentSection({
               : "-"
           }
         />
-        <InfoField
-          label="Gross Salary"
-          value={employment?.gross_salary ?? "-"}
-        />
-        <InfoField
-          label="Basic Salary"
-          value={employment?.basic_salary ?? "-"}
-        />
-        <InfoField
-          label="Transportation Allowance"
-          value={employment?.transportation_allowance ?? "-"}
-        />
-        <InfoField
-          label="Housing Allowance"
-          value={employment?.housing_allowance ?? "-"}
-        />
-        <InfoField
-          label="Meal Allowance"
-          value={employment?.meal_allowance ?? "-"}
-        />
         <InfoField label="Manager ID" value={employment?.manager_id || "-"} />
       </div>
 
@@ -712,53 +766,7 @@ function EmploymentSection({
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-              label="Gross Salary"
-              type="number"
-              name="gross_salary"
-              value={form.gross_salary}
-              onChange={handleChange}
-              required
-              icon={FiDollarSign}
-            />
-            <FormField
-              label="Basic Salary"
-              type="number"
-              name="basic_salary"
-              value={form.basic_salary}
-              onChange={handleChange}
-              required
-              icon={FiDollarSign}
-            />
-            <FormField
-              label="Transportation Allowance"
-              type="number"
-              name="transportation_allowance"
-              value={form.transportation_allowance}
-              onChange={handleChange}
-              required
-              icon={FiDollarSign}
-            />
-            <FormField
-              label="Housing Allowance"
-              type="number"
-              name="housing_allowance"
-              value={form.housing_allowance}
-              onChange={handleChange}
-              required
-              icon={FiDollarSign}
-            />
-            <FormField
-              label="Meal Allowance"
-              type="number"
-              name="meal_allowance"
-              value={form.meal_allowance}
-              onChange={handleChange}
-              required
-              icon={FiDollarSign}
-            />
-          </div>
+
 
           <div className="flex justify-end gap-3 pt-2">
             <Button
@@ -1263,6 +1271,82 @@ function InfoField({
     <div className="p-3 bg-gray-50 rounded-xl">
       <p className="text-sm text-gray-500 mb-1">{label}</p>
       <p className="font-medium text-k-dark-grey">{value || "N/A"}</p>
+    </div>
+  );
+}
+
+function CompensationSection({
+  employee,
+  allowanceTypes,
+}: {
+  employee: any;
+  allowanceTypes: any[];
+}) {
+  const latestEmployment = getLatestEmployment(employee?.employments || []);
+  const navigate = useNavigate();
+
+  if (!latestEmployment) {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm p-6">
+        <h2 className="text-xl font-bold text-k-dark-grey mb-6 border-b pb-4">
+          Compensation
+        </h2>
+        <p className="text-gray-500 text-center py-8">
+          No employment record found. Please add employment first to manage compensation.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm p-6 animate-[slideUp_0.3s_ease-out]">
+      <div className="flex justify-between items-center mb-6 border-b pb-4">
+        <h2 className="text-xl font-bold text-k-dark-grey">Compensation</h2>
+        <Button
+          variant="outline"
+          type="button"
+          icon={FiDollarSign}
+          onClick={() =>
+            navigate(
+              `${routeConstants.createEmployment}?employeeId=${employee.id}&employmentId=${latestEmployment.id}`
+            )
+          }
+        >
+          Update Compensation
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <InfoField
+          label="Gross Salary"
+          value={latestEmployment.gross_salary ? `${Number(latestEmployment.gross_salary).toLocaleString()} ETB` : "-"}
+        />
+        <InfoField
+          label="Basic Salary"
+          value={latestEmployment.basic_salary ? `${Number(latestEmployment.basic_salary).toLocaleString()} ETB` : "-"}
+        />
+      </div>
+
+      <div className="border-t pt-6">
+        <h3 className="font-semibold text-k-dark-grey mb-4 flex items-center gap-2">
+          <FiDollarSign className="text-k-orange" /> Allowances
+        </h3>
+        {latestEmployment.allowances && latestEmployment.allowances.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {latestEmployment.allowances.map((a: any, index: number) => {
+              const typeName = a.allowanceType?.name || allowanceTypes.find((at: any) => at.id === a.allowance_type_id)?.name || "Allowance";
+              return (
+                <div key={a.id || index} className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <p className="text-sm text-gray-500 mb-1">{typeName}</p>
+                  <p className="font-bold text-k-dark-grey">{Number(a.amount).toLocaleString()} ETB</p>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-gray-500 text-sm italic">No allowances assigned.</p>
+        )}
+      </div>
     </div>
   );
 }

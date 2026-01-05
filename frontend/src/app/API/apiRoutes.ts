@@ -61,6 +61,9 @@ const apiRoutes = {
   // Job Title Management routes
   jobTitles: `${BASE_URL}/job-titles`,
 
+  // Allowance Type Management routes
+  allowanceTypes: `${BASE_URL}/allowance-types`,
+
   // ==========================================
   // Leave Management routes
   // ==========================================
@@ -129,6 +132,24 @@ const apiRoutes = {
 
   // Leave Settings
   leaveSettings: `${BASE_URL}/leave-settings`,
+
+  // ==========================================
+  // Export Management routes
+  // ==========================================
+  exportFields: (type: string) => `${BASE_URL}/export/fields?type=${type}`,
+  exportEmployees: `${BASE_URL}/export/employees`,
+  exportEmployments: `${BASE_URL}/export/employments`,
+  exportEmployeeProfile: (id: string) => `${BASE_URL}/export/employee/${id}`,
+
+  // ==========================================
+  // Career Management routes
+  // ==========================================
+  careerPromote: `${BASE_URL}/career/promote`,
+  careerDemote: `${BASE_URL}/career/demote`,
+  careerTransfer: `${BASE_URL}/career/transfer`,
+  careerEvents: `${BASE_URL}/career/events`,
+  careerEventsByEmployee: (employeeId: string) =>
+    `${BASE_URL}/career/events/${employeeId}`,
 };
 
 export default apiRoutes;

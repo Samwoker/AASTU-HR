@@ -6,6 +6,7 @@ import CreateEmployee from "../../app/pages/Admin/CreateEmployee";
 import Departments from "../../app/pages/Admin/Departments";
 import Employees from "../../app/pages/Admin/Employees";
 import EmployeeDetail from "../../app/pages/Admin/EmployeeDetail";
+import FullEmployeeProfile from "../../app/pages/Admin/FullEmployeeProfile";
 import SubmittedUsers from "../../app/pages/Admin/SubmittedUsers";
 import SubmittedUserDetail from "../../app/pages/Admin/SubmittedUserDetail";
 import PendingUsers from "../../app/pages/Admin/PendingUsers";
@@ -19,6 +20,7 @@ import EmployeeLogin from "../../app/pages/Authentication/EmployeeLogin";
 import AdminLogin from "../../app/pages/Authentication/AdminLogin";
 import ForgotPassword from "../../app/pages/Authentication/ForgotPassword";
 import ResetPassword from "../../app/pages/Authentication/ResetPassword";
+import SetupAccount from "../../app/pages/Authentication/SetupAccount";
 import EmployeeOnboarding from "../../app/pages/employee/Onboarding";
 import LeaveApplication from "../../app/pages/employee/LeaveApplication";
 import LeaveRecall from "../../app/pages/employee/LeaveRecall";
@@ -43,6 +45,11 @@ export const routes: IRoute[] = [
   {
     path: routeConstants.resetPassword,
     element: <ResetPassword />,
+    isAuthenticated: false,
+  },
+  {
+    path: routeConstants.setupAccount,
+    element: <SetupAccount />,
     isAuthenticated: false,
   },
   {
@@ -88,6 +95,11 @@ export const routes: IRoute[] = [
   {
     path: routeConstants.employeeDetail,
     element: <EmployeeDetail />,
+    isAuthenticated: true,
+  },
+  {
+    path: routeConstants.fullEmployeeProfile,
+    element: <FullEmployeeProfile />,
     isAuthenticated: true,
   },
   {

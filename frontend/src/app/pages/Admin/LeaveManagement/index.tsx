@@ -4,17 +4,16 @@ import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../../components/DefaultLayout/AdminLayout";
 import {
   MdCalendarToday,
-  MdPending,
-  MdCheckCircle,
+
   MdRefresh,
   MdVisibility,
   MdCheck,
   MdClose,
   MdFilterList,
-  MdPeople,
+
   MdInsertDriveFile,
   MdNotifications,
-  MdAttachMoney,
+
   MdEdit,
   MdSettings,
   MdEvent,
@@ -30,7 +29,7 @@ import Modal from "../../../components/common/Modal";
 import StatusBadge from "../../../components/common/StatusBadge";
 import Button from "../../../components/common/Button";
 import DataTable, { TableColumn } from "../../../components/common/DataTable";
-import StatCard from "../../../components/common/StatCard";
+
 import TabBar, { Tab } from "../../../components/common/TabBar";
 import InfoBanner from "../../../components/common/InfoBanner";
 import FormField from "../../../components/common/FormField";
@@ -43,7 +42,7 @@ import {
   selectLeaveSuccess,
   selectLeaveError,
   selectLeaveMessage,
-  selectLeaveStats,
+
   selectOnLeaveCount,
   selectOnLeaveEmployees,
   selectExpiringBalances,
@@ -150,7 +149,7 @@ export default function LeaveManagement() {
   const success = useSelector(selectLeaveSuccess);
   const error = useSelector(selectLeaveError);
   const message = useSelector(selectLeaveMessage);
-  const leaveStats = useSelector(selectLeaveStats);
+
   const onLeaveCount = useSelector(selectOnLeaveCount);
   const onLeaveEmployees = useSelector(selectOnLeaveEmployees);
   const expiringBalances = useSelector(selectExpiringBalances);
@@ -203,7 +202,7 @@ export default function LeaveManagement() {
   // Fetch data on mount and state change
   useEffect(() => {
     const fetchData = () => {
-      dispatch(leaveActions.getLeaveStatsRequest());
+
 
       const baseParams = {
           page,
@@ -477,15 +476,7 @@ export default function LeaveManagement() {
 
   const displayData = Array.isArray(displayDataSource) ? displayDataSource : [];
 
-  const defaultStats = {
-    totalEmployees: 0,
-    onLeaveToday: onLeaveCount,
-    pendingApplications: actualPendingApplications.length,
-    approvedTotal: allApplicationsWithPending.filter((a) => a.current_status === "APPROVED").length,
-    rejectedTotal: allApplicationsWithPending.filter((a) => a.current_status === "REJECTED").length,
-  };
-  const stats = { ...defaultStats, ...(leaveStats ?? {}) };
-  const approvedCountDisplay = stats.approvedTotal !== undefined ? stats.approvedTotal : stats.approvedThisMonth;
+
 
 
   const tabs: Tab[] = [
@@ -773,32 +764,7 @@ export default function LeaveManagement() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard
-          icon={MdPeople}
-          label="On Leave Today"
-          value={stats?.onLeaveToday || 0}
-          color="bg-k-orange"
-        />
-        <StatCard
-          icon={MdPending}
-          label="Pending Approval"
-          value={stats?.pendingApplications || 0}
-          color="bg-k-orange"
-        />
-        <StatCard
-          icon={MdCheckCircle}
-          label="Approved"
-          value={Number(approvedCountDisplay) || 0}
-          color="bg-k-orange"
-        />
-        <StatCard
-          icon={MdAttachMoney}
-          label="Pending Cash-Out"
-          value={pendingCashOutCount || 0}
-          color="bg-k-orange"
-        />
-      </div>
+
 
       <div className="bg-white rounded-2xl shadow-card p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">

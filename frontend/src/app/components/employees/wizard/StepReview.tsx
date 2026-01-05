@@ -1,7 +1,13 @@
 import React from "react";
 import { MdEdit, MdInsertDriveFile } from "react-icons/md";
 
-const ReviewSection = ({ title, onEdit, children }) => (
+interface ReviewSectionProps {
+  title: string;
+  onEdit: () => void;
+  children: React.ReactNode;
+}
+
+const ReviewSection = ({ title, onEdit, children }: ReviewSectionProps) => (
   <div className="bg-gray-50 rounded-xl p-6 mb-6">
     <div className="flex justify-between items-center mb-4 border-b border-gray-200 pb-2">
       <h3 className="text-lg font-bold text-k-dark-grey font-heading">
@@ -18,7 +24,12 @@ const ReviewSection = ({ title, onEdit, children }) => (
   </div>
 );
 
-const ReviewItem = ({ label, value }) => (
+interface ReviewItemProps {
+  label: string;
+  value: string | null | undefined;
+}
+
+const ReviewItem = ({ label, value }: ReviewItemProps) => (
   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
     <span className="text-sm font-medium text-k-medium-grey">{label}</span>
     <span className="text-sm text-k-dark-grey sm:col-span-2 font-medium wrap-break-words">
@@ -27,7 +38,12 @@ const ReviewItem = ({ label, value }) => (
   </div>
 );
 
-const FileList = ({ files, label }) => {
+interface FileListProps {
+  files: any;
+  label: string;
+}
+
+const FileList = ({ files, label }: FileListProps) => {
   if (!files) return <ReviewItem label={label} value="Not uploaded" />;
 
   const fileArray = Array.isArray(files) ? files : [files];
@@ -86,7 +102,12 @@ const FileList = ({ files, label }) => {
   );
 };
 
-export default function StepReview({ formData, onEditStep }) {
+interface StepReviewProps {
+  formData: any;
+  onEditStep: (step: number) => void;
+}
+
+export default function StepReview({ formData, onEditStep }: StepReviewProps) {
   return (
     <div className="space-y-8 animate-[fadeIn_0.3s_ease-out]">
       <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
@@ -116,7 +137,7 @@ export default function StepReview({ formData, onEditStep }) {
           <p className="text-sm font-medium text-k-medium-grey mb-2">
             Phone Numbers
           </p>
-          {formData.phones.map((phone, index) => (
+          {formData.phones.map((phone: any, index: number) => (
             <div
               key={index}
               className="bg-white p-2 rounded border border-gray-200 mb-2 text-sm"
@@ -138,7 +159,7 @@ export default function StepReview({ formData, onEditStep }) {
       {/* Education */}
       <ReviewSection title="Education" onEdit={() => onEditStep(3)}>
         {formData.education.length > 0 ? (
-          formData.education.map((edu, index) => (
+          formData.education.map((edu: any, index: number) => (
             <div
               key={index}
               className="bg-white p-3 rounded border border-gray-200 mb-3 last:mb-0"
@@ -167,7 +188,7 @@ export default function StepReview({ formData, onEditStep }) {
       {/* Work Experience */}
       <ReviewSection title="Work Experience" onEdit={() => onEditStep(4)}>
         {formData.workExperience.length > 0 ? (
-          formData.workExperience.map((exp, index) => (
+          formData.workExperience.map((exp: any, index: number) => (
             <div
               key={index}
               className="bg-white p-3 rounded border border-gray-200 mb-3 last:mb-0"
@@ -192,7 +213,7 @@ export default function StepReview({ formData, onEditStep }) {
       {/* Certifications */}
       <ReviewSection title="Certifications" onEdit={() => onEditStep(5)}>
         {formData.certifications.length > 0 ? (
-          formData.certifications.map((cert, index) => (
+          formData.certifications.map((cert: any, index: number) => (
             <div
               key={index}
               className="bg-white p-3 rounded border border-gray-200 mb-3 last:mb-0"
@@ -216,21 +237,23 @@ export default function StepReview({ formData, onEditStep }) {
 
       {/* Documents */}
       <ReviewSection title="Documents" onEdit={() => onEditStep(6)}>
-        <FileList label="CV / Resume" files={formData.documents.cv} />
-        <FileList
-          label="Educational Certificates"
-          files={formData.documents.certificates}
-        />
-        <FileList label="Photo / ID" files={formData.documents.photo} />
-        <FileList
-          label="Work Experience Letters"
-          files={formData.documents.experienceLetters}
-        />
-        <FileList label="Tax Forms" files={formData.documents.taxForms} />
-        <FileList
-          label="Pension Forms"
-          files={formData.documents.pensionForms}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+          <FileList label="CV / Resume" files={formData.documents.cv} />
+          <FileList
+            label="Educational Certificates"
+            files={formData.documents.certificates}
+          />
+          <FileList label="Photo / ID" files={formData.documents.photo} />
+          <FileList
+            label="Work Experience Letters"
+            files={formData.documents.experienceLetters}
+          />
+          <FileList label="Tax Forms" files={formData.documents.taxForms} />
+          <FileList
+            label="Pension Forms"
+            files={formData.documents.pensionForms}
+          />
+        </div>
       </ReviewSection>
     </div>
   );

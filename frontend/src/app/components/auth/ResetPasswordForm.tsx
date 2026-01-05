@@ -11,15 +11,20 @@ import authService from "../../services/authService";
 interface ResetPasswordFormProps {
   title?: string;
   subtitle?: string;
+  token?: string;
 }
 
 export default function ResetPasswordForm({
   title = "Reset Password",
   subtitle = "Enter a new password",
+  token: propToken,
 }: ResetPasswordFormProps) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const token = useMemo(() => searchParams.get("token") || "", [searchParams]);
+  const token = useMemo(() => propToken || searchParams.get("token") || "", [
+    propToken,
+    searchParams,
+  ]);
   const didShowMissingTokenToast = useRef(false);
 
   const [password, setPassword] = useState("");

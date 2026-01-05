@@ -1,49 +1,51 @@
-import Button from "./Button";
+import { useNavigate, Link } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
-
-type ButtonVariant = "primary" | "secondary" | "outline" | "link";
 
 interface BackButtonProps {
   label?: string;
   to?: string;
   fallbackTo?: string;
-  variant?: ButtonVariant;
-  className?: string;
+  className?: string; // Optional extra classes
 }
 
+/**
+ * Standardized Back Button/Link for Admin Pages
+ * Matches the "Back to Employees" style from the CreateEmployee page.
+ */
 export default function BackButton({
   label = "Back",
   to,
   fallbackTo,
-  variant = "link",
   className = "",
 }: BackButtonProps) {
   const navigate = useNavigate();
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (to) return; // Let Link handle it if 'to' is provided
+    
+    e.preventDefault();
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else if (fallbackTo) {
+      navigate(fallbackTo);
+    }
+  };
+
+  const containerClasses = `flex items-center text-k-medium-grey hover:text-k-orange transition-colors mb-4 w-fit cursor-pointer ${className}`;
+
+  if (to) {
+    return (
+      <Link to={to} className={containerClasses}>
+        <FiArrowLeft className="mr-2" />
+        {label}
+      </Link>
+    );
+  }
+
   return (
-    <Button
-      type="button"
-      variant={variant}
-      icon={FiArrowLeft}
-      className={className}
-      onClick={() => {
-        if (to) {
-          navigate(to);
-          return;
-        }
-
-        if (window.history.length > 1) {
-          navigate(-1);
-          return;
-        }
-
-        if (fallbackTo) {
-          navigate(fallbackTo);
-        }
-      }}
-    >
+    <div onClick={handleClick} className={containerClasses}>
+      <FiArrowLeft className="mr-2" />
       {label}
-    </Button>
+    </div>
   );
 }

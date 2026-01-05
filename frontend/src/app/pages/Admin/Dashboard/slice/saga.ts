@@ -3,28 +3,43 @@ import { dashboardActions } from "./index";
 import makeCall from "../../../../API";
 import apiRoutes from "../../../../API/apiRoutes";
 
-function* fetchDashboardStats() {
+function* fetchDashboardStats(action: ReturnType<typeof dashboardActions.fetchStatsRequest>) {
   try {
+    const filters = action.payload || {};
+    const queryParams = new URLSearchParams();
+
+    if (filters.department_id && filters.department_id !== 'All') {
+      queryParams.append('department_id', filters.department_id);
+    }
+    if (filters.start_date) {
+      queryParams.append('start_date', filters.start_date);
+    }
+    if (filters.end_date) {
+      queryParams.append('end_date', filters.end_date);
+    }
+
+    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+
     const [employeesRes, departmentsRes, activeRes, managersRes]: any[] =
       yield all([
         call(makeCall, {
           method: "GET",
-          route: apiRoutes.employeesCount,
+          route: `${apiRoutes.employeesCount}${queryString}`,
           isSecureRoute: true,
         }),
         call(makeCall, {
           method: "GET",
-          route: apiRoutes.departmentsCount,
+          route: `${apiRoutes.departmentsCount}${queryString}`,
           isSecureRoute: true,
         }),
         call(makeCall, {
           method: "GET",
-          route: apiRoutes.activeEmploymentsCount,
+          route: `${apiRoutes.activeEmploymentsCount}${queryString}`,
           isSecureRoute: true,
         }),
         call(makeCall, {
           method: "GET",
-          route: apiRoutes.managersCount,
+          route: `${apiRoutes.managersCount}${queryString}`,
           isSecureRoute: true,
         }),
       ]);
