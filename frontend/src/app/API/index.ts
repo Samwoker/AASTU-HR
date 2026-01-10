@@ -6,11 +6,12 @@ export interface IAPICallConfig {
   body?: any;
   query?: any;
   isSecureRoute?: boolean;
+  responseType?: 'arraybuffer' | 'blob' | 'document' | 'json' | 'text' | 'stream';
 }
 
 const makeCall = async (config: IAPICallConfig): Promise<AxiosResponse> => {
   try {
-    const { method, route, body, query, isSecureRoute = true } = config;
+    const { method, route, body, query, isSecureRoute = true, responseType } = config;
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -29,6 +30,7 @@ const makeCall = async (config: IAPICallConfig): Promise<AxiosResponse> => {
       data: body,
       params: query,
       headers,
+      responseType,
     };
 
     const response = await axios(axiosConfig);

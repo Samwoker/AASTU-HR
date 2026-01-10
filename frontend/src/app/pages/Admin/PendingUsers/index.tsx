@@ -124,7 +124,10 @@ export default function PendingUsers() {
   return (
     <AdminLayout>
       <div className="max-w-7xl mx-auto space-y-8">
-        <BackButton to={routeConstants.employees} />
+        <BackButton 
+          to={routeConstants.employees} 
+          label="Back to Employees"
+        />
 
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

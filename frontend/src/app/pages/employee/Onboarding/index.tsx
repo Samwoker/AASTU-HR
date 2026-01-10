@@ -170,6 +170,8 @@ export default function EmployeeOnboarding() {
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [shouldRedirect, setShouldRedirect] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
   const [formData, setFormData] = useState<FormData>({
     // Personal Info (flat structure)
     fullName: "",
@@ -345,13 +347,19 @@ export default function EmployeeOnboarding() {
           const onboardingStatus = response.data.onboarding_status;
           if (
             onboardingStatus &&
-            !["PENDING", "IN_PROGRESS"].includes(onboardingStatus)
+            !["PENDING_APPROVAL", "IN_PROGRESS"].includes(onboardingStatus)
           ) {
             setShouldRedirect(true);
             setIsLoadingStatus(false);
             dispatch(authActions.getMeRequest());
             navigate("/employee/dashboard", { replace: true });
             return;
+          }
+
+          if (onboardingStatus === "PENDING_APPROVAL") {
+             setIsSubmitted(true);
+             setIsLoadingStatus(false);
+             return;
           }
 
           // Only show loading toast if we're actually going to load data
@@ -876,6 +884,9 @@ export default function EmployeeOnboarding() {
       }
 
       navigate("/employee/dashboard", { replace: true });
+      // Show success screen instead of redirecting immediately
+      setIsSubmitted(true);
+      window.scrollTo(0, 0);
     } catch (error: unknown) {
       console.error("Submission error:", error);
       toast.dismiss(submittingToast);
@@ -972,6 +983,25 @@ export default function EmployeeOnboarding() {
           <p className="text-k-medium-grey">Loading your onboarding data...</p>
         </div>
       </div>
+    );
+  }
+
+  if (isSubmitted) {
+    return (
+       <div className="min-h-screen bg-k-light-grey flex items-center justify-center p-4">
+         <div className="bg-white rounded-2xl shadow-card p-8 md:p-12 max-w-lg w-full text-center">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <MdCheck className="w-10 h-10 text-green-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-k-dark-grey mb-3">Application Submitted!</h2>
+            <p className="text-k-medium-grey mb-8">
+               Thank you for completing your onboarding. Your application has been submitted and is currently pending approval from HR. You will be notified once it is reviewed.
+            </p>
+            <Button onClick={() => navigate("/employee/dashboard")} variant="primary" fullWidth>
+               Go to Dashboard
+            </Button>
+         </div>
+       </div>
     );
   }
 

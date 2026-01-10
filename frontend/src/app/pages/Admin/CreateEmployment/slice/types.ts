@@ -6,9 +6,11 @@ export interface CreateEmploymentPayload {
   end_date?: string;
   gross_salary: number;
   basic_salary: number;
-  transportation_allowance: number;
-  housing_allowance: number;
-  meal_allowance: number;
+  allowances?: {
+    allowance_type_id: number;
+    amount: number;
+    effective_date?: string;
+  }[];
   department_id: number;
   job_title_id: number;
   cost_sharing_status?: string;

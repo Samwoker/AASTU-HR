@@ -5,12 +5,27 @@ import apiRoutes from '../../../../API/apiRoutes';
 
 export function* fetchAllEmployees(action: ReturnType<typeof employeesActions.fetchAllEmployeesRequest>) {
   try {
-    const { page = 1, limit = 10 } = action.payload || {};
-    const queryParams = `?page=${page}&limit=${limit}`;
+    const { page = 1, limit = 10, filters } = action.payload || {};
+    
+    // Construct query parameters
+    const queryParams = new URLSearchParams();
+    queryParams.append('page', page.toString());
+    queryParams.append('limit', limit.toString());
+
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        if (filters[key] && filters[key] !== 'All' && filters[key] !== '') {
+          queryParams.append(key, filters[key]);
+        }
+      });
+    }
+
+    const queryString = queryParams.toString();
+    const route = `${apiRoutes.employees}?${queryString}`;
 
     // Fetch employees and total count in parallel
     const [employeesRes, countRes]: any[] = yield all([
-      call(makeCall, { method: 'GET', route: `${apiRoutes.employees}${queryParams}`, isSecureRoute: true }),
+      call(makeCall, { method: 'GET', route, isSecureRoute: true }),
       call(makeCall, { method: 'GET', route: apiRoutes.employeesCount, isSecureRoute: true }),
     ]);
 

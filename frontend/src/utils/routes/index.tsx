@@ -6,18 +6,25 @@ import CreateEmployee from "../../app/pages/Admin/CreateEmployee";
 import Departments from "../../app/pages/Admin/Departments";
 import Employees from "../../app/pages/Admin/Employees";
 import EmployeeDetail from "../../app/pages/Admin/EmployeeDetail";
+import FullEmployeeProfile from "../../app/pages/Admin/FullEmployeeProfile";
 import SubmittedUsers from "../../app/pages/Admin/SubmittedUsers";
 import SubmittedUserDetail from "../../app/pages/Admin/SubmittedUserDetail";
 import PendingUsers from "../../app/pages/Admin/PendingUsers";
+import LeaveManagement from "../../app/pages/Admin/LeaveManagement";
+import LeaveTypes from "../../app/pages/Admin/LeaveTypes";
+import PublicHolidays from "../../app/pages/Admin/PublicHolidays";
+import LeaveSettings from "../../app/pages/Admin/LeaveSettings";
 import EmployeeDashboard from "../../app/pages/employee/Dashboard";
 import Login from "../../app/pages/Authentication/Login";
 import EmployeeLogin from "../../app/pages/Authentication/EmployeeLogin";
 import AdminLogin from "../../app/pages/Authentication/AdminLogin";
 import ForgotPassword from "../../app/pages/Authentication/ForgotPassword";
 import ResetPassword from "../../app/pages/Authentication/ResetPassword";
+import SetupAccount from "../../app/pages/Authentication/SetupAccount";
 import EmployeeOnboarding from "../../app/pages/employee/Onboarding";
 import LeaveApplication from "../../app/pages/employee/LeaveApplication";
 import LeaveRecall from "../../app/pages/employee/LeaveRecall";
+import LeaveCashOut from "../../app/pages/employee/LeaveCashOut";
 import ProfileUpdateLayout from "../../app/pages/employee/ProfileUpdate/ProfileUpdateLayout";
 import Settings from "../../app/pages/Admin/Settings";
 import NotFound from "../../app/pages/ErrorDisplayPage/NotFound";
@@ -38,6 +45,11 @@ export const routes: IRoute[] = [
   {
     path: routeConstants.resetPassword,
     element: <ResetPassword />,
+    isAuthenticated: false,
+  },
+  {
+    path: routeConstants.setupAccount,
+    element: <SetupAccount />,
     isAuthenticated: false,
   },
   {
@@ -86,6 +98,11 @@ export const routes: IRoute[] = [
     isAuthenticated: true,
   },
   {
+    path: routeConstants.fullEmployeeProfile,
+    element: <FullEmployeeProfile />,
+    isAuthenticated: true,
+  },
+  {
     path: routeConstants.submittedUsers,
     element: <SubmittedUsers />,
     isAuthenticated: true,
@@ -126,6 +143,11 @@ export const routes: IRoute[] = [
     isAuthenticated: true,
   },
   {
+    path: routeConstants.employeeLeaveCashOut,
+    element: <LeaveCashOut />,
+    isAuthenticated: true,
+  },
+  {
     path: routeConstants.employeeProfile,
     element: <ProfileUpdateLayout />,
     isAuthenticated: true,
@@ -133,6 +155,26 @@ export const routes: IRoute[] = [
   {
     path: routeConstants.settings,
     element: <Settings />,
+    isAuthenticated: true,
+  },
+  {
+    path: routeConstants.adminLeaves,
+    element: <LeaveManagement />,
+    isAuthenticated: true,
+  },
+  {
+    path: routeConstants.adminLeaveTypes,
+    element: <LeaveTypes />,
+    isAuthenticated: true,
+  },
+  {
+    path: routeConstants.adminPublicHolidays,
+    element: <PublicHolidays />,
+    isAuthenticated: true,
+  },
+  {
+    path: routeConstants.adminLeaveSettings,
+    element: <LeaveSettings />,
     isAuthenticated: true,
   },
   {

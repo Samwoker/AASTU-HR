@@ -15,6 +15,7 @@ export const initialState: EmployeesState = {
     total: 0,
     totalPages: 0,
   },
+  filters: {},
 };
 
 const slice = createSlice({
@@ -22,7 +23,7 @@ const slice = createSlice({
   initialState,
   reducers: {
     // Legacy actions for old employees list
-    fetchAllEmployeesRequest(state, _action: PayloadAction<{ page: number; limit: number } | undefined>) {
+    fetchAllEmployeesRequest(state, _action: PayloadAction<{ page?: number; limit?: number; filters?: any } | undefined>) {
       state.loading = true;
       state.error = null;
     },
@@ -68,6 +69,14 @@ const slice = createSlice({
     // Clear selected employee
     clearSelectedEmployee(state) {
       state.selectedEmployee = null;
+    },
+
+    // Filter actions
+    setFilters(state, action: PayloadAction<any>) {
+      state.filters = { ...state.filters, ...action.payload };
+    },
+    clearFilters(state) {
+      state.filters = {};
     },
   },
 });

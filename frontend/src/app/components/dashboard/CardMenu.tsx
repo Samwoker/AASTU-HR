@@ -1,13 +1,24 @@
 import React, { useState, useRef, useEffect } from "react";
 import { MdMoreVert } from "react-icons/md";
 
-export default function CardMenu({ actions = [] }) {
+interface Action {
+  label: string;
+  icon?: React.ElementType;
+  onClick: () => void;
+  danger?: boolean;
+}
+
+interface CardMenuProps {
+  actions?: Action[];
+}
+
+export default function CardMenu({ actions = [] }: CardMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };

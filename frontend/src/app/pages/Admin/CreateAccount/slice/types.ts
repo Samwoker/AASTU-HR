@@ -4,10 +4,36 @@ export interface CreateAccountState {
   success: boolean;
 }
 
+export interface EmploymentPayload {
+  employmentType: string;
+  grossSalary: number;
+  basicSalary?: number;
+  departmentId: number;
+  jobTitleId: number;
+  managerId?: string;
+  startDate: string;
+}
+
+export interface EmployeePayload {
+  fullName: string;
+  gender?: string;
+  dateOfBirth?: string;
+  tinNumber?: string;
+  pensionNumber?: string;
+  employment: EmploymentPayload;
+}
+
+export interface AllowancePayload {
+  allowance_type_id: number;
+  amount: number;
+  effective_date: string;
+}
+
 export interface CreateAccountPayload {
   email: string;
-  password: string;
   role: string;
+  employee: EmployeePayload;
+  allowances?: AllowancePayload[];
 }
 
 export interface CreateAccountResponse {

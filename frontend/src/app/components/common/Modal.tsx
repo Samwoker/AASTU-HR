@@ -2,7 +2,7 @@ import { useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { MdClose } from "react-icons/md";
 
-type ModalSize = "sm" | "md" | "lg" | "xl" | "2xl";
+type ModalSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "full";
 
 interface ModalProps {
   isOpen: boolean;
@@ -49,6 +49,10 @@ export default function Modal({
     lg: "max-w-lg",
     xl: "max-w-xl",
     "2xl": "max-w-2xl",
+    "3xl": "max-w-3xl",
+    "4xl": "max-w-4xl",
+    "5xl": "max-w-5xl",
+    full: "max-w-full m-4",
   };
 
   return createPortal(
@@ -61,7 +65,7 @@ export default function Modal({
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
 
       <div
-        className={`relative bg-white rounded-2xl shadow-xl w-full ${sizeClasses[size]} transform transition-all animate-[scaleIn_0.2s_ease-out]`}
+        className={`relative bg-white rounded-2xl shadow-xl w-full ${sizeClasses[size]} transform transition-all animate-[scaleIn_0.2s_ease-out] flex flex-col max-h-[90vh]`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
@@ -76,7 +80,7 @@ export default function Modal({
           </button>
         </div>
 
-        <div className="p-6">{children}</div>
+        <div className="p-6 overflow-y-auto">{children}</div>
       </div>
     </div>,
     document.body
