@@ -251,14 +251,53 @@ function* getAllLeaveBalancesSaga(
     });
 
     const raw = response?.data;
-    const balances: LeaveBalance[] =
-      (Array.isArray(raw?.balances) && raw.balances) ||
-      (Array.isArray(raw?.data?.balances) && raw.data.balances) ||
-      (Array.isArray(raw?.data) && raw.data) ||
-      (Array.isArray(raw) && raw) ||
-      [];
+
+    // Supports multiple backend response shapes.
+    // New shape: { status, message, data: { fiscal_year, employees: [{..., leaveBalances: [...] }], pagination } }
+    let balances: LeaveBalance[] = [];
+
+    const employees = raw?.data?.employees ?? raw?.employees;
+    const fiscalYear = raw?.data?.fiscal_year ?? raw?.fiscal_year;
+
+    if (Array.isArray(employees)) {
+      balances = employees.flatMap((emp: any) => {
+        const employeeRef = {
+          id: emp?.id,
+          full_name: emp?.full_name,
+          gender: emp?.gender,
+          employments: Array.isArray(emp?.employments) ? emp.employments : [],
+        } as any;
+
+        const leaveBalances = Array.isArray(emp?.leaveBalances)
+          ? emp.leaveBalances
+          : Array.isArray(emp?.leave_balances)
+          ? emp.leave_balances
+          : [];
+
+        return leaveBalances.map((lb: any) => ({
+          ...lb,
+          employee_id: lb?.employee_id ?? emp?.id,
+          fiscal_year: lb?.fiscal_year ?? fiscalYear,
+          total_entitlement: Number(lb?.total_entitlement ?? 0),
+          used_days: Number(lb?.used_days ?? 0),
+          pending_days: Number(lb?.pending_days ?? 0),
+          remaining_days: Number(lb?.remaining_days ?? 0),
+          employee: employeeRef,
+          leaveType: lb?.leaveType ?? lb?.leave_type,
+        }));
+      });
+    } else {
+      // Older shapes that return a flat list of balances
+      balances =
+        (Array.isArray(raw?.balances) && raw.balances) ||
+        (Array.isArray(raw?.data?.balances) && raw.data.balances) ||
+        (Array.isArray(raw?.data) && raw.data) ||
+        (Array.isArray(raw) && raw) ||
+        [];
+    }
+
     const pagination: Pagination | undefined =
-      raw?.pagination ?? raw?.data?.pagination;
+      raw?.data?.pagination ?? raw?.pagination ?? raw?.data?.pagination;
 
     yield put(
       leaveActions.getAllLeaveBalancesSuccess({
@@ -717,40 +756,40 @@ function* getOnLeaveEmployeesSaga(
 
     // Robust parsing to handle various API response structures
     if (Array.isArray(response)) {
-        employees = response;
-        count = response.length;
+      employees = response;
+      count = response.length;
     } else if (Array.isArray(response?.data)) {
-        employees = response.data;
-        count = response.data.length;
+      employees = response.data;
+      count = response.data.length;
     } else if (Array.isArray(response?.data?.employees)) {
-        employees = response.data.employees;
-        count = response.data.count || employees.length;
+      employees = response.data.employees;
+      count = response.data.count || employees.length;
     } else if (Array.isArray(response?.data?.data?.employees)) {
-        // Deeply nested: AxiosResponse -> data -> data -> employees
-        employees = response.data.data.employees.map((emp: any) => ({
-             ...emp,
-             id: emp.application_id || emp.id,
-             // Ensure photo is a string if the component expects it, or leave as is if array works
-        }));
-        count = response.data.data.count || employees.length;
+      // Deeply nested: AxiosResponse -> data -> data -> employees
+      employees = response.data.data.employees.map((emp: any) => ({
+        ...emp,
+        id: emp.application_id || emp.id,
+        // Ensure photo is a string if the component expects it, or leave as is if array works
+      }));
+      count = response.data.data.count || employees.length;
     } else if (Array.isArray(response?.data?.data?.applications)) {
-        // Deeply nested fallback: AxiosResponse -> data -> data -> applications
-        employees = response.data.data.applications.map((app: any) => ({
-            id: app.id,
-            employee_id: app.employee?.id || app.employee_id,
-            full_name: app.employee?.full_name,
-            photo: app.employee?.documents?.photo?.[0] || null,
-            department: app.employee?.employments?.[0]?.department?.name,
-            job_title: app.employee?.employments?.[0]?.job_title,
-            leave_type: app.leaveType?.name,
-            is_paid: app.leaveType?.is_paid,
-            start_date: app.start_date,
-            end_date: app.end_date,
-            return_date: app.return_date,
-            requested_days: app.requested_days,
-            phone: app.employee?.phones?.[0]?.phone_number
-        }));
-        count = response.data.data.count || employees.length;
+      // Deeply nested fallback: AxiosResponse -> data -> data -> applications
+      employees = response.data.data.applications.map((app: any) => ({
+        id: app.id,
+        employee_id: app.employee?.id || app.employee_id,
+        full_name: app.employee?.full_name,
+        photo: app.employee?.documents?.photo?.[0] || null,
+        department: app.employee?.employments?.[0]?.department?.name,
+        job_title: app.employee?.employments?.[0]?.job_title,
+        leave_type: app.leaveType?.name,
+        is_paid: app.leaveType?.is_paid,
+        start_date: app.start_date,
+        end_date: app.end_date,
+        return_date: app.return_date,
+        requested_days: app.requested_days,
+        phone: app.employee?.phones?.[0]?.phone_number,
+      }));
+      count = response.data.data.count || employees.length;
     }
 
     yield put(
@@ -1301,7 +1340,11 @@ function* notifyExpiringBalancesSaga(
       body: action?.payload ?? {},
       isSecureRoute: true,
     });
-    yield put(leaveActions.notifyExpiringBalancesSuccess({ notified: response.data.notified }));
+    yield put(
+      leaveActions.notifyExpiringBalancesSuccess({
+        notified: response.data.notified,
+      })
+    );
   } catch (error: any) {
     const errorMessage =
       error?.message ||
@@ -1335,12 +1378,15 @@ function* requestCashOutSaga(
   action: ReturnType<typeof leaveActions.requestCashOutRequest>
 ) {
   try {
-    const response: { data: { cashOut: CashOutRequest } } = yield call(makeCall, {
-      method: "POST",
-      route: apiRoutes.requestCashOut,
-      body: action.payload,
-      isSecureRoute: true,
-    });
+    const response: { data: { cashOut: CashOutRequest } } = yield call(
+      makeCall,
+      {
+        method: "POST",
+        route: apiRoutes.requestCashOut,
+        body: action.payload,
+        isSecureRoute: true,
+      }
+    );
     yield put(
       leaveActions.requestCashOutSuccess(
         response.data.cashOut || (response.data as any)
@@ -1357,11 +1403,14 @@ function* requestCashOutSaga(
 
 function* getMyCashOutRequestsSaga() {
   try {
-    const response: { data: { requests: CashOutRequest[] } } = yield call(makeCall, {
-      method: "GET",
-      route: apiRoutes.myCashOutRequests,
-      isSecureRoute: true,
-    });
+    const response: { data: { requests: CashOutRequest[] } } = yield call(
+      makeCall,
+      {
+        method: "GET",
+        route: apiRoutes.myCashOutRequests,
+        isSecureRoute: true,
+      }
+    );
     yield put(
       leaveActions.getMyCashOutRequestsSuccess(
         response.data.requests || (response.data as any) || []
@@ -1428,11 +1477,14 @@ function* approveCashOutSaga(
   action: ReturnType<typeof leaveActions.approveCashOutRequest>
 ) {
   try {
-    const response: { data: { cashOut: CashOutRequest } } = yield call(makeCall, {
-      method: "PUT",
-      route: apiRoutes.approveCashOut(action.payload),
-      isSecureRoute: true,
-    });
+    const response: { data: { cashOut: CashOutRequest } } = yield call(
+      makeCall,
+      {
+        method: "PUT",
+        route: apiRoutes.approveCashOut(action.payload),
+        isSecureRoute: true,
+      }
+    );
     yield put(
       leaveActions.approveCashOutSuccess(
         response.data.cashOut || (response.data as any)
@@ -1452,12 +1504,15 @@ function* rejectCashOutSaga(
 ) {
   try {
     const { id, rejection_reason } = action.payload;
-    const response: { data: { cashOut: CashOutRequest } } = yield call(makeCall, {
-      method: "PUT",
-      route: apiRoutes.rejectCashOut(id),
-      body: { rejection_reason },
-      isSecureRoute: true,
-    });
+    const response: { data: { cashOut: CashOutRequest } } = yield call(
+      makeCall,
+      {
+        method: "PUT",
+        route: apiRoutes.rejectCashOut(id),
+        body: { rejection_reason },
+        isSecureRoute: true,
+      }
+    );
     yield put(
       leaveActions.rejectCashOutSuccess(
         response.data.cashOut || (response.data as any)
@@ -1643,10 +1698,7 @@ export function* leaveSaga() {
     leaveActions.calculateCashOutRequest.type,
     calculateCashOutSaga
   );
-  yield takeLatest(
-    leaveActions.requestCashOutRequest.type,
-    requestCashOutSaga
-  );
+  yield takeLatest(leaveActions.requestCashOutRequest.type, requestCashOutSaga);
   yield takeLatest(
     leaveActions.getMyCashOutRequestsRequest.type,
     getMyCashOutRequestsSaga
@@ -1655,12 +1707,6 @@ export function* leaveSaga() {
     leaveActions.getAllCashOutRequestsRequest.type,
     getAllCashOutRequestsSaga
   );
-  yield takeLatest(
-    leaveActions.approveCashOutRequest.type,
-    approveCashOutSaga
-  );
-  yield takeLatest(
-    leaveActions.rejectCashOutRequest.type,
-    rejectCashOutSaga
-  );
+  yield takeLatest(leaveActions.approveCashOutRequest.type, approveCashOutSaga);
+  yield takeLatest(leaveActions.rejectCashOutRequest.type, rejectCashOutSaga);
 }

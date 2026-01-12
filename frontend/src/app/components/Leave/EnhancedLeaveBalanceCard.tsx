@@ -55,13 +55,28 @@ export const EnhancedLeaveBalanceCard = ({
   const typeName = leaveType?.name || balance.leaveType?.name || "Leave";
   
   // Calculate percentage for progress bar
-  const totalEntitlement = Number(balance.annual_entitlement || balance.total_entitlement || 0);
-  const accruedEntitlement = Number(balance.accrued_entitlement || balance.total_entitlement || 0);
+  // Some APIs provide both an annual entitlement (e.g., 16 days/yr for Annual Leave)
+  // and an accrued/available entitlement to-date. For display, "Total" should reflect
+  // the accrued/available entitlement, not the annual default.
+  const annualEntitlement = Number(
+    balance.annual_entitlement ?? balance.total_entitlement ?? 0
+  );
+  const accruedEntitlement = Number(
+    balance.accrued_entitlement ?? balance.total_entitlement ?? 0
+  );
+  const totalEntitlementForDisplay = Number(
+    balance.total_entitlement ?? accruedEntitlement ?? 0
+  );
   const usedDays = Number(balance.used_days || 0);
   const remainingDays = Number(balance.remaining_days || 0);
   
-  const usedPercentage = totalEntitlement > 0 ? (usedDays / totalEntitlement) * 100 : 0;
-  const accrualPercentage = totalEntitlement > 0 ? (accruedEntitlement / totalEntitlement) * 100 : 0;
+  const percentageDenominator = annualEntitlement > 0 ? annualEntitlement : accruedEntitlement;
+  const usedPercentage =
+    percentageDenominator > 0 ? (usedDays / percentageDenominator) * 100 : 0;
+  const accrualPercentage =
+    percentageDenominator > 0
+      ? (accruedEntitlement / percentageDenominator) * 100
+      : 0;
   
   // Cash-out info
   const cashOutInfo = balance.cash_out;
@@ -106,7 +121,7 @@ export const EnhancedLeaveBalanceCard = ({
         <div className="flex justify-between text-xs text-gray-500 mb-4">
           <span>Used: {usedDays}</span>
           <span>Accrued: {accruedEntitlement.toFixed(1)}</span>
-          <span>Total: {totalEntitlement}</span>
+          <span>Total: {totalEntitlementForDisplay.toFixed(1)}</span>
         </div>
       </div>
 
