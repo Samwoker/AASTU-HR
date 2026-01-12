@@ -53,16 +53,32 @@ export const EnhancedLeaveBalanceCard = ({
   const navigate = useNavigate();
   const Icon = getLeaveIcon(leaveType?.code || "ANNUAL");
   const typeName = leaveType?.name || balance.leaveType?.name || "Leave";
-  
+
   // Calculate percentage for progress bar
-  const totalEntitlement = Number(balance.annual_entitlement || balance.total_entitlement || 0);
-  const accruedEntitlement = Number(balance.accrued_entitlement || balance.total_entitlement || 0);
+  // Some APIs provide both an annual entitlement (e.g., 16 days/yr for Annual Leave)
+  // and an accrued/available entitlement to-date. For display, "Total" should reflect
+  // the accrued/available entitlement, not the annual default.
+  const annualEntitlement = Number(
+    balance.annual_entitlement ?? balance.total_entitlement ?? 0
+  );
+  const accruedEntitlement = Number(
+    balance.accrued_entitlement ?? balance.total_entitlement ?? 0
+  );
+  const totalEntitlementForDisplay = Number(
+    balance.total_entitlement ?? accruedEntitlement ?? 0
+  );
   const usedDays = Number(balance.used_days || 0);
   const remainingDays = Number(balance.remaining_days || 0);
-  
-  const usedPercentage = totalEntitlement > 0 ? (usedDays / totalEntitlement) * 100 : 0;
-  const accrualPercentage = totalEntitlement > 0 ? (accruedEntitlement / totalEntitlement) * 100 : 0;
-  
+
+  const percentageDenominator =
+    annualEntitlement > 0 ? annualEntitlement : accruedEntitlement;
+  const usedPercentage =
+    percentageDenominator > 0 ? (usedDays / percentageDenominator) * 100 : 0;
+  const accrualPercentage =
+    percentageDenominator > 0
+      ? (accruedEntitlement / percentageDenominator) * 100
+      : 0;
+
   // Cash-out info
   const cashOutInfo = balance.cash_out;
   const hasCashOut = cashOutInfo && cashOutInfo.eligible_days > 0;
@@ -87,7 +103,7 @@ export const EnhancedLeaveBalanceCard = ({
           </div>
         </div>
         <h3 className="text-lg font-semibold mb-2">{typeName}</h3>
-        
+
         {/* Progress Bar */}
         <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden mb-2">
           {/* Accrued (total available) */}
@@ -101,12 +117,12 @@ export const EnhancedLeaveBalanceCard = ({
             style={{ width: `${Math.min(usedPercentage, 100)}%` }}
           />
         </div>
-        
+
         {/* Stats Row */}
         <div className="flex justify-between text-xs text-gray-500 mb-4">
           <span>Used: {usedDays}</span>
           <span>Accrued: {accruedEntitlement.toFixed(1)}</span>
-          <span>Total: {totalEntitlement}</span>
+          <span>Total: {totalEntitlementForDisplay.toFixed(1)}</span>
         </div>
       </div>
 
@@ -123,19 +139,29 @@ export const EnhancedLeaveBalanceCard = ({
                 </div>
                 <div className="grid grid-cols-3 gap-3 text-sm">
                   <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
-                    <span className="text-gray-500 font-medium block mb-1">Carried Over</span>
+                    <span className="text-gray-500 font-medium block mb-1">
+                      Carried Over
+                    </span>
                     <p className="font-bold text-blue-600 text-base">
                       {balance.accrual_details.carried_over_days} days
                     </p>
                   </div>
                   <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
-                    <span className="text-gray-500 font-medium block mb-1">Accrued This Year</span>
+                    <span className="text-gray-500 font-medium block mb-1">
+                      Accrued This Year
+                    </span>
                     <p className="font-bold text-green-600 text-base">
-                      +{balance.accrual_details.accrued_days_current_year?.toFixed(2)} days
+                      +
+                      {balance.accrual_details.accrued_days_current_year?.toFixed(
+                        2
+                      )}{" "}
+                      days
                     </p>
                   </div>
                   <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
-                    <span className="text-gray-500 font-medium block mb-1">Total Available</span>
+                    <span className="text-gray-500 font-medium block mb-1">
+                      Total Available
+                    </span>
                     <p className="font-bold text-k-dark-grey text-base">
                       {accruedEntitlement.toFixed(2)} days
                     </p>
@@ -143,15 +169,22 @@ export const EnhancedLeaveBalanceCard = ({
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mt-2">
                   <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
-                    <span className="text-gray-500 font-medium block mb-1">Base + Tenure Bonus</span>
+                    <span className="text-gray-500 font-medium block mb-1">
+                      Base + Tenure Bonus
+                    </span>
                     <p className="font-bold text-k-dark-grey">
-                      {balance.accrual_details.base_entitlement} + {balance.accrual_details.tenure_bonus_days} = {balance.annual_entitlement} days/yr
+                      {balance.accrual_details.base_entitlement} +{" "}
+                      {balance.accrual_details.tenure_bonus_days} ={" "}
+                      {balance.annual_entitlement} days/yr
                     </p>
                   </div>
                   <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
-                    <span className="text-gray-500 font-medium block mb-1">Daily Rate</span>
+                    <span className="text-gray-500 font-medium block mb-1">
+                      Daily Rate
+                    </span>
                     <p className="font-bold text-k-dark-grey">
-                      {balance.accrual_details.daily_rate.toFixed(4)}/day ({balance.accrual_details.days_worked} days worked)
+                      {balance.accrual_details.daily_rate.toFixed(4)}/day (
+                      {balance.accrual_details.days_worked} days worked)
                     </p>
                   </div>
                 </div>
@@ -167,20 +200,28 @@ export const EnhancedLeaveBalanceCard = ({
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="bg-white p-3 rounded-lg border border-green-100 shadow-sm">
-                    <span className="text-green-600 font-medium block mb-1">Eligible Days</span>
+                    <span className="text-green-600 font-medium block mb-1">
+                      Eligible Days
+                    </span>
                     <p className="font-bold text-green-700 text-base">
                       {cashOutInfo!.eligible_days} days
                     </p>
                   </div>
                   <div className="bg-white p-3 rounded-lg border border-green-100 shadow-sm">
-                    <span className="text-green-600 font-medium block mb-1">Est. Value</span>
+                    <span className="text-green-600 font-medium block mb-1">
+                      Est. Value
+                    </span>
                     <p className="font-bold text-green-700 text-base">
-                      {(cashOutInfo?.cash_value || 0).toLocaleString()} {cashOutInfo?.currency || "ETB"}
+                      {(cashOutInfo?.cash_value || 0).toLocaleString()}{" "}
+                      {cashOutInfo?.currency || "ETB"}
                     </p>
                   </div>
                 </div>
                 <div className="bg-white/50 p-3 rounded-lg border border-green-100 mt-auto text-xs text-green-700">
-                  <p className="italic">You can convert these accrued days into a cash payment based on your current salary.</p>
+                  <p className="italic">
+                    You can convert these accrued days into a cash payment based
+                    on your current salary.
+                  </p>
                 </div>
               </div>
             ) : (
@@ -189,9 +230,12 @@ export const EnhancedLeaveBalanceCard = ({
                   <MdAttachMoney className="text-2xl" />
                 </div>
                 <div className="text-center">
-                  <p className="text-base font-bold text-gray-400">Cash-Out Unavailable</p>
+                  <p className="text-base font-bold text-gray-400">
+                    Cash-Out Unavailable
+                  </p>
                   <p className="text-xs text-gray-400 max-w-[200px] mt-1 italic">
-                    Leave encashment is currently not available for this leave type or your current eligibility status.
+                    Leave encashment is currently not available for this leave
+                    type or your current eligibility status.
                   </p>
                 </div>
               </div>
@@ -201,11 +245,17 @@ export const EnhancedLeaveBalanceCard = ({
       )}
 
       {/* Action Buttons */}
-      <div className={`p-6 pt-2 mt-auto ${hasCashOut ? 'flex flex-col sm:flex-row gap-3' : 'space-y-3'}`}>
+      <div
+        className={`p-6 pt-2 mt-auto ${
+          hasCashOut ? "flex flex-col sm:flex-row gap-3" : "space-y-3"
+        }`}
+      >
         <button
           onClick={onApply}
           disabled={disabled || remainingDays <= 0}
-          className={`py-3 rounded-xl font-bold transition-all shadow-md text-sm ${hasCashOut ? 'flex-1' : 'w-full'} ${
+          className={`py-3 rounded-xl font-bold transition-all shadow-md text-sm ${
+            hasCashOut ? "flex-1" : "w-full"
+          } ${
             disabled || remainingDays <= 0
               ? "bg-gray-300 text-gray-500 cursor-not-allowed"
               : "bg-k-dark-grey text-white hover:bg-black cursor-pointer hover:shadow-lg"
@@ -213,7 +263,7 @@ export const EnhancedLeaveBalanceCard = ({
         >
           {remainingDays <= 0 ? "No Balance" : "Apply for Leave"}
         </button>
-        
+
         {hasCashOut && (
           <button
             onClick={() => navigate(routeConstants.employeeLeaveCashOut)}
@@ -222,7 +272,6 @@ export const EnhancedLeaveBalanceCard = ({
             Request Cash-Out
           </button>
         )}
-        
       </div>
     </div>
   );
@@ -258,7 +307,9 @@ export const CompactLeaveBalanceCard = ({
           <Icon className="text-xl text-k-orange" />
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-semibold text-k-dark-grey truncate">{typeName}</h4>
+          <h4 className="text-sm font-semibold text-k-dark-grey truncate">
+            {typeName}
+          </h4>
           <div className="flex items-center gap-2 text-xs text-gray-500">
             <span>{remainingDays} left</span>
             <span className="text-gray-300">•</span>
@@ -266,14 +317,20 @@ export const CompactLeaveBalanceCard = ({
           </div>
         </div>
         <div className="text-right">
-          <span className="text-2xl font-bold text-k-dark-grey">{remainingDays}</span>
+          <span className="text-2xl font-bold text-k-dark-grey">
+            {remainingDays}
+          </span>
         </div>
       </div>
       {/* Mini progress bar */}
       <div className="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
         <div
           className="h-full bg-k-orange rounded-full transition-all"
-          style={{ width: `${totalEntitlement > 0 ? (usedDays / totalEntitlement) * 100 : 0}%` }}
+          style={{
+            width: `${
+              totalEntitlement > 0 ? (usedDays / totalEntitlement) * 100 : 0
+            }%`,
+          }}
         />
       </div>
     </div>
