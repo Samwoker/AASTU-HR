@@ -243,7 +243,7 @@ export default function ResetPasswordForm({
             )}
 
             <Button type="submit" variant="primary" fullWidth loading={loading}>
-              Reset Password
+              {title === "Setup Account" ? "Activate Account" : "Reset Password"}
             </Button>
 
             {error === "Link expired. Please request a new reset link." && (

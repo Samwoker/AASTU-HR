@@ -36,25 +36,59 @@ const KachaSpinner: React.FC<KachaSpinnerProps> = ({
       className={`inline-flex flex-col items-center justify-center ${className}`}
     >
       <style>{`
-        @keyframes kacha-k-cycle {
-          0%, 6% {
+        /* 
+         * Draw-Erase-Redraw Animation Cycle
+         * One full cycle: Draw all 3 strokes sequentially → Erase all 3 strokes sequentially
+         * Timeline (100% = full cycle):
+         *   0-10%:   Draw vertical line
+         *   10-20%:  Draw top slash  
+         *   20-30%:  Draw bottom slash
+         *   30-50%:  Hold complete K
+         *   50-60%:  Erase vertical line
+         *   60-70%:  Erase top slash
+         *   70-80%:  Erase bottom slash
+         *   80-100%: Pause before restart
+         */
+        
+        @keyframes kacha-draw-erase-v-line {
+          0% {
             stroke-dashoffset: 100;
-            opacity: 0;
           }
-          10%, 100% {
+          10%, 50% {
             stroke-dashoffset: 0;
-            opacity: 1;
+          }
+          60%, 100% {
+            stroke-dashoffset: 100;
           }
         }
 
-        @keyframes kacha-k-fade {
-          0%, 90% { opacity: 1; }
-          100% { opacity: 0; }
+        @keyframes kacha-draw-erase-top-slash {
+          0%, 10% {
+            stroke-dashoffset: 100;
+          }
+          20%, 50% {
+            stroke-dashoffset: 0;
+          }
+          70%, 100% {
+            stroke-dashoffset: 100;
+          }
+        }
+
+        @keyframes kacha-draw-erase-bot-slash {
+          0%, 20% {
+            stroke-dashoffset: 100;
+          }
+          30%, 50% {
+            stroke-dashoffset: 0;
+          }
+          80%, 100% {
+            stroke-dashoffset: 100;
+          }
         }
 
         @keyframes kacha-k-breathe {
           0%, 100% { transform: scale(1); }
-          45% { transform: scale(1.03); }
+          40% { transform: scale(1.03); }
         }
 
         .kacha-k-wrapper {
@@ -62,26 +96,26 @@ const KachaSpinner: React.FC<KachaSpinnerProps> = ({
           will-change: transform;
         }
 
-        .kacha-k-svg {
-          animation: kacha-k-fade ${KACHA_SPINNER_CYCLE_MS}ms ease-in-out infinite;
-        }
-
         .kacha-stroke {
           stroke-dasharray: 100;
           stroke-dashoffset: 100;
-          animation: kacha-k-cycle ${KACHA_SPINNER_CYCLE_MS}ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
-          will-change: stroke-dashoffset, opacity;
+          will-change: stroke-dashoffset;
         }
 
-        /* Sequence: vertical -> top -> bottom */
-        .kacha-v-line { animation-delay: 0ms; }
-        .kacha-top-slash { animation-delay: 220ms; }
-        .kacha-bot-slash { animation-delay: 440ms; }
-
-        /* Slightly different glow per stroke for depth */
-        .kacha-v-line { filter: drop-shadow(0 0 3px rgba(229, 84, 0, 0.35)); }
-        .kacha-top-slash { filter: drop-shadow(0 0 3px rgba(255, 218, 0, 0.45)); }
-        .kacha-bot-slash { filter: drop-shadow(0 0 3px rgba(229, 84, 0, 0.28)); }
+        .kacha-v-line { 
+          animation: kacha-draw-erase-v-line ${KACHA_SPINNER_CYCLE_MS}ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+          filter: drop-shadow(0 0 3px rgba(229, 84, 0, 0.35)); 
+        }
+        
+        .kacha-top-slash { 
+          animation: kacha-draw-erase-top-slash ${KACHA_SPINNER_CYCLE_MS}ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+          filter: drop-shadow(0 0 3px rgba(255, 218, 0, 0.45)); 
+        }
+        
+        .kacha-bot-slash { 
+          animation: kacha-draw-erase-bot-slash ${KACHA_SPINNER_CYCLE_MS}ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+          filter: drop-shadow(0 0 3px rgba(229, 84, 0, 0.28)); 
+        }
       `}</style>
 
       <div className="kacha-k-wrapper">
@@ -90,7 +124,7 @@ const KachaSpinner: React.FC<KachaSpinnerProps> = ({
           height={svgSize}
           viewBox="0 0 100 100"
           xmlns="http://www.w3.org/2000/svg"
-          className="kacha-k-svg"
+          className="kacha-k-svg-container"
         >
           {/* Vertical line (left side of K) - Orange */}
           <path
