@@ -1,7 +1,15 @@
-const BASE_URL =
-  import.meta.env.VITE_BASE_URL || "http://localhost:5000/api/v1";
+const RAW_BASE_URL =
+  import.meta.env.VITE_API_URL || import.meta.env.VITE_BASE_URL;
 
-export const SERVER_URL = BASE_URL.replace("/api/v1", "");
+if (!RAW_BASE_URL) {
+  throw new Error(
+    "Missing API base URL. Set VITE_API_URL (recommended) or VITE_BASE_URL in frontend/.env (example: VITE_API_URL=http://localhost:5000/api/v1)."
+  );
+}
+
+const BASE_URL = String(RAW_BASE_URL).replace(/\/+$/, "");
+
+export const SERVER_URL = BASE_URL.replace(/\/api\/v1\/?$/, "");
 
 const apiRoutes = {
   // Define your routes here as you add them
@@ -82,7 +90,8 @@ const apiRoutes = {
     advancedStats: `${BASE_URL}/analytics/advanced-stats`,
   },
   experienceLetter: (id: string) => `${BASE_URL}/experience-letter/${id}`,
-  certificateOfService: (id: string) => `${BASE_URL}/certificate-of-service/${id}`,
+  certificateOfService: (id: string) =>
+    `${BASE_URL}/certificate-of-service/${id}`,
 
   // Leave Management
   leaveTypes: `${BASE_URL}/leave-types`,

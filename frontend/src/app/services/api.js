@@ -1,7 +1,16 @@
 import axios from "axios";
 
+const RAW_BASE_URL =
+  import.meta.env.VITE_API_URL || import.meta.env.VITE_BASE_URL;
+
+if (!RAW_BASE_URL) {
+  throw new Error(
+    "Missing API base URL. Set VITE_API_URL (recommended) or VITE_BASE_URL in frontend/.env (example: VITE_API_URL=http://localhost:5000/api/v1)."
+  );
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1",
+  baseURL: String(RAW_BASE_URL).replace(/\/+$/, ""),
   headers: {
     "Content-Type": "application/json",
   },
