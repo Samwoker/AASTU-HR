@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import Input from "../common/Input";
@@ -37,6 +37,7 @@ export default function LoginForm({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
+  const toastShownRef = useRef(false);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -54,8 +55,12 @@ export default function LoginForm({
       dispatch(authActions.reset());
     }
 
-    if (isSuccess && user) {
+    if (isSuccess && user && !toastShownRef.current) {
+      toastShownRef.current = true;
       const handleRedirect = async () => {
+        // Show welcome message once
+        toast.success(`Welcome back, ${user?.email || "User"}!`);
+
         // Determine redirect path based on user role_id
         let path = redirectPath;
 
@@ -64,19 +69,19 @@ export default function LoginForm({
           // role_id mapping: 1 = Admin, 2 = HR, 3 = Employee
           if (user?.role_id === 1 || user?.role_id === 2) {
             path = "/admin/dashboard";
-            toast.success(`Welcome back, ${user?.email || "User"}!`);
             navigate(path);
           } else {
             // For employees, check onboarding status first
             try {
               const response = await onboardingService.getStatus();
 
-              if (response.data?.onboarding_status === "COMPLETED") {
-                // Onboarding completed - go directly to dashboard
+              const status = response.data?.onboarding_status;
+
+              if (status === "COMPLETED") {
                 path = "/employee/dashboard";
-                toast.success(`Welcome back, ${user?.email || "User"}!`);
+              } else if (status === "PENDING_APPROVAL") {
+                path = "/employee/waiting-approval";
               } else {
-                // Onboarding not completed - go to onboarding page
                 path = "/employee/onboarding";
               }
 
@@ -89,7 +94,6 @@ export default function LoginForm({
             }
           }
         } else {
-          toast.success(`Welcome back, ${user?.email || "User"}!`);
           navigate(path);
         }
 

@@ -1,40 +1,72 @@
-import { createSelector } from '@reduxjs/toolkit';
-import { initialState } from '.';
-import { RootState } from '../../../../../store/types/RootState';
+import { createSelector } from "@reduxjs/toolkit";
+import { initialState } from ".";
+import { RootState } from "../../../../../store/types/RootState";
 
-const selectSlice = (state: RootState) => state.employees || initialState;
+export const selectEmployeesState = (state: RootState) =>
+  state.employees || initialState;
+const selectSlice = selectEmployeesState;
 
 export const selectAllEmployees = createSelector(
   [selectSlice],
-  (state) => state.employees,
-);
-
-export const selectCompletedEmployees = createSelector(
-  [selectSlice],
-  (state) => state.completedEmployees,
-);
-
-export const selectSelectedEmployee = createSelector(
-  [selectSlice],
-  (state) => state.selectedEmployee,
+  (state) => state[state.activeTab].data
 );
 
 export const selectEmployeesLoading = createSelector(
   [selectSlice],
-  (state) => state.loading,
+  (state) => state.loading
 );
 
 export const selectEmployeesError = createSelector(
   [selectSlice],
-  (state) => state.error,
+  (state) => state.error
 );
 
 export const selectEmployeesPagination = createSelector(
   [selectSlice],
-  (state) => state.pagination,
+  (state) => state[state.activeTab].pagination
 );
 
-export const selectEmployeesFilters = createSelector(
+export const selectLastFetched = createSelector(
   [selectSlice],
-  (state) => state.filters,
+  (state) => state[state.activeTab].lastFetched
+);
+
+export const selectSelectedEmployee = createSelector(
+  [selectSlice],
+  (state) => state.selectedEmployee
+);
+
+export const selectEmployeeDetails = createSelector(
+  [selectSlice],
+  (state) => state.detailsCache
+);
+
+export const selectApproveSuccess = createSelector(
+  [selectSlice],
+  (state) => state.approveSuccess
+);
+
+export const selectDeleteSuccess = createSelector(
+  [selectSlice],
+  (state) => state.deleteSuccess
+);
+
+export const selectActivateSuccess = createSelector(
+  [selectSlice],
+  (state) => state.activateSuccess
+);
+
+export const selectEmployeeFilters = createSelector(
+  [selectSlice],
+  (state) => state.filters
+);
+
+export const selectActiveTab = createSelector(
+  [selectSlice],
+  (state) => state.activeTab
+);
+
+export const selectExportSuccess = createSelector(
+  [selectSlice],
+  (state) => state.exportSuccess
 );

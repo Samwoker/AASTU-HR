@@ -8,7 +8,7 @@ import Modal from "../../../components/common/Modal";
 import FormField from "../../../components/common/FormField";
 import { FiPlus } from "react-icons/fi";
 import ToastService from "../../../../utils/ToastService";
-import Table from "../../../components/Core/ui/Table";
+import DataTable from "../../../components/common/DataTable";
 
 export default function Departments() {
   const { actions } = useDepartments();
@@ -43,19 +43,23 @@ export default function Departments() {
           </Button>
         </div>
 
-        <Table
-          data={departments}
-          isLoading={isLoading}
-          keyExtractor={(dept: any) => dept.id}
+        <DataTable
+          data={departments || []}
+          loading={isLoading}
+          keyExtractor={(dept: any, index) => dept?.id ?? index}
           columns={[
-            { header: "ID", accessor: "id", className: "w-24" },
+            { key: "id", header: "ID", className: "w-24" },
             {
+              key: "name",
               header: "Department Name",
-              accessor: "name",
               className: "font-medium",
             },
           ]}
-          emptyMessage="No departments found. Create one to get started!"
+          emptyState={{
+            title: "No departments found",
+            description: "Create one to get started!",
+          }}
+          itemLabel="department"
         />
 
         <Modal

@@ -2,6 +2,11 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Button from "../../common/Button";
 import FormField from "../../common/FormField";
+import FormAutocomplete from "../../common/FormAutocomplete";
+import CreateItemModal from "../../common/CreateItemModal";
+import KachaSpinner from "../../common/KachaSpinner";
+import useMinimumDelay from "../../../hooks/useMinimumDelay";
+import { KACHA_SPINNER_CYCLE_MS } from "../../common/KachaSpinner";
 import { FiMail, FiUser, FiPlus, FiTrash2 } from "react-icons/fi";
 import { useCreateAccountSlice } from "../../../pages/Admin/CreateAccount/slice";
 import {
@@ -24,7 +29,7 @@ interface CreateUserFormProps {
 }
 
 interface AllowanceEntry {
-  allowance_type_id: string;
+  name: string;
   amount: string;
   effective_date: string;
 }
@@ -76,6 +81,18 @@ export default function CreateUserForm({
   // Allowances (multiple)
   const [allowances, setAllowances] = useState<AllowanceEntry[]>([]);
 
+  // Modal State
+  const [createModalState, setCreateModalState] = useState<{
+    isOpen: boolean;
+    type: "allowance" | null;
+    initialValue: string;
+    targetIndex?: number;
+  }>({
+    isOpen: false,
+    type: null,
+    initialValue: "",
+  });
+
   // Fetch dropdown data on mount
   const fetchDropdownData = useCallback(async () => {
     setIsLoadingData(true);
@@ -105,7 +122,9 @@ export default function CreateUserForm({
   // Reset form on success
   useEffect(() => {
     if (success) {
-      ToastService.success("Employee created successfully! Welcome email sent.");
+      ToastService.success(
+        "Employee created successfully! Welcome email sent."
+      );
       dispatch(actions.resetState());
       onSuccess();
     }
@@ -142,9 +161,10 @@ export default function CreateUserForm({
     setAllowances([
       ...allowances,
       {
-        allowance_type_id: "",
+        name: "",
         amount: "",
-        effective_date: form.startDate || new Date().toISOString().split("T")[0],
+        effective_date:
+          form.startDate || new Date().toISOString().split("T")[0],
       },
     ]);
   };
@@ -178,13 +198,22 @@ export default function CreateUserForm({
     }
 
     // Prepare allowances array
-    const validAllowances = allowances
-      .filter((a) => a.allowance_type_id && a.amount)
-      .map((a) => ({
-        allowance_type_id: Number(a.allowance_type_id),
-        amount: Number(a.amount),
-        effective_date: a.effective_date,
-      }));
+    const validAllowances = [];
+    for (const a of allowances) {
+      if (a.name && a.amount) {
+        const typeId = resolveAllowanceType(a.name);
+        if (!typeId) {
+          ToastService.error(`Allowance Type "${a.name}" not found.`);
+          return;
+        }
+        validAllowances.push({
+          allowance_type_id: Number(typeId),
+          amount: Number(a.amount),
+          currency: "ETB",
+          effective_date: a.effective_date,
+        });
+      }
+    }
 
     dispatch(
       actions.createAccountRequest({
@@ -221,30 +250,108 @@ export default function CreateUserForm({
     value: String(j.id),
   }));
 
-  const allowanceTypeOptions = allowanceTypes.map((a) => ({
-    label: a.name,
-    value: String(a.id),
-  }));
-
   const managerOptions = [
     { label: "No Manager", value: "__none__" },
     ...employees.map((e) => ({
-      label: `${e.full_name} (${e.employee_id})`,
-      value: e.employee_id,
+      label: `${e.fullName} (${e.id})`,
+      value: e.id,
     })),
   ];
 
-  if (isLoadingData) {
+  // Helpers
+  const filterAllowanceTypes = async (query: string) => {
+    return allowanceTypes
+      .filter((a) => a.name.toLowerCase().includes(query.toLowerCase()))
+      .map((a) => a.name);
+  };
+
+  const handleOpenCreateModal = (value: string, index: number) => {
+    setCreateModalState({
+      isOpen: true,
+      type: "allowance",
+      initialValue: value,
+      targetIndex: index,
+    });
+  };
+
+  const handleCreateSubmit = async (values: Record<string, any>) => {
+    try {
+      const isTaxable =
+        values.is_taxable === true || values.is_taxable === "true";
+      const newAllowance = await adminService.createAllowanceType({
+        name: values.name,
+        description: values.description,
+        is_taxable: isTaxable,
+      });
+      setAllowanceTypes((prev) => [...prev, newAllowance]);
+
+      if (typeof createModalState.targetIndex === "number") {
+        handleAllowanceChange(
+          createModalState.targetIndex,
+          "name",
+          newAllowance.name
+        );
+      }
+      ToastService.success(`Allowance Type "${newAllowance.name}" created.`);
+    } catch (err: any) {
+      ToastService.error(err.message || "Failed to create allowance type.");
+    }
+  };
+
+  const resolveAllowanceType = (name: string): string | null => {
+    const existing = allowanceTypes.find(
+      (a) => a.name.toLowerCase() === name.toLowerCase()
+    );
+    return existing ? String(existing.id) : null;
+  };
+
+  const showLoadingData = useMinimumDelay(
+    isLoadingData,
+    KACHA_SPINNER_CYCLE_MS
+  );
+
+  if (showLoadingData) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-k-orange"></div>
+        <KachaSpinner size="lg" variant="screen" showText={false} />
         <span className="ml-3 text-gray-600">Loading form data...</span>
       </div>
     );
   }
 
+  // Modal Fields
+  let modalFields: any[] = [];
+  let modalTitle = "";
+  if (createModalState.type === "allowance") {
+    modalTitle = "Create New Allowance Type";
+    modalFields = [
+      {
+        name: "name",
+        label: "Allowance Name",
+        required: true,
+        defaultValue: createModalState.initialValue,
+        placeholder: "e.g. Transport",
+      },
+      {
+        name: "description",
+        label: "Description",
+        required: true,
+        type: "textarea",
+        placeholder: "Describe this allowance",
+      },
+      {
+        name: "is_taxable",
+        label: "Is Taxable?",
+        type: "checkbox",
+      },
+    ];
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6 max-h-[70vh] overflow-y-auto pr-2"
+    >
       {/* Section 1: Account Info */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-k-dark-grey border-b pb-2">
@@ -416,15 +523,15 @@ export default function CreateUserForm({
                 key={index}
                 className="grid grid-cols-1 md:grid-cols-4 gap-3 p-3 bg-gray-50 rounded-lg items-end"
               >
-                <FormField
+                <FormAutocomplete
                   label="Type"
-                  type="select"
-                  name={`allowance_type_${index}`}
-                  value={allowance.allowance_type_id}
-                  onChange={(e) =>
-                    handleAllowanceChange(index, "allowance_type_id", e.target.value)
-                  }
-                  options={allowanceTypeOptions}
+                  type="allowanceTypes"
+                  value={allowance.name}
+                  onChange={(val) => handleAllowanceChange(index, "name", val)}
+                  fetchSuggestionsFn={filterAllowanceTypes}
+                  onCreateNew={(val) => handleOpenCreateModal(val, index)}
+                  placeholder="e.g. Transport"
+                  containerClassName="w-full"
                 />
                 <FormField
                   label="Amount"
@@ -442,7 +549,11 @@ export default function CreateUserForm({
                   name={`allowance_date_${index}`}
                   value={allowance.effective_date}
                   onChange={(e) =>
-                    handleAllowanceChange(index, "effective_date", e.target.value)
+                    handleAllowanceChange(
+                      index,
+                      "effective_date",
+                      e.target.value
+                    )
                   }
                 />
                 <Button
@@ -469,6 +580,21 @@ export default function CreateUserForm({
           Create Employee
         </Button>
       </div>
+      {/* Modal */}
+      <CreateItemModal
+        isOpen={createModalState.isOpen}
+        onClose={() =>
+          setCreateModalState((prev) => ({
+            ...prev,
+            isOpen: false,
+            type: null,
+          }))
+        }
+        title={modalTitle}
+        fields={modalFields}
+        onSubmit={handleCreateSubmit}
+        initialValues={{ name: createModalState.initialValue }}
+      />
     </form>
   );
 }

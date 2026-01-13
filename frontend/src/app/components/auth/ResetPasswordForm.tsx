@@ -12,25 +12,32 @@ interface ResetPasswordFormProps {
   title?: string;
   subtitle?: string;
   token?: string;
+  showConfirmPassword?: boolean;
 }
 
 export default function ResetPasswordForm({
   title = "Reset Password",
   subtitle = "Enter a new password",
   token: propToken,
+  showConfirmPassword = false,
 }: ResetPasswordFormProps) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const token = useMemo(() => propToken || searchParams.get("token") || "", [
-    propToken,
-    searchParams,
-  ]);
+  const token = useMemo(
+    () => propToken || searchParams.get("token") || "",
+    [propToken, searchParams]
+  );
   const didShowMissingTokenToast = useRef(false);
 
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{
+    password?: string;
+    confirmPassword?: string;
+  }>({});
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
@@ -41,19 +48,49 @@ export default function ResetPasswordForm({
   }, [token]);
 
   const validate = () => {
-    if (!token) return "Reset token is missing.";
-    if (!password) return "New password is required";
-    if (password.length < 6) return "Password must be at least 6 characters";
-    return null;
+    const nextFieldErrors: {
+      password?: string;
+      confirmPassword?: string;
+    } = {};
+
+    if (!token) {
+      return {
+        fieldErrors: nextFieldErrors,
+        message: "Reset token is missing.",
+      };
+    }
+
+    if (!password) {
+      nextFieldErrors.password = "New password is required";
+    } else if (password.length < 6) {
+      nextFieldErrors.password = "Password must be at least 6 characters";
+    }
+
+    if (showConfirmPassword) {
+      if (!confirmPassword) {
+        nextFieldErrors.confirmPassword = "Please confirm your password";
+      } else if (confirmPassword !== password) {
+        nextFieldErrors.confirmPassword = "Passwords do not match";
+      }
+    }
+
+    const firstError =
+      nextFieldErrors.password || nextFieldErrors.confirmPassword || null;
+
+    return {
+      fieldErrors: nextFieldErrors,
+      message: firstError,
+    };
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    const validationError = validate();
-    setError(validationError);
-    if (validationError) {
-      toast.error(validationError);
+    const { fieldErrors: validationFieldErrors, message } = validate();
+    setFieldErrors(validationFieldErrors);
+    setError(message);
+    if (message) {
+      toast.error(message);
       return;
     }
 
@@ -77,6 +114,7 @@ export default function ResetPasswordForm({
           : message;
 
       setError(friendlyMessage);
+      setFieldErrors({});
       toast.error(friendlyMessage);
     } finally {
       setLoading(false);
@@ -132,11 +170,25 @@ export default function ResetPasswordForm({
               onChange={(e) => {
                 setPassword(e.target.value);
                 if (error) setError(null);
+                if (fieldErrors.password || fieldErrors.confirmPassword) {
+                  setFieldErrors((prev) => ({
+                    ...prev,
+                    password: undefined,
+                    ...(showConfirmPassword
+                      ? { confirmPassword: undefined }
+                      : null),
+                  }));
+                }
               }}
               placeholder="Enter new password"
               icon={MdLock}
-              error={!!error}
-              helperText={error || ""}
+              error={
+                !!fieldErrors.password || (!!error && !showConfirmPassword)
+              }
+              helperText={
+                fieldErrors.password ||
+                (!showConfirmPassword ? error || "" : "")
+              }
               required
               suffix={
                 <button
@@ -149,6 +201,46 @@ export default function ResetPasswordForm({
                 </button>
               }
             />
+
+            {showConfirmPassword && (
+              <Input
+                label="Confirm Password"
+                type={showPassword ? "text" : "password"}
+                name="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (error) setError(null);
+                  if (fieldErrors.confirmPassword) {
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      confirmPassword: undefined,
+                    }));
+                  }
+                }}
+                placeholder="Confirm new password"
+                icon={MdLock}
+                error={!!fieldErrors.confirmPassword}
+                helperText={fieldErrors.confirmPassword || ""}
+                required
+                suffix={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="text-k-medium-grey hover:text-k-dark-grey transition-colors"
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showPassword ? (
+                      <FiEyeOff size={18} />
+                    ) : (
+                      <FiEye size={18} />
+                    )}
+                  </button>
+                }
+              />
+            )}
 
             <Button type="submit" variant="primary" fullWidth loading={loading}>
               Reset Password

@@ -43,7 +43,7 @@ export function ActionMenu({ actions, className }: ActionMenuProps) {
     const updatePosition = () => {
       if (!buttonRef.current) return;
       const rect = buttonRef.current.getBoundingClientRect();
-      const width = 160; // matches w-40
+      const width = 208; // matches w-52
       setMenuPos({
         top: rect.bottom + window.scrollY + 4,
         left: rect.right + window.scrollX - width,
@@ -76,7 +76,7 @@ export function ActionMenu({ actions, className }: ActionMenuProps) {
         createPortal(
           <div
             ref={portalRef}
-            className="fixed z-50 w-40 origin-top-right rounded-xl border border-gray-100 bg-white p-1 shadow-lg ring-1 ring-black/5"
+            className="fixed z-50 w-52 origin-top-right rounded-xl border border-gray-100 bg-white p-1 shadow-lg ring-1 ring-black/5"
             style={{ top: menuPos.top, left: menuPos.left }}
           >
             {actions.map((action) => (
@@ -87,7 +87,7 @@ export function ActionMenu({ actions, className }: ActionMenuProps) {
                   action.onClick();
                   setIsOpen(false);
                 }}
-                className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
+                className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors cursor-pointer ${
                   action.variant === "danger"
                     ? "text-red-600 hover:bg-red-50"
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"

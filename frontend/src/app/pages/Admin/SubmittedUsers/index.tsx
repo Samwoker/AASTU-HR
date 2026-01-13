@@ -9,6 +9,9 @@ import {
 } from "./slice/selectors";
 import AdminLayout from "../../../components/DefaultLayout/AdminLayout";
 import BackButton from "../../../components/common/BackButton";
+import KachaSpinner from "../../../components/common/KachaSpinner";
+import useMinimumDelay from "../../../hooks/useMinimumDelay";
+import { KACHA_SPINNER_CYCLE_MS } from "../../../components/common/KachaSpinner";
 import { ActionMenu } from "../../../components/common/ActionMenu";
 import Modal from "../../../components/common/Modal";
 import Button from "../../../components/common/Button";
@@ -32,6 +35,8 @@ export default function SubmittedUsers() {
   const users = useSelector(selectSubmittedUsers) || [];
   const isLoading = useSelector(selectSubmittedUsersLoading);
   const isApproving = useSelector(selectApproving);
+
+  const showLoading = useMinimumDelay(isLoading, KACHA_SPINNER_CYCLE_MS);
 
   const [approveModalOpen, setApproveModalOpen] = useState(false);
   const [userToApprove, setUserToApprove] = useState<SubmittedUser | null>(
@@ -118,10 +123,7 @@ export default function SubmittedUsers() {
   return (
     <AdminLayout>
       <div className="max-w-7xl mx-auto space-y-8">
-        <BackButton 
-          to={routeConstants.employees} 
-          label="Back to Employees"
-        />
+        <BackButton to={routeConstants.employees} label="Back to Employees" />
 
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -199,14 +201,14 @@ export default function SubmittedUsers() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {isLoading ? (
+                {showLoading ? (
                   <tr>
                     <td
                       colSpan={6}
                       className="px-6 py-8 text-center text-gray-500"
                     >
                       <div className="flex flex-col items-center gap-2">
-                        <div className="w-8 h-8 border-2 border-k-orange border-t-transparent rounded-full animate-spin"></div>
+                        <KachaSpinner size="lg" />
                         <span>Loading submitted users...</span>
                       </div>
                     </td>

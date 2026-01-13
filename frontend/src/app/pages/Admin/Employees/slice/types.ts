@@ -1,138 +1,138 @@
-// Types for completed employees API response
-
-export interface Address {
-  id: number;
-  company_id: number;
+export interface Employee {
+  id: string;
   employee_id: string;
-  region: string | null;
-  city: string | null;
-  sub_city: string | null;
-  woreda: string | null;
+  full_name: string;
+  email?: string;
+  gender: string;
+  date_of_birth: string;
+  tin_number?: string;
+  pension_number?: string;
+  place_of_work?: string;
+  company_id?: string;
+  // Account/Login info
+  username?: string;
+  role_id?: number;
+  onboarding_status?: string;
+  profilePicture?: string;
+  role?: string;
+  phone?: string;
+  appUsers?: {
+    email?: string;
+    onboarding_status?: string;
+    profile_picture?: string;
+    role?: { name: string };
+  }[];
+
+  // Relations
+  addresses?: EmployeeAddress[];
+  phones?: EmployeePhone[];
+  educations?: EmployeeEducation[];
+  employments?: any[]; // Using any to avoid defining full Employment types for now, as we only need deep access
+  employmentHistories?: EmployeeExperience[]; // Backend uses employmentHistories
+  licensesAndCertifications?: EmployeeCertification[]; // Backend uses licensesAndCertifications
+  documents?: EmployeeDocument[];
+  careerEvents?: CareerEvent[];
+
+  // Employment details that might be on the root or related
+  department?: string; // from join
+  job_title?: string; // from join
+  job_level?: string;
+  employment_type?: string;
+  start_date?: string;
+  salary?: EmployeeSalary;
+  team_size?: number;
+
+  created_at?: string;
+  updated_at?: string;
 }
 
-export interface Phone {
-  id: number;
+export interface EmployeeAddress {
+  id: string;
+  region: string;
+  city: string;
+  sub_city: string;
+  woreda: string;
   company_id: number;
   employee_id: string;
+}
+
+export interface EmployeePhone {
+  id: string;
   phone_number: string;
-  phone_type: string;
-  is_primary: boolean;
+  phone_type?: string; // Backend uses phone_type, frontend used to use type
+  is_primary?: boolean;
+  company_id: number;
+  employee_id: string;
 }
 
-export interface Education {
-  id: number;
-  employee_id: string;
-  education_level_id: number;
-  field_of_study_id: number;
-  institution_id: number;
+export interface EmployeeEducation {
+  id: string;
+  institution: { name: string; category?: string }; // Backend nested inclusion
+  educationLevel: { name: string };
+  fieldOfStudy: { name: string };
   program_type: string;
-  has_cost_sharing: boolean;
-  cost_sharing_document_url: string | null;
-  start_date: string;
-  end_date: string;
-  is_verified: boolean;
-  is_current: boolean;
-  created_at: string;
-  updated_at: string;
+  has_cost_sharing?: boolean;
+  cost_sharing_document?: string;
+  cost_sharing_document_url?: string;
+  start_date?: string;
+  end_date?: string;
+  document_url?: string;
+  costSharings?: EmployeeCostSharing[];
 }
 
-export interface EmploymentHistory {
+export interface EmployeeCostSharing {
   id: number;
-  employee_id: string;
-  previous_company_name: string;
-  job_title_id: number | null;
-  previous_job_title_text: string | null;
-  previous_level: string | null;
-  department_name: string | null;
-  start_date: string;
-  end_date: string;
-  is_verified: boolean;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
+  document_number?: string;
+  issuing_institution?: string;
+  issue_date?: string;
+  declared_total_cost?: number | string;
+  currency?: string;
+  document_url?: string;
+  remarks?: string;
 }
 
-export interface LicenseOrCertification {
-  id: number;
-  employee_id: string;
+export interface EmployeeExperience {
+  id: string;
+  company_name: string;
+  job_title: string;
+  previous_job_title?: string; // Legacy support
+  job_level?: string; // Backend uses job_level
+  department?: string;
+  start_date: string;
+  end_date?: string;
+  is_current?: boolean; // Frontend logic usually computes this or backend check
+  employment_type?: string;
+  description?: string;
+  reason_for_leaving?: string;
+  document_url?: string;
+}
+
+export interface EmployeeDocument {
+  id: string;
+  document_type: string;
+  document_url: string;
+  file_name?: string;
+  uploaded_at: string;
+}
+
+export interface EmployeeCertification {
+  id: string;
   name: string;
   issuing_organization: string;
-  issue_date: string | null;
-  expiration_date: string | null;
-  credential_id: string | null;
-  credential_url: string | null;
-  created_at: string;
-  updated_at: string;
+  issue_date: string;
+  expiration_date?: string;
+  credential_id?: string;
+  credential_url?: string;
+  document_url?: string;
 }
 
-export interface Documents {
-  id: number;
-  employee_id: string;
-  company_id: number;
-  cv: string[];
-  certificates: string[];
-  photo: string[];
-  experienceLetters: string[];
-  taxForms: string[];
-  pensionForms: string[];
-}
-
-export interface EmployeeDetails {
-  id: string;
-  company_id: number;
-  full_name: string;
-  gender: string | null;
-  date_of_birth: string | null;
-  tin_number: string | null;
-  pension_number: string | null;
-  place_of_work: string;
-  created_at: string;
-  updated_at: string;
-  addresses: Address[];
-  phones: Phone[];
-  educations: Education[];
-  employmentHistories: EmploymentHistory[];
-  licensesAndCertifications: LicenseOrCertification[];
-  documents: Documents | null;
-  employments: any[];
-}
-
-export interface Role {
-  id: number;
-  company_id?: number;
-  name: string;
-  description?: string;
-}
-
-export interface CompletedEmployee {
-  id: number;
-  company_id: number;
-  employee_id: string;
-  email: string;
-  role_id: number;
-  is_active: boolean;
-  onboarding_status: 'COMPLETED' | 'PENDING_APPROVAL' | 'IN_PROGRESS';
-  created_at: string;
-  updated_at: string;
-  employee: EmployeeDetails;
-  role: Role;
-}
-
-// Legacy Employee type for backwards compatibility
-export interface Employee {
-  id: string; // "EMP-0001"
-  fullName: string;
-  department: string;
-  jobTitle: string;
-  status: string;
-  onboarding_status?: string;
-  gender?: string;
-  date_of_birth?: string;
-  manager?: {
-    id: string;
-    full_name: string;
-    jobTitle: string;
-  };
+export interface EmployeeSalary {
+  gross: number;
+  basic: number;
+  housing: number;
+  transport: number;
+  meal: number;
+  custom_allowances?: { name: string; amount: number }[];
 }
 
 export interface Pagination {
@@ -143,24 +143,62 @@ export interface Pagination {
 }
 
 export interface EmployeeFilters {
-  search?: string;
-  department_id?: string;
-  job_title_id?: string;
-  employment_type?: string;
-  status?: string;
-  gender?: string;
-  hire_date_from?: string;
-  hire_date_to?: string;
-  sortBy?: string;
-  order?: 'asc' | 'desc';
+  gender: string;
+  department: string;
+  job_title: string;
+  job_level: string;
+  sort_by: string;
+  search: string;
+  cost_sharing_status: string;
 }
 
 export interface EmployeesState {
   loading: boolean;
   error: string | null;
-  employees: Employee[];
-  completedEmployees: CompletedEmployee[];
-  selectedEmployee: CompletedEmployee | null;
-  pagination: Pagination;
+
+  // Separate caches for each tab
+  active: {
+    data: Employee[];
+    pagination: Pagination;
+    lastFetched: number | null;
+    pages: Record<number, Employee[]>;
+  };
+  pending: {
+    data: Employee[];
+    pagination: Pagination;
+    lastFetched: number | null;
+    pages: Record<number, Employee[]>;
+  };
+
+  inactive: {
+    data: Employee[];
+    pagination: Pagination;
+    lastFetched: number | null;
+    pages: Record<number, Employee[]>;
+  };
+
+  selectedEmployee: Employee | null;
+  detailsCache: Record<string, { data: Employee; lastFetched: number }>;
   filters: EmployeeFilters;
+  activeTab: "active" | "pending" | "inactive";
+  approveSuccess?: boolean;
+  deleteSuccess?: boolean;
+  activateSuccess?: boolean;
+  exportSuccess?: boolean;
+}
+
+export interface CareerEvent {
+  id: number;
+  event_date: string;
+  effective_date: string;
+  event_type: string;
+  justification?: string;
+  notes?: string;
+  newJobTitle?: { title: string; level: string };
+  previousJobTitle?: { title: string; level: string };
+  newEmployment?: { department?: { name: string } };
+  previousEmployment?: { department?: { name: string } };
+  new_salary?: number | string;
+  previous_salary?: number | string;
+  department_changed?: boolean;
 }

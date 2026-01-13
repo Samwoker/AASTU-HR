@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import KachaSpinner from "./KachaSpinner";
 // We will adapt the service import later or use props for fetching
 // For now, I'll allow passing a fetcher function prop to make it reusable without hardcoding the service here
 // if the user strongly prefers the service import I can add it, but passing a prop is cleaner.
@@ -17,9 +18,9 @@ interface FormAutocompleteProps {
   // Added prop to fetch suggestions to avoid hardcoding service dependency inside the generic component
   // Or I can stick to the user's pattern if I create the service method.
   // The user said "you can use this code", implying I should use it as is.
-  // But I don't have existing `employeeService.getSuggestions`. 
+  // But I don't have existing `employeeService.getSuggestions`.
   // I'll stick to the user's code structure but likely swap the service call.
-  fetchSuggestionsFn?: (query: string) => Promise<string[]>; 
+  fetchSuggestionsFn?: (query: string) => Promise<string[]>;
   onCreateNew?: (query: string) => void;
 }
 
@@ -33,7 +34,7 @@ const FormAutocomplete: React.FC<FormAutocompleteProps> = ({
   required,
   containerClassName = "",
   fetchSuggestionsFn,
-  onCreateNew
+  onCreateNew,
 }) => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -43,7 +44,10 @@ const FormAutocomplete: React.FC<FormAutocompleteProps> = ({
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
         setShowSuggestions(false);
       }
     }
@@ -53,7 +57,7 @@ const FormAutocomplete: React.FC<FormAutocompleteProps> = ({
 
   const fetchSuggestions = async (query: string) => {
     if (!fetchSuggestionsFn) return;
-    
+
     setIsLoading(true);
     try {
       const data = await fetchSuggestionsFn(query);
@@ -84,7 +88,9 @@ const FormAutocomplete: React.FC<FormAutocompleteProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setActiveIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : prev));
+      setActiveIndex((prev) =>
+        prev < suggestions.length - 1 ? prev + 1 : prev
+      );
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setActiveIndex((prev) => (prev > 0 ? prev - 1 : prev));
@@ -92,10 +98,8 @@ const FormAutocomplete: React.FC<FormAutocompleteProps> = ({
       e.preventDefault();
       if (activeIndex >= 0 && activeIndex < suggestions.length) {
         handleSelect(suggestions[activeIndex]);
-      } else if (value && !suggestions.some(s => s.toLowerCase() === value.toLowerCase()) && onCreateNew) {
-         onCreateNew(value);
-         setShowSuggestions(false);
       } else {
+        // Accept any value - the backend will create it if it doesn't exist
         setShowSuggestions(false);
       }
     } else if (e.key === "Escape") {
@@ -168,21 +172,33 @@ const FormAutocomplete: React.FC<FormAutocompleteProps> = ({
           placeholder={placeholder}
           required={required}
         />
-        <div
-          className="text-k-medium-grey ml-2 transition-all duration-300 group-hover:text-k-orange cursor-pointer"
-        >
-          <svg className={`w-5 h-5 transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${showSuggestions ? 'rotate-180 text-k-orange' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
+        <div className="text-k-medium-grey ml-2 transition-all duration-300 group-hover:text-k-orange cursor-pointer">
+          <svg
+            className={`w-5 h-5 transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${
+              showSuggestions ? "rotate-180 text-k-orange" : ""
+            }`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2.5"
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         </div>
       </div>
 
       {showSuggestions && (
-        <div className="autocomplete-dropdown absolute gap-1 z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl max-h-60 overflow-y-auto animate-[fadeInScale_0.2s_ease-out] ring-1 ring-black ring-opacity-5">
+        <div className="autocomplete-dropdown absolute gap-1 z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-60 overflow-y-auto animate-[fadeInScale_0.2s_ease-out] ring-1 ring-gray-200">
           {isLoading ? (
             <div className="px-4 py-8 text-sm text-gray-400 flex flex-col items-center justify-center gap-3">
-              <div className="w-6 h-6 border-2 border-k-orange border-t-transparent rounded-full animate-spin"></div>
-              <span className="animate-pulse font-medium">Loading suggestions...</span>
+              <KachaSpinner size="md" />
+              <span className="animate-pulse font-medium">
+                Loading suggestions...
+              </span>
             </div>
           ) : (
             <div className="py-2 px-1">
@@ -190,21 +206,33 @@ const FormAutocomplete: React.FC<FormAutocompleteProps> = ({
                 suggestions.map((suggestion, index) => (
                   <div
                     key={index}
-                    className={`px-4 py-2.5 cursor-pointer transition-all duration-150 flex items-center justify-between rounded-lg ${index === activeIndex || suggestion.toLowerCase() === value.toLowerCase()
+                    className={`px-4 py-2.5 cursor-pointer transition-all duration-150 flex items-center justify-between rounded-lg ${
+                      index === activeIndex ||
+                      suggestion.toLowerCase() === value.toLowerCase()
                         ? "bg-orange-50 text-k-orange"
                         : "text-k-dark-grey hover:bg-gray-50"
-                      }`}
+                    }`}
                     onMouseEnter={() => setActiveIndex(index)}
                     onMouseDown={(e) => {
                       e.preventDefault();
                       handleSelect(suggestion);
                     }}
                   >
-                    <span className="font-medium truncate text-sm">{suggestion}</span>
+                    <span className="font-medium truncate text-sm">
+                      {suggestion}
+                    </span>
                     {suggestion.toLowerCase() === value.toLowerCase() && (
                       <div className="bg-orange-100 p-1 rounded-full scale-90">
-                        <svg className="w-3.5 h-3.5 text-k-orange" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        <svg
+                          className="w-3.5 h-3.5 text-k-orange"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                       </div>
                     )}
@@ -212,21 +240,18 @@ const FormAutocomplete: React.FC<FormAutocompleteProps> = ({
                 ))
               ) : (
                 <div className="px-4 py-6 text-center text-sm text-gray-400">
-                  No matches found
-                </div>
-              )}
-
-              {value && !suggestions.some(s => s.toLowerCase() === value.toLowerCase()) && onCreateNew && (
-                <div 
-                  className="mx-1 mt-1 px-3 py-2 rounded-lg border-t border-gray-50 text-[10px] uppercase tracking-wider font-bold text-gray-400 bg-gray-50/30 flex items-center gap-2 cursor-pointer hover:bg-orange-50 hover:text-k-orange transition-colors"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    onCreateNew(value);
-                    setShowSuggestions(false);
-                  }}
-                >
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange-300"></div>
-                  Create new: <span className="text-gray-600 font-bold">"{value}"</span>
+                  {value ? (
+                    <div>
+                      <p className="font-medium text-k-dark-grey mb-1">
+                        "{value}" will be created
+                      </p>
+                      <p className="text-xs">
+                        Press Enter or click outside to continue
+                      </p>
+                    </div>
+                  ) : (
+                    "No matches found"
+                  )}
                 </div>
               )}
             </div>

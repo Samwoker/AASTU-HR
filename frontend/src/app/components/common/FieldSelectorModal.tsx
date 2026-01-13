@@ -3,7 +3,10 @@ import { FiCheck, FiDownload, FiFileText } from "react-icons/fi";
 import { MdPictureAsPdf, MdTableChart, MdDescription } from "react-icons/md";
 import Modal from "./Modal";
 import Button from "./Button";
-import exportService, { ExportField, ExportFormat } from "../../services/exportService";
+import exportService, {
+  ExportField,
+  ExportFormat,
+} from "../../services/exportService";
 
 interface FieldSelectorModalProps {
   isOpen: boolean;
@@ -15,26 +18,26 @@ interface FieldSelectorModalProps {
 }
 
 const FORMAT_OPTIONS = [
-  { 
-    value: "pdf" as ExportFormat, 
-    label: "PDF", 
+  {
+    value: "pdf" as ExportFormat,
+    label: "PDF",
     icon: MdPictureAsPdf,
     color: "text-red-500",
-    description: "Best for printing and sharing"
+    description: "Best for printing and sharing",
   },
-  { 
-    value: "csv" as ExportFormat, 
-    label: "CSV", 
+  {
+    value: "csv" as ExportFormat,
+    label: "CSV",
     icon: MdTableChart,
     color: "text-green-600",
-    description: "For spreadsheet applications"
+    description: "For spreadsheet applications",
   },
-  { 
-    value: "xlsx" as ExportFormat, 
-    label: "Excel", 
+  {
+    value: "xlsx" as ExportFormat,
+    label: "Excel",
     icon: MdDescription,
     color: "text-green-700",
-    description: "Microsoft Excel format"
+    description: "Microsoft Excel format",
   },
 ];
 
@@ -158,7 +161,7 @@ export default function FieldSelectorModal({
 
           {isLoadingFields ? (
             <div className="flex items-center justify-center py-8">
-              <div className="w-6 h-6 border-2 border-k-orange border-t-transparent rounded-full animate-spin" />
+              <KachaSpinner size="md" />
               <span className="ml-2 text-gray-500">Loading fields...</span>
             </div>
           ) : fields.length === 0 ? (
@@ -174,9 +177,7 @@ export default function FieldSelectorModal({
                   <label
                     key={field.key}
                     className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-colors ${
-                      isSelected
-                        ? "bg-k-orange/5"
-                        : "hover:bg-gray-50"
+                      isSelected ? "bg-k-orange/5" : "hover:bg-gray-50"
                     }`}
                   >
                     <div

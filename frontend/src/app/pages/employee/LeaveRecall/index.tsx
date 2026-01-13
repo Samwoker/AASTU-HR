@@ -1,12 +1,8 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import EmployeeLayout from "../../../components/DefaultLayout/EmployeeLayout";
-import {
-  MdWarning,
-  MdHistory,
-  MdPersonAdd,
-  MdRefresh,
-} from "react-icons/md";
+import KachaSpinner from "../../../components/common/KachaSpinner";
+import { MdWarning, MdHistory, MdPersonAdd } from "react-icons/md";
 import toast from "react-hot-toast";
 import Button from "../../../components/common/Button";
 import StatusModal from "../../../components/common/StatusModal";
@@ -33,8 +29,6 @@ import { LeaveApplication, LeaveRecall } from "../../../slice/leaveSlice/types";
 // Tab types
 const TAB_CANCEL = "cancel";
 const TAB_RECALL = "recall";
-
-
 
 // Helper to calculate days remaining
 const calculateDaysRemaining = (endDate: string): number => {
@@ -250,7 +244,11 @@ export default function LeaveRecallPage() {
           className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
           title="Refresh"
         >
-          <MdRefresh size={18} className={isLoading ? "animate-spin" : ""} />
+          {isLoading ? (
+            <KachaSpinner size="sm" />
+          ) : (
+            <span className="text-lg">↻</span>
+          )}
         </button>
       </div>
 

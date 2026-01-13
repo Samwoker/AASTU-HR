@@ -1,14 +1,107 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import FormField from "../../common/FormField";
+import FormAutocomplete from "../../Core/ui/FormAutocomplete";
 import Button from "../../common/Button";
 import Checkbox from "../../common/Checkbox";
-import { MdAdd, MdDelete, MdWork } from "react-icons/md";
+import { MdAdd, MdDelete, MdWork, MdCloudUpload, MdCancel, MdCheck, MdError } from "react-icons/md";
+import toast from "react-hot-toast";
 
 export default function StepWorkExperience({ formData, updateFormData, errors = {} }) {
+  const abortControllersRef = useRef<Record<string, AbortController>>({});
+
+  // Cleanup abort controllers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(abortControllersRef.current).forEach((controller) => {
+        controller.abort();
+      });
+    };
+  }, []);
+
   const handleExperienceChange = (index, field, value) => {
     const newExperience = [...formData.workExperience];
     newExperience[index][field] = value;
     updateFormData("workExperience", newExperience);
+  };
+
+  const cancelUpload = (uploadId: string) => {
+    const controller = abortControllersRef.current[uploadId];
+    if (controller) {
+      controller.abort();
+      delete abortControllersRef.current[uploadId];
+      toast("Upload cancelled");
+    }
+  };
+
+  const handleFileChange = async (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const uploadId = `exp-${index}-${Date.now()}`;
+      const abortController = new AbortController();
+      abortControllersRef.current[uploadId] = abortController;
+
+      try {
+        // Add to document_urls as an object with uploading state
+        const currentDocs = formData.workExperience[index].document_urls || [];
+        const newDoc = {
+          file,
+          name: file.name,
+          uploading: true,
+          uploadId,
+          url: "", // key for success check
+        };
+        
+        handleExperienceChange(index, "document_urls", [...currentDocs, newDoc]);
+
+        const { uploadFile } = await import(
+          "../../../services/fileUploadService"
+        );
+        const url = await uploadFile(file, {
+          signal: abortController.signal,
+          timeout: 5 * 60 * 1000,
+        });
+
+        if (abortController.signal.aborted) return;
+
+        // Update the specific doc in the array
+        const updatedDocs = [...(formData.workExperience[index].document_urls || [])];
+        const docIndex = updatedDocs.findIndex(d => d.uploadId === uploadId);
+        if (docIndex !== -1) {
+             updatedDocs[docIndex] = { ...updatedDocs[docIndex], url, uploading: false };
+             handleExperienceChange(index, "document_urls", updatedDocs);
+             toast.success(`"${file.name}" uploaded successfully`);
+        }
+
+      } catch (error: any) {
+        if (error?.message === "Upload cancelled") {
+             // Remove from list
+             const updatedDocs = [...(formData.workExperience[index].document_urls || [])].filter(d => d.uploadId !== uploadId);
+             handleExperienceChange(index, "document_urls", updatedDocs);
+             return;
+        }
+
+        const errorMessage = error?.message || "Upload failed";
+        const updatedDocs = [...(formData.workExperience[index].document_urls || [])];
+        const docIndex = updatedDocs.findIndex(d => d.uploadId === uploadId);
+        if (docIndex !== -1) {
+             updatedDocs[docIndex] = { ...updatedDocs[docIndex], error: errorMessage, uploading: false };
+             handleExperienceChange(index, "document_urls", updatedDocs);
+             toast.error(`Failed to upload "${file.name}"`);
+        }
+      } finally {
+        delete abortControllersRef.current[uploadId];
+      }
+    }
+    e.target.value = "";
+  };
+
+  const removeDocument = (expIndex: number, docIndex: number) => {
+      const docs = [...(formData.workExperience[expIndex].document_urls || [])];
+      docs.splice(docIndex, 1);
+      handleExperienceChange(expIndex, "document_urls", docs);
   };
 
   const addExperience = () => {
@@ -23,6 +116,7 @@ export default function StepWorkExperience({ formData, updateFormData, errors = 
         startDate: "",
         endDate: "",
         isCurrent: false,
+        document_urls: []
       },
     ]);
   };
@@ -58,6 +152,7 @@ export default function StepWorkExperience({ formData, updateFormData, errors = 
               {/* Company Name */}
               <div className="md:col-span-2">
                 <FormField
+                  name={`exp_company_${index}`}
                   label="Previous Company Name"
                   value={exp.companyName}
                   onChange={(e) => handleExperienceChange(index, "companyName", e.target.value)}
@@ -67,14 +162,16 @@ export default function StepWorkExperience({ formData, updateFormData, errors = 
               </div>
 
               {/* Job Titles */}
-              <FormField
-                label="Job Title (ID)"
+              <FormAutocomplete
+                label="Job Title"
                 value={exp.jobTitle}
-                onChange={(e) => handleExperienceChange(index, "jobTitle", e.target.value)}
-                placeholder="Optional"
+                onChange={(val) => handleExperienceChange(index, "jobTitle", val)}
+                type="jobTitles"
+                placeholder="Search job titles..."
               />
 
               <FormField
+                name={`exp_prevjob_${index}`}
                 label="Previous Job Title (Text)"
                 value={exp.previousJobTitle}
                 onChange={(e) => handleExperienceChange(index, "previousJobTitle", e.target.value)}
@@ -84,6 +181,7 @@ export default function StepWorkExperience({ formData, updateFormData, errors = 
               {/* Level & Department */}
               <div>
                 <FormField
+                  name={`exp_level_${index}`}
                   label="Level"
                   type="select"
                   value={exp.level}
@@ -100,15 +198,17 @@ export default function StepWorkExperience({ formData, updateFormData, errors = 
                 </FormField>
               </div>
 
-              <FormField
+              <FormAutocomplete
                 label="Department"
                 value={exp.department}
-                onChange={(e) => handleExperienceChange(index, "department", e.target.value)}
-                placeholder="Optional"
+                onChange={(val) => handleExperienceChange(index, "department", val)}
+                type="departments"
+                placeholder="Search departments..."
               />
 
               {/* Dates */}
               <FormField
+                name={`exp_start_${index}`}
                 label="Start Date"
                 type="date"
                 value={exp.startDate}
@@ -118,6 +218,7 @@ export default function StepWorkExperience({ formData, updateFormData, errors = 
               />
 
               <FormField
+                name={`exp_end_${index}`}
                 label="End Date"
                 type="date"
                 value={exp.endDate}
@@ -134,6 +235,47 @@ export default function StepWorkExperience({ formData, updateFormData, errors = 
                   onChange={(e) => handleExperienceChange(index, "isCurrent", e.target.checked)}
                 />
               </div>
+
+              {/* Documents Section */}
+              <div className="md:col-span-2 mt-4 pt-4 border-t border-gray-200">
+                <label className="block text-sm font-medium text-k-dark-grey mb-2">
+                    Experience Documents (Optional)
+                </label>
+                
+                <div className="flex flex-wrap gap-4 mb-3">
+                   {exp.document_urls && exp.document_urls.map((doc: any, docIdx: number) => (
+                      <div key={docIdx} className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm">
+                          {doc.uploading ? (
+                             <span className="text-xs text-k-orange flex items-center gap-1">Uploading... <MdCancel onClick={() => cancelUpload(doc.uploadId)} className="cursor-pointer" /></span>
+                          ) : doc.error ? (
+                             <span className="text-xs text-error flex items-center gap-1"><MdError /> Error</span>
+                          ) : (
+                             <>
+                               <MdCheck className="text-success" size={16} />
+                               <a href={doc.url || doc} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline truncate max-w-[150px]">
+                                   {doc.name || "Document"}
+                               </a>
+                             </>
+                          )}
+                          <button onClick={() => removeDocument(index, docIdx)} className="text-gray-400 hover:text-error ml-2">
+                              <MdCancel />
+                          </button>
+                      </div>
+                   ))}
+                </div>
+
+                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700 shadow-sm">
+                    <MdCloudUpload size={20} className="text-k-orange" />
+                    <span>Upload Document</span>
+                    <input
+                        type="file"
+                        className="hidden"
+                        accept=".pdf,.doc,.docx,.jpg,.png"
+                        onChange={(e) => handleFileChange(index, e)}
+                    />
+                </label>
+              </div>
+
             </div>
 
             <button

@@ -1,13 +1,38 @@
 import React from "react";
 
+interface CheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  name?: string;
+  checked: boolean;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
+}
+
 export default function Checkbox({
   label,
   name,
   checked,
   onChange,
   disabled = false,
+  className = "",
   ...props
-}) {
+}: CheckboxProps) {
+  // If no label, render a simple checkbox without the label wrapper
+  if (!label) {
+    return (
+      <input
+        id={name}
+        name={name}
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+        disabled={disabled}
+        className={`w-5 h-5 border-2 border-gray-300 rounded bg-white cursor-pointer transition-all duration-200 checked:bg-k-orange checked:border-k-orange focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+        {...props}
+      />
+    );
+  }
+
   return (
     <div className="flex items-center">
       <input
@@ -17,7 +42,7 @@ export default function Checkbox({
         checked={checked}
         onChange={onChange}
         disabled={disabled}
-        className="absolute opacity-0 w-0 h-0 peer"
+        className={`absolute opacity-0 w-0 h-0 peer ${className}`}
         {...props}
       />
       <label

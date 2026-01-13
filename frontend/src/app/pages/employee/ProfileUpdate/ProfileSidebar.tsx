@@ -5,8 +5,9 @@ import {
   MdSchool, 
   MdVerifiedUser, 
   MdAttachMoney, 
-  MdWork, 
-  MdUploadFile 
+  MdWork,
+  MdUploadFile,
+  MdTrendingUp
 } from "react-icons/md";
 
 const SECTIONS = [
@@ -15,8 +16,9 @@ const SECTIONS = [
   { id: "education", label: "Education", icon: MdSchool },
   { id: "workExperience", label: "Work Experience", icon: MdWork },
   { id: "certifications", label: "Certifications", icon: MdVerifiedUser },
+  { id: "employment", label: "Employment", icon: MdWork },
+  { id: "career", label: "Career Path", icon: MdTrendingUp },
   { id: "financial", label: "Financial Details", icon: MdAttachMoney },
-  { id: "job", label: "Job Details", icon: MdWork },
   { id: "documents", label: "Documents", icon: MdUploadFile },
 ];
 

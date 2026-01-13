@@ -45,12 +45,14 @@ export default function DonutChart({ title, labels, series }: DonutChartProps) {
         },
       },
     },
-    colors: ["#FF9900", "#FFCC00", "#ff6b6b", "#4dabf7", "#51cf66"],
+    colors: ["#e55400", "#ffda00", "#ff6b6b", "#4dabf7", "#51cf66", "#a78bfa"],
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-      <h2 className="text-lg font-semibold text-[#333] mb-4">{title}</h2>
+    <div className="bg-white p-6 rounded-xl shadow-card border border-gray-100">
+      {title && (
+        <h2 className="text-lg font-semibold text-k-dark-grey mb-4">{title}</h2>
+      )}
       <Chart options={options} series={series} type="donut" height={320} />
     </div>
   );

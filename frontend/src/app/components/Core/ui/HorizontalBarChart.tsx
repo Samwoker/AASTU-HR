@@ -59,7 +59,7 @@ export default function HorizontalBarChart({
 
             <Bar dataKey="value" radius={[8, 8, 8, 8]} barSize={36}>
               {data.map((entry, index) => (
-                <Cell key={index} fill="#FFCC00" />
+                <Cell key={index} fill="#e55400" />
               ))}
             </Bar>
           </BarChart>

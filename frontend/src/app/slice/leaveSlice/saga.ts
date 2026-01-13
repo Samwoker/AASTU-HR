@@ -930,7 +930,7 @@ function* respondToRecallSaga(
     const { id, ...data } = action.payload;
     const response: { data: { recall: LeaveRecall } } = yield call(makeCall, {
       method: "POST",
-      route: apiRoutes.respondToRecall(id),
+      route: apiRoutes.respondToRecall(String(id)),
       body: data,
       isSecureRoute: true,
     });
@@ -1481,7 +1481,7 @@ function* approveCashOutSaga(
       makeCall,
       {
         method: "PUT",
-        route: apiRoutes.approveCashOut(action.payload),
+        route: apiRoutes.approveCashOut(String(action.payload)),
         isSecureRoute: true,
       }
     );
@@ -1508,7 +1508,7 @@ function* rejectCashOutSaga(
       makeCall,
       {
         method: "PUT",
-        route: apiRoutes.rejectCashOut(id),
+        route: apiRoutes.rejectCashOut(String(id)),
         body: { rejection_reason },
         isSecureRoute: true,
       }

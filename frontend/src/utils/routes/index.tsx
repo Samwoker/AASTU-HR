@@ -14,6 +14,12 @@ import LeaveManagement from "../../app/pages/Admin/LeaveManagement";
 import LeaveTypes from "../../app/pages/Admin/LeaveTypes";
 import PublicHolidays from "../../app/pages/Admin/PublicHolidays";
 import LeaveSettings from "../../app/pages/Admin/LeaveSettings";
+import AdminManagers from "../../app/pages/Admin/Managers";
+import AdminConnectManager from "../../app/pages/Admin/Managers/AssignManager";
+import ManagerDetail from "../../app/pages/Admin/Managers/Detail";
+import BuildTeamPage from "../../app/pages/Admin/Managers/BuildTeam";
+import PromotionPage from "../../app/pages/Admin/Employees/Promotion";
+import WaitingApproval from "../../app/pages/employee/WaitingApproval";
 import EmployeeDashboard from "../../app/pages/employee/Dashboard";
 import Login from "../../app/pages/Authentication/Login";
 import EmployeeLogin from "../../app/pages/Authentication/EmployeeLogin";
@@ -71,111 +77,169 @@ export const routes: IRoute[] = [
     path: routeConstants.dashboard,
     element: <AdminDashboard />,
     isAuthenticated: true,
+    allowedRoles: [1, 2],
   },
   {
     path: routeConstants.createUser,
     element: <CreateUser />,
     isAuthenticated: true,
+    allowedRoles: [1, 2],
   },
   {
     path: routeConstants.createEmployment,
     element: <CreateEmployment />,
     isAuthenticated: true,
+    allowedRoles: [1, 2],
   },
   {
     path: routeConstants.createEmployee,
     element: <CreateEmployee />,
     isAuthenticated: true,
+    allowedRoles: [1, 2],
   },
   {
     path: routeConstants.employees,
     element: <Employees />,
     isAuthenticated: true,
+    allowedRoles: [1, 2],
   },
   {
     path: routeConstants.employeeDetail,
     element: <EmployeeDetail />,
     isAuthenticated: true,
+    allowedRoles: [1, 2],
   },
   {
     path: routeConstants.fullEmployeeProfile,
     element: <FullEmployeeProfile />,
     isAuthenticated: true,
+    allowedRoles: [1, 2],
+  },
+  {
+    path: "/admin/managers",
+    element: <AdminManagers />,
+    isAuthenticated: true,
+    allowedRoles: [1, 2],
+  },
+  {
+    path: routeConstants.assignManager,
+    element: <AdminConnectManager />,
+    isAuthenticated: true,
+    allowedRoles: [1, 2],
+  },
+  {
+    path: routeConstants.managerDetail,
+    element: <ManagerDetail />,
+    isAuthenticated: true,
+    allowedRoles: [1, 2],
+  },
+  {
+    path: routeConstants.buildTeam,
+    element: <BuildTeamPage />,
+    isAuthenticated: true,
+    allowedRoles: [1, 2],
   },
   {
     path: routeConstants.submittedUsers,
     element: <SubmittedUsers />,
     isAuthenticated: true,
+    allowedRoles: [1, 2],
   },
   {
     path: routeConstants.submittedUserDetail,
     element: <SubmittedUserDetail />,
     isAuthenticated: true,
+    allowedRoles: [1, 2],
   },
   {
     path: routeConstants.pendingUsers,
     element: <PendingUsers />,
     isAuthenticated: true,
+    allowedRoles: [1, 2],
   },
   {
     path: routeConstants.employeeDashboard,
     element: <EmployeeDashboard />,
     isAuthenticated: true,
+    allowedRoles: [3],
   },
   {
     path: routeConstants.departments,
     element: <Departments />,
     isAuthenticated: true,
+    allowedRoles: [1, 2],
   },
   {
     path: routeConstants.employeeOnboarding,
     element: <EmployeeOnboarding />,
     isAuthenticated: true,
+    allowedRoles: [3],
+  },
+  {
+    path: routeConstants.waitingApproval,
+    element: <WaitingApproval />,
+    isAuthenticated: true,
+    allowedRoles: [3],
+  },
+  {
+    path: routeConstants.promoteEmployee,
+    element: <PromotionPage />,
+    isAuthenticated: true,
+    allowedRoles: [1],
   },
   {
     path: routeConstants.employeeLeave,
     element: <LeaveApplication />,
     isAuthenticated: true,
+    allowedRoles: [3],
   },
   {
     path: routeConstants.employeeLeaveRecall,
     element: <LeaveRecall />,
     isAuthenticated: true,
+    allowedRoles: [3],
   },
   {
     path: routeConstants.employeeLeaveCashOut,
     element: <LeaveCashOut />,
     isAuthenticated: true,
+    allowedRoles: [3],
   },
   {
     path: routeConstants.employeeProfile,
     element: <ProfileUpdateLayout />,
     isAuthenticated: true,
+    allowedRoles: [3],
   },
   {
     path: routeConstants.settings,
     element: <Settings />,
     isAuthenticated: true,
+    allowedRoles: [1, 2],
   },
   {
     path: routeConstants.adminLeaves,
     element: <LeaveManagement />,
     isAuthenticated: true,
+    allowedRoles: [1, 2],
   },
   {
     path: routeConstants.adminLeaveTypes,
     element: <LeaveTypes />,
     isAuthenticated: true,
+    allowedRoles: [1, 2],
   },
   {
     path: routeConstants.adminPublicHolidays,
     element: <PublicHolidays />,
     isAuthenticated: true,
+    allowedRoles: [1, 2],
   },
   {
     path: routeConstants.adminLeaveSettings,
     element: <LeaveSettings />,
     isAuthenticated: true,
+    allowedRoles: [1, 2],
   },
   {
     path: routeConstants.noAuthorized,

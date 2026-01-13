@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import EmployeeLayout from "../../../components/DefaultLayout/EmployeeLayout";
+import Button from "../../../components/common/Button";
 import {
   FiMail,
   FiPhone,
@@ -12,6 +13,7 @@ import {
   FiExternalLink,
   FiBriefcase,
   FiDollarSign,
+  FiFileText,
 } from "react-icons/fi";
 import {
   MdPerson,
@@ -21,6 +23,8 @@ import {
   MdVerifiedUser,
   MdUploadFile,
 } from "react-icons/md";
+import { FiTrendingUp } from "react-icons/fi";
+import CareerTimeline from "../../../components/Employee/CareerTimeline";
 import makeCall from "../../../API";
 import apiRoutes from "../../../API/apiRoutes";
 import adminService from "../../../services/adminService";
@@ -33,6 +37,7 @@ type SectionId =
   | "education"
   | "workExperience"
   | "employment"
+  | "career"
   | "compensation"
   | "certifications"
   | "documents";
@@ -43,6 +48,7 @@ const SECTIONS = [
   { id: "education" as SectionId, label: "Education", icon: MdSchool },
   { id: "workExperience" as SectionId, label: "Work Experience", icon: MdWork },
   { id: "employment" as SectionId, label: "Employment", icon: FiBriefcase },
+  { id: "career" as SectionId, label: "Career Path", icon: FiTrendingUp },
   { id: "compensation" as SectionId, label: "Compensation", icon: FiDollarSign },
   {
     id: "certifications" as SectionId,
@@ -76,7 +82,7 @@ export default function Profile() {
         if (employeeId) {
             const res: any = await makeCall({
                 method: "GET",
-                route: apiRoutes.employeeById(employeeId),
+                route: apiRoutes.employeeDetail(employeeId),
                 isSecureRoute: true,
             });
             setEmployee(res?.data?.data?.employee || res?.data?.employee || res?.data);
@@ -138,6 +144,8 @@ export default function Profile() {
         );
       case "employment":
         return <EmploymentSection employee={employee} />;
+      case "career":
+        return <CareerSection events={employee?.careerEvents} />;
       case "compensation":
         return (
           <CompensationSection
@@ -348,12 +356,67 @@ function WorkExperienceSection({ histories, formatDate }: any) {
 }
 
 function EmploymentSection({ employee }: any) {
+  const [downloading, setDownloading] = useState<string | null>(null);
   const latest = employee?.employments?.length > 0 ? employee.employments[0] : null;
+
+  const handleDownload = async (type: 'experience-letter' | 'certificate-of-service') => {
+    if (!employee?.id) return;
+    try {
+      setDownloading(type);
+      // Construct route based on type
+      const route = type === 'experience-letter' 
+        ? apiRoutes.experienceLetter(employee.id)
+        : apiRoutes.certificateOfService(employee.id);
+      
+      const response: any = await makeCall({
+        method: "GET",
+        route,
+        isSecureRoute: true,
+        responseType: 'blob',
+      });
+
+      const file = new Blob([response.data], { type: 'application/pdf' });
+      const fileURL = URL.createObjectURL(file);
+      const link = document.createElement('a');
+      link.href = fileURL;
+      link.download = `${type === 'experience-letter' ? 'Experience_Letter' : 'Certificate_of_Service'}_${employee.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Download failed", err);
+      ToastService.error("Failed to download document");
+    } finally {
+      setDownloading(null);
+    }
+  };
 
   return (
     <div className="bg-white rounded-2xl shadow-sm p-6 animate-[slideUp_0.3s_ease-out]">
-      <div className="mb-6 border-b pb-4">
+      <div className="mb-6 border-b pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h2 className="text-xl font-bold text-k-dark-grey">Employment Details</h2>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="text-sm border-orange-200 text-orange-700 hover:bg-orange-50 px-3 py-1.5"
+            onClick={() => handleDownload('experience-letter')}
+            disabled={downloading !== null}
+            loading={downloading === 'experience-letter'}
+            icon={FiDownload}
+          >
+            Experience Letter
+          </Button>
+          <Button
+            variant="outline"
+            className="text-sm border-orange-200 text-orange-700 hover:bg-orange-50 px-3 py-1.5"
+            onClick={() => handleDownload('certificate-of-service')}
+            disabled={downloading !== null}
+            loading={downloading === 'certificate-of-service'}
+            icon={FiFileText}
+          >
+            Certificate of Service
+          </Button>
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <InfoField label="Department" value={latest?.department?.name} />
@@ -474,6 +537,15 @@ function DocumentCard({ title, files }: any) {
           </a>
         ))}
       </div>
+    </div>
+  );
+}
+
+function CareerSection({ events }: { events: any[] }) {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm p-6 animate-[slideUp_0.3s_ease-out]">
+      <h2 className="text-xl font-bold text-k-dark-grey mb-6 border-b pb-4">Career Path</h2>
+      <CareerTimeline events={events || []} />
     </div>
   );
 }

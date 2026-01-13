@@ -1,9 +1,11 @@
 import React from "react";
 
 interface Column<T> {
-  header: string;
+  header: React.ReactNode;
   accessor: keyof T | ((item: T) => React.ReactNode);
   className?: string;
+  headerClassName?: string;
+  stopRowClick?: boolean;
 }
 
 interface TableProps<T> {
@@ -13,6 +15,8 @@ interface TableProps<T> {
   isLoading?: boolean;
   emptyMessage?: string;
   onRowClick?: (item: T) => void;
+  rowClassName?: (item: T) => string;
+  containerClassName?: string;
 }
 
 function Table<T>({
@@ -22,6 +26,8 @@ function Table<T>({
   isLoading,
   emptyMessage = "No data found",
   onRowClick,
+  rowClassName,
+  containerClassName = "",
 }: TableProps<T>) {
   if (isLoading) {
     return (
@@ -40,7 +46,9 @@ function Table<T>({
   }
 
   return (
-    <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div
+      className={`w-full bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden ${containerClassName}`}
+    >
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -48,7 +56,11 @@ function Table<T>({
               {columns.map((col, index) => (
                 <th
                   key={index}
-                  className={`px-6 py-4 text-sm font-semibold text-gray-600 ${index !== columns.length - 1 ? "border-r border-gray-200" : ""} ${col.className || ""}`}
+                  className={`px-6 py-4 text-sm font-semibold text-gray-600 ${
+                    index !== columns.length - 1
+                      ? "border-r border-gray-200"
+                      : ""
+                  } ${col.headerClassName || ""} ${col.className || ""}`}
                 >
                   {col.header}
                 </th>
@@ -56,17 +68,29 @@ function Table<T>({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {data.map((item, _rowIndex) => (
+            {data.map((item, rowIndex) => (
               <tr
                 key={keyExtractor(item)}
                 onClick={() => onRowClick && onRowClick(item)}
-                className={`group hover:bg-yellow-50/50 transition-colors ${onRowClick ? "cursor-pointer" : ""
-                  }`}
+                className={`group hover:bg-yellow-50/50 transition-colors ${
+                  onRowClick ? "cursor-pointer" : ""
+                } ${rowClassName ? rowClassName(item) : ""}`}
               >
                 {columns.map((col, colIndex) => (
                   <td
                     key={colIndex}
-                    className={`px-6 py-4 text-sm text-gray-700 ${colIndex !== columns.length - 1 ? "border-r border-gray-100" : ""} ${col.className || ""}`}
+                    onClick={
+                      col.stopRowClick
+                        ? (e) => {
+                            e.stopPropagation();
+                          }
+                        : undefined
+                    }
+                    className={`px-6 py-4 text-sm text-gray-700 ${
+                      colIndex !== columns.length - 1
+                        ? "border-r border-gray-100"
+                        : ""
+                    } ${col.className || ""}`}
                   >
                     {typeof col.accessor === "function"
                       ? col.accessor(item)

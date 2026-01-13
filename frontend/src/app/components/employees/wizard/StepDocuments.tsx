@@ -488,31 +488,12 @@ export default function StepDocuments({
         />
 
         <FileUpload
-          label="Educational Certificates"
-          name="certificates"
-          files={formData.documents.certificates || null}
-          onChange={handleDocumentChange}
-          required
-          error={errors.certificates || null}
-          multiple={true}
-        />
-
-        <FileUpload
           label="Photo / ID"
           name="photo"
           files={formData.documents.photo || null}
           onChange={handleDocumentChange}
           required
           error={errors.photo || null}
-          multiple={true}
-        />
-
-        <FileUpload
-          label="Work Experience Letters"
-          name="experienceLetters"
-          files={formData.documents.experienceLetters || null}
-          onChange={handleDocumentChange}
-          error={errors.experienceLetters || null}
           multiple={true}
         />
 

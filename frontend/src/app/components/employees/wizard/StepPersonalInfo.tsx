@@ -69,13 +69,15 @@ export default function StepPersonalInfo({ formData, handleChange, errors = {} }
 
       {/* Read-Only Fields (HR Filled) */}
       <div className="md:col-span-2 border-t border-gray-200 pt-6 mt-2">
-        <h3 className="text-lg font-semibold text-k-dark-grey mb-4">Employment Details (Read-Only)</h3>
+        <h3 className="text-lg font-semibold text-k-dark-grey mb-4">Employment Details</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
+            name="placeOfWork"
             label="Place of Work"
             value={formData.placeOfWork}
-            disabled
-            className="bg-gray-100 cursor-not-allowed"
+            onChange={(e) => handleChange("placeOfWork", e.target.value)}
+            placeholder="Enter place of work"
+            className="bg-white"
           />
           {/* Placeholder for Company ID / Employee Code if available in context */}
         </div>

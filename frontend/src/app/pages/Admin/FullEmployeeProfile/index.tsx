@@ -3,11 +3,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { useEmployeesSlice } from "../Employees/slice";
 import {
-  selectCompletedEmployees,
+  selectAllEmployees,
   selectEmployeesLoading,
 } from "../Employees/slice/selectors";
 import AdminLayout from "../../../components/DefaultLayout/AdminLayout";
 import Button from "../../../components/common/Button";
+import KachaSpinner from "../../../components/common/KachaSpinner";
+import useMinimumDelay from "../../../hooks/useMinimumDelay";
+import { KACHA_SPINNER_CYCLE_MS } from "../../../components/common/KachaSpinner";
 import BackButton from "../../../components/common/BackButton";
 import PageHeader from "../../../components/common/PageHeader";
 import exportService, { ExportFormat } from "../../../services/exportService";
@@ -28,12 +31,8 @@ import {
   FiCheck,
   FiPrinter,
 } from "react-icons/fi";
-import {
-  MdPictureAsPdf,
-  MdTableChart,
-  MdDescription,
-} from "react-icons/md";
-import { CompletedEmployee } from "../Employees/slice/types";
+import { MdPictureAsPdf, MdTableChart, MdDescription } from "react-icons/md";
+import { Employee } from "../Employees/slice/types";
 
 // Section configuration
 const SECTIONS = [
@@ -53,10 +52,12 @@ export default function FullEmployeeProfile() {
   const { employeeId } = useParams<{ employeeId: string }>();
   const { actions } = useEmployeesSlice();
 
-  const completedEmployees = useSelector(selectCompletedEmployees);
+  const completedEmployees = useSelector(selectAllEmployees);
   const isLoading = useSelector(selectEmployeesLoading);
 
-  const [employee, setEmployee] = useState<CompletedEmployee | null>(null);
+  const showLoading = useMinimumDelay(isLoading, KACHA_SPINNER_CYCLE_MS);
+
+  const [employee, setEmployee] = useState<Employee | null>(null);
   const [selectedSections, setSelectedSections] = useState<string[]>(
     SECTIONS.map((s) => s.id)
   );
@@ -65,7 +66,7 @@ export default function FullEmployeeProfile() {
   // Fetch employees if not loaded
   useEffect(() => {
     if (completedEmployees.length === 0) {
-      dispatch(actions.fetchCompletedEmployeesRequest());
+      dispatch(actions.fetchAllEmployeesRequest());
     }
   }, [dispatch, actions, completedEmployees.length]);
 
@@ -111,7 +112,9 @@ export default function FullEmployeeProfile() {
         format,
         selectedSections
       );
-      const filename = `employee_${employeeId}_profile.${exportService.getFileExtension(format)}`;
+      const filename = `employee_${employeeId}_profile.${exportService.getFileExtension(
+        format
+      )}`;
       exportService.downloadFile(blob, filename);
       ToastService.success(`Profile exported as ${format.toUpperCase()}`);
     } catch (err: any) {
@@ -150,12 +153,12 @@ export default function FullEmployeeProfile() {
     return `https://avatar.iran.liara.run/public/${num + offset}`;
   };
 
-  if (isLoading) {
+  if (showLoading) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center h-96">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-10 h-10 border-2 border-k-orange border-t-transparent rounded-full animate-spin"></div>
+            <KachaSpinner size="xl" />
             <span className="text-gray-500">Loading employee details...</span>
           </div>
         </div>
@@ -171,7 +174,11 @@ export default function FullEmployeeProfile() {
           <h2 className="text-xl font-semibold text-gray-600">
             Employee not found
           </h2>
-          <Button onClick={() => navigate("/admin/employees")} icon={FiArrowLeft} variant="outline">
+          <Button
+            onClick={() => navigate("/admin/employees")}
+            icon={FiArrowLeft}
+            variant="outline"
+          >
             Back to Employees
           </Button>
         </div>
@@ -179,7 +186,22 @@ export default function FullEmployeeProfile() {
     );
   }
 
-  const emp = employee.employee;
+  const emp = employee;
+
+  const documents =
+    emp?.documents?.reduce((acc: any, doc: any) => {
+      let key = doc.document_type?.toLowerCase() || "other";
+      if (key.includes("cv") || key.includes("resume")) key = "cv";
+      else if (key.includes("certificate")) key = "certificates";
+      else if (key.includes("experience")) key = "experienceLetters";
+      else if (key.includes("tax")) key = "taxForms";
+      else if (key.includes("pension")) key = "pensionForms";
+      else if (key.includes("photo")) key = "photo";
+
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(doc.document_url);
+      return acc;
+    }, {}) || {};
 
   return (
     <AdminLayout>
@@ -190,7 +212,7 @@ export default function FullEmployeeProfile() {
             <BackButton
               to={`/admin/employees/${employeeId}`}
               label="Back to Employee Profile"
-              className="!text-gray-300 hover:!text-white"
+              className="text-gray-300! hover:text-white!"
             />
             <h1 className="text-3xl font-bold mb-2">Full Employee Profile</h1>
             <p className="text-gray-300">
@@ -268,7 +290,7 @@ export default function FullEmployeeProfile() {
                     onClick={() => handleExport("pdf")}
                     loading={exporting}
                     disabled={exporting || selectedSections.length === 0}
-                    className="!text-red-600 !border-red-200 hover:!bg-red-50"
+                    className="text-red-600! border-red-200! hover:bg-red-50!"
                   >
                     PDF
                   </Button>
@@ -278,7 +300,7 @@ export default function FullEmployeeProfile() {
                     onClick={() => handleExport("csv")}
                     loading={exporting}
                     disabled={exporting || selectedSections.length === 0}
-                    className="!text-green-600 !border-green-200 hover:!bg-green-50"
+                    className="text-green-600! border-green-200! hover:bg-green-50!"
                   >
                     CSV
                   </Button>
@@ -288,7 +310,7 @@ export default function FullEmployeeProfile() {
                     onClick={() => handleExport("xlsx")}
                     loading={exporting}
                     disabled={exporting || selectedSections.length === 0}
-                    className="!text-green-700 !border-green-200 hover:!bg-green-50"
+                    className="text-green-700! border-green-200! hover:bg-green-50!"
                   >
                     Excel
                   </Button>
@@ -309,9 +331,9 @@ export default function FullEmployeeProfile() {
           <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
             <div className="flex items-center gap-6">
               <div className="w-24 h-24 rounded-full bg-k-yellow border-4 border-white overflow-hidden shadow-lg shrink-0">
-                {emp?.documents?.photo?.[0] ? (
+                {documents.photo?.[0] ? (
                   <img
-                    src={emp.documents.photo[0]}
+                    src={documents.photo[0]}
                     alt={emp.full_name}
                     className="w-full h-full object-cover"
                   />
@@ -334,12 +356,12 @@ export default function FullEmployeeProfile() {
                   </span>
                   <span
                     className={`text-sm px-3 py-1 rounded-full ${
-                      employee.is_active
+                      (employee as any)?.is_active
                         ? "bg-green-100 text-green-700"
                         : "bg-gray-100 text-gray-600"
                     }`}
                   >
-                    {employee.is_active ? "Active" : "Inactive"}
+                    {(employee as any)?.is_active ? "Active" : "Inactive"}
                   </span>
                 </div>
               </div>
@@ -353,10 +375,19 @@ export default function FullEmployeeProfile() {
               <SectionCard title="Personal Details" icon={FiUser}>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <InfoItem label="Full Name" value={emp?.full_name} />
-                  <InfoItem label="Gender" value={getGenderLabel(emp?.gender)} />
-                  <InfoItem label="Date of Birth" value={formatDate(emp?.date_of_birth)} />
+                  <InfoItem
+                    label="Gender"
+                    value={getGenderLabel(emp?.gender)}
+                  />
+                  <InfoItem
+                    label="Date of Birth"
+                    value={formatDate(emp?.date_of_birth)}
+                  />
                   <InfoItem label="TIN Number" value={emp?.tin_number} />
-                  <InfoItem label="Pension Number" value={emp?.pension_number} />
+                  <InfoItem
+                    label="Pension Number"
+                    value={emp?.pension_number}
+                  />
                   <InfoItem label="Place of Work" value={emp?.place_of_work} />
                 </div>
               </SectionCard>
@@ -374,7 +405,10 @@ export default function FullEmployeeProfile() {
                     </div>
                   </div>
                   {emp?.phones?.map((phone: any, idx: number) => (
-                    <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                    <div
+                      key={idx}
+                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
+                    >
                       <FiPhone className="w-5 h-5 text-k-orange" />
                       <div>
                         <p className="text-xs text-gray-500">
@@ -385,7 +419,10 @@ export default function FullEmployeeProfile() {
                     </div>
                   ))}
                   {emp?.addresses?.map((addr: any, idx: number) => (
-                    <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                    <div
+                      key={idx}
+                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
+                    >
                       <FiMapPin className="w-5 h-5 text-k-orange" />
                       <div>
                         <p className="text-xs text-gray-500">Address</p>
@@ -404,26 +441,42 @@ export default function FullEmployeeProfile() {
             {/* Employment */}
             {selectedSections.includes("employment") && (
               <SectionCard title="Employment" icon={FiBriefcase}>
-                {emp?.employments?.length > 0 ? (
+                {(emp?.employments || [])?.length > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {(() => {
-                      const latest = emp.employments[emp.employments.length - 1];
+                      const latest = (emp?.employments || [] || [])[
+                        (emp?.employments || [] || []).length - 1
+                      ];
                       return (
                         <>
-                          <InfoItem label="Department" value={latest?.department?.name} />
-                          <InfoItem label="Job Title" value={latest?.jobTitle?.title} />
-                          <InfoItem label="Employment Type" value={latest?.employment_type} />
+                          <InfoItem
+                            label="Department"
+                            value={latest?.department?.name}
+                          />
+                          <InfoItem
+                            label="Job Title"
+                            value={latest?.jobTitle?.title}
+                          />
+                          <InfoItem
+                            label="Employment Type"
+                            value={latest?.employment_type}
+                          />
                           <InfoItem
                             label="Start Date"
                             value={formatDate(latest?.start_date)}
                           />
-                          <InfoItem label="Manager ID" value={latest?.manager_id} />
+                          <InfoItem
+                            label="Manager ID"
+                            value={latest?.manager_id}
+                          />
                         </>
                       );
                     })()}
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-center py-4">No employment record</p>
+                  <p className="text-gray-500 text-center py-4">
+                    No employment record
+                  </p>
                 )}
               </SectionCard>
             )}
@@ -431,18 +484,22 @@ export default function FullEmployeeProfile() {
             {/* Compensation */}
             {selectedSections.includes("compensation") && (
               <SectionCard title="Compensation" icon={FiDollarSign}>
-                {emp?.employments?.length > 0 ? (
+                {(emp?.employments || [])?.length > 0 ? (
                   <div>
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       {(() => {
-                        const latest = emp.employments[emp.employments.length - 1];
+                        const latest = (emp?.employments || [] || [])[
+                          (emp?.employments || [] || []).length - 1
+                        ];
                         return (
                           <>
                             <InfoItem
                               label="Gross Salary"
                               value={
                                 latest?.gross_salary
-                                  ? `ETB ${Number(latest.gross_salary).toLocaleString()}`
+                                  ? `ETB ${Number(
+                                      latest.gross_salary
+                                    ).toLocaleString()}`
                                   : "N/A"
                               }
                             />
@@ -450,7 +507,9 @@ export default function FullEmployeeProfile() {
                               label="Basic Salary"
                               value={
                                 latest?.basic_salary
-                                  ? `ETB ${Number(latest.basic_salary).toLocaleString()}`
+                                  ? `ETB ${Number(
+                                      latest.basic_salary
+                                    ).toLocaleString()}`
                                   : "N/A"
                               }
                             />
@@ -458,28 +517,34 @@ export default function FullEmployeeProfile() {
                         );
                       })()}
                     </div>
-                    {emp.employments[emp.employments.length - 1]?.allowances?.length > 0 && (
+                    {(emp?.employments || [] || [])[
+                      (emp?.employments || [] || []).length - 1
+                    ]?.allowances?.length > 0 && (
                       <>
-                        <h4 className="font-medium text-gray-700 mt-4 mb-2">Allowances</h4>
+                        <h4 className="font-medium text-gray-700 mt-4 mb-2">
+                          Allowances
+                        </h4>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                          {emp.employments[emp.employments.length - 1].allowances.map(
-                            (a: any, i: number) => (
-                              <div key={i} className="p-3 bg-gray-50 rounded-xl">
-                                <p className="text-xs text-gray-500">
-                                  {a.allowanceType?.name || "Allowance"}
-                                </p>
-                                <p className="font-medium">
-                                  ETB {Number(a.amount).toLocaleString()}
-                                </p>
-                              </div>
-                            )
-                          )}
+                          {(emp?.employments || [] || [])[
+                            (emp?.employments || [] || []).length - 1
+                          ].allowances.map((a: any, i: number) => (
+                            <div key={i} className="p-3 bg-gray-50 rounded-xl">
+                              <p className="text-xs text-gray-500">
+                                {a.allowanceType?.name || "Allowance"}
+                              </p>
+                              <p className="font-medium">
+                                ETB {Number(a.amount).toLocaleString()}
+                              </p>
+                            </div>
+                          ))}
                         </div>
                       </>
                     )}
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-center py-4">No compensation data</p>
+                  <p className="text-gray-500 text-center py-4">
+                    No compensation data
+                  </p>
                 )}
               </SectionCard>
             )}
@@ -487,30 +552,37 @@ export default function FullEmployeeProfile() {
             {/* Education */}
             {selectedSections.includes("education") && (
               <SectionCard title="Education" icon={FiBookOpen}>
-                {emp?.educations?.length > 0 ? (
+                {(emp?.educations || [])?.length > 0 ? (
                   <div className="space-y-3">
-                    {emp.educations.map((edu: any, idx: number) => (
-                      <div key={idx} className="p-4 bg-gray-50 rounded-xl border-l-4 border-k-orange">
-                        <p className="font-medium">
-                          {edu.level ? `Level ${edu.level}` : "Education"}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {edu.fieldOfStudy || edu.field_of_study || "-"}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {edu.institution || "-"}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {formatDate(edu.startDate || edu.start_date)} -{" "}
-                          {edu.isCurrent || edu.is_current
-                            ? "Present"
-                            : formatDate(edu.endDate || edu.end_date)}
-                        </p>
-                      </div>
-                    ))}
+                    {(emp?.educations || [] || []).map(
+                      (edu: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className="p-4 bg-gray-50 rounded-xl border-l-4 border-k-orange"
+                        >
+                          <p className="font-medium">
+                            {edu.level ? `Level ${edu.level}` : "Education"}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {edu.fieldOfStudy || edu.field_of_study || "-"}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {edu.institution || "-"}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {formatDate(edu.startDate || edu.start_date)} -{" "}
+                            {edu.isCurrent || edu.is_current
+                              ? "Present"
+                              : formatDate(edu.endDate || edu.end_date)}
+                          </p>
+                        </div>
+                      )
+                    )}
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-center py-4">No education records</p>
+                  <p className="text-gray-500 text-center py-4">
+                    No education records
+                  </p>
                 )}
               </SectionCard>
             )}
@@ -518,28 +590,38 @@ export default function FullEmployeeProfile() {
             {/* Work Experience */}
             {selectedSections.includes("workExperience") && (
               <SectionCard title="Work Experience" icon={FiBriefcase}>
-                {emp?.employmentHistories?.length > 0 ? (
+                {(emp?.employmentHistories || [])?.length > 0 ? (
                   <div className="space-y-3">
-                    {emp.employmentHistories.map((hist: any, idx: number) => (
-                      <div key={idx} className="p-4 bg-gray-50 rounded-xl border-l-4 border-k-orange">
-                        <p className="font-medium">
-                          {hist.previousCompanyName ||
-                            hist.previous_company_name ||
-                            hist.previous_company ||
-                            "-"}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {hist.jobTitle || hist.previous_job_title_text || "-"}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {formatDate(hist.startDate || hist.start_date)} -{" "}
-                          {formatDate(hist.endDate || hist.end_date) || "Present"}
-                        </p>
-                      </div>
-                    ))}
+                    {(emp?.employmentHistories || [] || []).map(
+                      (hist: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className="p-4 bg-gray-50 rounded-xl border-l-4 border-k-orange"
+                        >
+                          <p className="font-medium">
+                            {hist.previousCompanyName ||
+                              hist.previous_company_name ||
+                              hist.previous_company ||
+                              "-"}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {hist.jobTitle ||
+                              hist.previous_job_title_text ||
+                              "-"}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {formatDate(hist.startDate || hist.start_date)} -{" "}
+                            {formatDate(hist.endDate || hist.end_date) ||
+                              "Present"}
+                          </p>
+                        </div>
+                      )
+                    )}
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-center py-4">No work experience records</p>
+                  <p className="text-gray-500 text-center py-4">
+                    No work experience records
+                  </p>
                 )}
               </SectionCard>
             )}
@@ -547,29 +629,34 @@ export default function FullEmployeeProfile() {
             {/* Certifications */}
             {selectedSections.includes("certifications") && (
               <SectionCard title="Certifications" icon={FiAward}>
-                {emp?.licensesAndCertifications?.length > 0 ? (
+                {(emp?.licensesAndCertifications || [])?.length > 0 ? (
                   <div className="space-y-3">
-                    {emp.licensesAndCertifications.map((cert: any, idx: number) => (
-                      <div key={idx} className="p-4 bg-gray-50 rounded-xl">
-                        <p className="font-medium">{cert.name}</p>
-                        <p className="text-sm text-gray-500">
-                          {cert.issuing_organization}
-                        </p>
-                        {cert.credential_url && (
-                          <a
-                            href={cert.credential_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-k-orange hover:underline inline-flex items-center gap-1 mt-1"
-                          >
-                            <FiExternalLink className="w-3 h-3" /> View Credential
-                          </a>
-                        )}
-                      </div>
-                    ))}
+                    {(emp?.licensesAndCertifications || [] || []).map(
+                      (cert: any, idx: number) => (
+                        <div key={idx} className="p-4 bg-gray-50 rounded-xl">
+                          <p className="font-medium">{cert.name}</p>
+                          <p className="text-sm text-gray-500">
+                            {cert.issuing_organization}
+                          </p>
+                          {cert.credential_url && (
+                            <a
+                              href={cert.credential_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-k-orange hover:underline inline-flex items-center gap-1 mt-1"
+                            >
+                              <FiExternalLink className="w-3 h-3" /> View
+                              Credential
+                            </a>
+                          )}
+                        </div>
+                      )
+                    )}
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-center py-4">No certifications</p>
+                  <p className="text-gray-500 text-center py-4">
+                    No certifications
+                  </p>
                 )}
               </SectionCard>
             )}
@@ -577,34 +664,41 @@ export default function FullEmployeeProfile() {
             {/* Documents */}
             {selectedSections.includes("documents") && (
               <SectionCard title="Documents" icon={FiFile}>
-                {emp?.documents &&
-                (emp.documents.cv?.length ||
-                  emp.documents.certificates?.length ||
-                  emp.documents.experienceLetters?.length ||
-                  emp.documents.taxForms?.length ||
-                  emp.documents.pensionForms?.length) ? (
+                {documents.cv?.length ||
+                documents.certificates?.length ||
+                documents.experienceLetters?.length ||
+                documents.taxForms?.length ||
+                documents.pensionForms?.length ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {emp.documents.cv?.length > 0 && (
-                      <DocList title="CV/Resume" files={emp.documents.cv} />
+                    {documents.cv?.length > 0 && (
+                      <DocList title="CV/Resume" files={documents.cv} />
                     )}
-                    {emp.documents.certificates?.length > 0 && (
-                      <DocList title="Certificates" files={emp.documents.certificates} />
-                    )}
-                    {emp.documents.experienceLetters?.length > 0 && (
+                    {documents.certificates?.length > 0 && (
                       <DocList
-                        title="Experience Letters"
-                        files={emp.documents.experienceLetters}
+                        title="Certificates"
+                        files={documents.certificates}
                       />
                     )}
-                    {emp.documents.taxForms?.length > 0 && (
-                      <DocList title="Tax Forms" files={emp.documents.taxForms} />
+                    {documents.experienceLetters?.length > 0 && (
+                      <DocList
+                        title="Experience Letters"
+                        files={documents.experienceLetters}
+                      />
                     )}
-                    {emp.documents.pensionForms?.length > 0 && (
-                      <DocList title="Pension Forms" files={emp.documents.pensionForms} />
+                    {documents.taxForms?.length > 0 && (
+                      <DocList title="Tax Forms" files={documents.taxForms} />
+                    )}
+                    {documents.pensionForms?.length > 0 && (
+                      <DocList
+                        title="Pension Forms"
+                        files={documents.pensionForms}
+                      />
                     )}
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-center py-4">No documents uploaded</p>
+                  <p className="text-gray-500 text-center py-4">
+                    No documents uploaded
+                  </p>
                 )}
               </SectionCard>
             )}

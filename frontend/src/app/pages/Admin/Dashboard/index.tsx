@@ -1,191 +1,258 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+
 import { useDashboardSlice } from "./slice";
 import {
   selectDashboardStats,
   selectDashboardLoading,
-  selectDashboardFilters,
 } from "./slice/selectors";
 
-import AdvancedFilterPanel from "../../../components/common/AdvancedFilterPanel";
+import { useDepartments } from "../Departments/slice";
+import {
+  selectDepartments,
+  selectDepartmentsLoading,
+} from "../Departments/slice/selectors";
 
 import AdminLayout from "../../../components/DefaultLayout/AdminLayout";
-import StatCard from "../../../components/Core/ui/StatCard";
+import StatCard from "../../../components/common/StatCard";
+import PageHeader from "../../../components/common/PageHeader";
+import FormAutocomplete from "../../../components/common/FormAutocomplete";
 import DonutChart from "../../../components/Core/ui/DonutChart";
 import HorizontalBarChart from "../../../components/Core/ui/HorizontalBarChart";
 import VerticalBarChart from "../../../components/Core/ui/VerticalBarChart";
-import ManagerialPie from "../../../components/Core/ui/ManagerialPie";
 
-import {
-  MdGroup,
-  MdApartment,
-  MdPersonOutline,
-  MdRemoveCircleOutline,
-} from "react-icons/md";
-import { authActions } from "../../../slice/authSlice";
+import { FiUsers, FiUserCheck, FiGrid, FiUserX } from "react-icons/fi";
 
 export default function AdminDashboard() {
   const dispatch = useDispatch();
+
   const { actions } = useDashboardSlice();
+  const { actions: departmentActions } = useDepartments();
 
   const stats = useSelector(selectDashboardStats);
   const isLoading = useSelector(selectDashboardLoading);
 
-  const filters = useSelector(selectDashboardFilters);
+  const departments = useSelector(selectDepartments);
+  const departmentsLoading = useSelector(selectDepartmentsLoading);
 
-  // Fetch stats on mount and filter change
+  const [selectedDepartmentId, setSelectedDepartmentId] =
+    useState<string>("all");
+  const [selectedDepartmentName, setSelectedDepartmentName] =
+    useState<string>("All Departments");
+
   useEffect(() => {
-    dispatch(actions.fetchStatsRequest(filters));
-  }, [dispatch, actions, filters]);
+    dispatch(actions.fetchStatsRequest());
+    dispatch(departmentActions.fetchDepartmentsStart());
+  }, [dispatch, actions, departmentActions]);
 
-  // Refresh logged-in user info
-  useEffect(() => {
-    dispatch(authActions.getMeRequest());
-  }, [dispatch]);
-
-  const handleFilterChange = (newFilters: any) => {
-    dispatch(actions.setFilters(newFilters));
+  // Filter function for department autocomplete
+  const filterDepartments = async (query: string) => {
+    const allOptions = ["All Departments", ...departments.map((d) => d.name)];
+    // If query is empty or matches the currently selected value, show all options
+    if (!query || query === selectedDepartmentName) {
+      return allOptions;
+    }
+    return allOptions.filter((name) =>
+      name.toLowerCase().includes(query.toLowerCase())
+    );
   };
 
+  // Handle department selection
+  const handleDepartmentChange = (departmentName: string) => {
+    setSelectedDepartmentName(departmentName);
+    if (departmentName === "All Departments") {
+      setSelectedDepartmentId("all");
+    } else {
+      const dept = departments.find((d) => d.name === departmentName);
+      if (dept) {
+        setSelectedDepartmentId(String(dept.id));
+      }
+    }
+  };
+
+  /* ======================
+     AGGREGATED METRICS
+  ====================== */
   const totalEmployees = stats?.totalEmployees ?? 0;
   const activeEmployees = stats?.activeEmployees ?? 0;
   const inactiveEmployees = stats?.inactiveEmployees ?? 0;
   const totalDepartments = stats?.totalDepartments ?? 0;
 
+  /* ======================
+     FILTERED BY DEPARTMENT
+  ====================== */
+  const deptStats =
+    selectedDepartmentId !== "all"
+      ? stats?.departmentBreakdown?.[selectedDepartmentId]
+      : null;
+
+  /* Gender (Filtered) */
   const genderLabels = ["Male", "Female"];
-  const genderSeries = [60, 40];
+  const genderSeries = deptStats
+    ? [deptStats.gender.male, deptStats.gender.female]
+    : [stats.genderDist.male, stats.genderDist.female];
 
-  const et = stats?.employmentType || {
-    fullTime: 45,
-    partTime: 20,
-    contract: 15,
-    outsourced: 20,
-  };
+  /* Job Level (Filtered) — NEW CREATIVE CARD */
+  const jobLevelSource = deptStats ? deptStats.jobLevels : stats.jobLevelDist;
 
-  const employmentLabels = ["Full-Time", "Part-Time", "Contract", "Outsourced"];
+  const jobLevelLabels = Object.keys(jobLevelSource || {});
+  const jobLevelSeries = Object.values(jobLevelSource || {});
 
-  const employmentSeries = [
-    et.fullTime ?? 50,
-    et.partTime ?? 20,
-    et.contract ?? 10,
-    et.outsourced ?? 15,
-  ];
+  /* ======================
+     EXISTING GLOBAL DATA
+  ====================== */
+  const empType = stats?.empTypeDist || {};
+  const employmentLabels = Object.keys(empType);
+  const employmentSeries = Object.values(empType);
 
-  const departmentData = [
-    { name: "IT", value: 50 },
-    { name: "HR", value: 45 },
-    { name: "Finance", value: 40 },
-    { name: "Marketing", value: 35 },
-    { name: "Sales", value: 30 },
-    { name: "Logistics", value: 25 },
-    { name: "Legal", value: 20 },
-    { name: "Operations", value: 15 },
-    { name: "Procurement", value: 10 },
-    { name: "Admin", value: 5 },
-  ];
+  const deptDist = stats?.deptDist || {};
+  const departmentData = Object.keys(deptDist).map((key) => ({
+    name: key,
+    value: deptDist[key],
+  }));
 
-  const jobLevels = [
-    { name: "Intern", value: 12 },
-    { name: "Junior", value: 25 },
-    { name: "Mid-Level", value: 30 },
-    { name: "Senior", value: 20 },
-    { name: "Lead", value: 10 },
-    { name: "Manager", value: 8 },
-  ];
+  const jobLevelDist = stats?.jobLevelDist || {};
+  const jobLevels = Object.keys(jobLevelDist).map((key) => ({
+    name: key,
+    value: jobLevelDist[key],
+  }));
+
+  const managerDist = stats?.managerDist || {};
 
   return (
     <AdminLayout>
-      <h1 className="text-2xl md:text-3xl font-bold text-k-dark-grey mb-8">
-        Admin Dashboard
-      </h1>
+      {/* Page Header */}
+      <PageHeader>
+        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <p className="text-gray-300 mt-2">
+          Company-wide workforce insights and department analytics
+        </p>
+      </PageHeader>
 
+      {/* Department Insights Section */}
       <div className="mb-8">
-        <AdvancedFilterPanel
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          showJobTitle={false}
-          showStatus={false}
-          showGender={false}
-          showEmploymentType={false}
-        />
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-k-dark-grey">
+              Department Insights
+            </h2>
+            <p className="text-gray-500 mt-1">
+              Dynamic analytics filtered by department
+            </p>
+          </div>
+
+          <FormAutocomplete
+            type="departments"
+            placeholder="All Departments"
+            value={selectedDepartmentName}
+            onChange={handleDepartmentChange}
+            fetchSuggestionsFn={filterDepartments}
+            containerClassName="!mb-0 w-64"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Gender Distribution Card */}
+          <div className="bg-white rounded-2xl shadow-card border border-gray-100 p-6">
+            <div className="mb-4">
+              <h3 className="font-bold text-lg text-k-dark-grey">
+                Gender Distribution
+              </h3>
+              <p className="text-sm text-gray-500 mt-1">
+                {selectedDepartmentId === "all"
+                  ? "Company-wide breakdown"
+                  : departments.find((d) => d.id === selectedDepartmentId)
+                      ?.name}
+              </p>
+            </div>
+            <DonutChart title="" labels={genderLabels} series={genderSeries} />
+          </div>
+
+          {/* Job Level Distribution Card */}
+          <div className="bg-white rounded-2xl shadow-card border border-gray-100 p-6">
+            <div className="mb-4">
+              <h3 className="font-bold text-lg text-k-dark-grey">
+                Role Seniority Mix
+              </h3>
+              <p className="text-sm text-gray-500 mt-1">
+                {selectedDepartmentId === "all"
+                  ? "Company-wide levels"
+                  : departments.find((d) => d.id === selectedDepartmentId)
+                      ?.name}
+              </p>
+            </div>
+            <DonutChart
+              title=""
+              labels={jobLevelLabels}
+              series={jobLevelSeries}
+            />
+          </div>
+        </div>
       </div>
 
-      {/*  STAT CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <StatCard
-          title="Total Employees"
-          value={isLoading ? "..." : totalEmployees.toString()}
-          icon={<MdGroup />}
-          size="lg"
-        />
+      {/* Company-wide Analytics */}
+      <div className="mb-8">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-k-dark-grey">
+            Company-wide Analytics
+          </h2>
+          <p className="text-gray-500 mt-1">
+            Overall workforce distribution and composition
+          </p>
+        </div>
 
-        <StatCard
-          title="Active Employees"
-          value={isLoading ? "..." : activeEmployees.toString()}
-          icon={<MdPersonOutline />}
-          size="lg"
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Employment Type Card */}
+          <div className="bg-white rounded-2xl shadow-card border border-gray-100 p-6">
+            <div className="mb-4">
+              <h3 className="font-bold text-lg text-k-dark-grey">
+                Employment Type
+              </h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Full-time, part-time, and contract breakdown
+              </p>
+            </div>
+            <DonutChart
+              title=""
+              labels={employmentLabels}
+              series={employmentSeries}
+            />
+          </div>
+
+          {/* Manager Distribution Card */}
+          <div className="bg-white rounded-2xl shadow-card border border-gray-100 p-6">
+            <div className="mb-4">
+              <h3 className="font-bold text-lg text-k-dark-grey">
+                Managerial Roles
+              </h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Managers vs. individual contributors
+              </p>
+            </div>
+            <DonutChart
+              title=""
+              labels={["Managers", "Non-Managers"]}
+              series={[
+                managerDist["Managers"] || 0,
+                managerDist["NonManagers"] || 0,
+              ]}
+            />
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-        <StatCard
-          title="Total Departments"
-          value={isLoading ? "..." : totalDepartments.toString()}
-          icon={<MdApartment />}
-          size="lg"
-        />
+      {/* Detailed Charts */}
+      <div className="space-y-6">
+        <div className="bg-white rounded-2xl shadow-card border border-gray-100 p-6">
+          <HorizontalBarChart
+            title="Employees by Department (Top 10)"
+            data={departmentData}
+          />
+        </div>
 
-        <StatCard
-          title="Inactive / Terminated"
-          value={isLoading ? "..." : inactiveEmployees.toString()}
-          icon={<MdRemoveCircleOutline />}
-          size="lg"
-        />
-      </div>
-
-      {/* DONUT CHARTS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
-        <DonutChart
-          title="Gender Distribution"
-          labels={genderLabels}
-          series={genderSeries}
-        />
-
-        <DonutChart
-          title="Employment Type Distribution"
-          labels={employmentLabels}
-          series={employmentSeries}
-        />
-      </div>
-
-      {/* HORIZONTAL BAR */}
-      <div className="mt-10">
-        <HorizontalBarChart
-          title="Employees by Department (Top 10)"
-          data={departmentData}
-        />
-      </div>
-
-      <VerticalBarChart title="Job Level Distribution" data={jobLevels} />
-      <ManagerialPie managerial={32} nonManagerial={108} />
-
-      {/* RECENT ACTIVITIES */}
-      <div className="mt-10 bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-        <h2 className="text-xl font-semibold mb-4 text-[#333]">
-          Recent Activities
-        </h2>
-
-        <ul className="space-y-3">
-          <li className="border-l-4 border-[#FFCC00] pl-4 text-[#555]">
-            New employee registered: <strong>Michael B.</strong>
-          </li>
-          <li className="border-l-4 border-[#FFCC00] pl-4 text-[#555]">
-            IT Department updated: <strong>New Supervisor Added</strong>
-          </li>
-          <li className="border-l-4 border-[#FFCC00] pl-4 text-[#555]">
-            Employee ID issued for <strong>Hanna S.</strong>
-          </li>
-        </ul>
+        <div className="bg-white rounded-2xl shadow-card border border-gray-100 p-6">
+          <VerticalBarChart title="Job Level Distribution" data={jobLevels} />
+        </div>
       </div>
     </AdminLayout>
   );

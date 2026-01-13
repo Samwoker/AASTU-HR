@@ -5,8 +5,8 @@ import {
   FiRepeat,
   FiCalendar,
   FiChevronRight,
-  FiLoader,
 } from "react-icons/fi";
+import KachaSpinner from "../common/KachaSpinner";
 import careerService, { CareerEvent } from "../../services/careerService";
 
 interface CareerHistoryTimelineProps {
@@ -83,9 +83,11 @@ export default function CareerHistoryTimeline({
   if (loading) {
     return (
       <div className={`bg-white rounded-2xl shadow-sm p-6 ${className}`}>
-        <h2 className="text-xl font-bold text-k-dark-grey mb-4">Career History</h2>
+        <h2 className="text-xl font-bold text-k-dark-grey mb-4">
+          Career History
+        </h2>
         <div className="flex items-center justify-center py-8">
-          <FiLoader className="w-6 h-6 text-k-orange animate-spin" />
+          <KachaSpinner size="md" />
           <span className="ml-2 text-gray-500">Loading career history...</span>
         </div>
       </div>
@@ -95,7 +97,9 @@ export default function CareerHistoryTimeline({
   if (error) {
     return (
       <div className={`bg-white rounded-2xl shadow-sm p-6 ${className}`}>
-        <h2 className="text-xl font-bold text-k-dark-grey mb-4">Career History</h2>
+        <h2 className="text-xl font-bold text-k-dark-grey mb-4">
+          Career History
+        </h2>
         <div className="text-center py-8 text-gray-500">{error}</div>
       </div>
     );
@@ -104,7 +108,9 @@ export default function CareerHistoryTimeline({
   if (events.length === 0) {
     return (
       <div className={`bg-white rounded-2xl shadow-sm p-6 ${className}`}>
-        <h2 className="text-xl font-bold text-k-dark-grey mb-4">Career History</h2>
+        <h2 className="text-xl font-bold text-k-dark-grey mb-4">
+          Career History
+        </h2>
         <div className="text-center py-8">
           <FiCalendar className="w-12 h-12 mx-auto text-gray-300 mb-3" />
           <p className="text-gray-500">No career events recorded yet</p>
@@ -115,7 +121,9 @@ export default function CareerHistoryTimeline({
 
   return (
     <div className={`bg-white rounded-2xl shadow-sm p-6 ${className}`}>
-      <h2 className="text-xl font-bold text-k-dark-grey mb-6">Career History</h2>
+      <h2 className="text-xl font-bold text-k-dark-grey mb-6">
+        Career History
+      </h2>
 
       <div className="relative">
         {/* Timeline Line */}
@@ -124,7 +132,8 @@ export default function CareerHistoryTimeline({
         {/* Events */}
         <div className="space-y-6">
           {events.map((event, index) => {
-            const config = EVENT_CONFIG[event.event_type] || EVENT_CONFIG.Transfer;
+            const config =
+              EVENT_CONFIG[event.event_type] || EVENT_CONFIG.Transfer;
             const Icon = config.icon;
 
             return (
@@ -150,11 +159,12 @@ export default function CareerHistoryTimeline({
                       <p className="text-sm text-gray-500 mt-1">
                         <FiCalendar className="inline w-3.5 h-3.5 mr-1" />
                         {formatDate(event.event_date)}
-                        {event.effective_date && event.effective_date !== event.event_date && (
-                          <span className="ml-2">
-                            (Effective: {formatDate(event.effective_date)})
-                          </span>
-                        )}
+                        {event.effective_date &&
+                          event.effective_date !== event.event_date && (
+                            <span className="ml-2">
+                              (Effective: {formatDate(event.effective_date)})
+                            </span>
+                          )}
                       </p>
                     </div>
                   </div>
@@ -194,11 +204,14 @@ export default function CareerHistoryTimeline({
                         {formatSalary(event.previous_salary)}
                       </span>
                       <FiChevronRight className="text-gray-400" />
-                      <span className={`font-medium ${
-                        Number(event.new_salary) > Number(event.previous_salary)
-                          ? "text-green-600"
-                          : "text-gray-800"
-                      }`}>
+                      <span
+                        className={`font-medium ${
+                          Number(event.new_salary) >
+                          Number(event.previous_salary)
+                            ? "text-green-600"
+                            : "text-gray-800"
+                        }`}
+                      >
                         {formatSalary(event.new_salary)}
                       </span>
                     </div>
@@ -207,7 +220,8 @@ export default function CareerHistoryTimeline({
                   {/* Justification */}
                   {event.justification && (
                     <p className="text-sm text-gray-600 mt-2 pt-2 border-t border-gray-200/50">
-                      <span className="font-medium">Reason:</span> {event.justification}
+                      <span className="font-medium">Reason:</span>{" "}
+                      {event.justification}
                     </p>
                   )}
                 </div>

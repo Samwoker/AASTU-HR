@@ -23,6 +23,7 @@ export default function SetupAccount() {
           title="Setup Account"
           subtitle="Create your password to activate your account"
           token={token}
+          showConfirmPassword
         />
 
         <div className="hidden lg:block relative h-full rounded-r-2xl overflow-hidden">

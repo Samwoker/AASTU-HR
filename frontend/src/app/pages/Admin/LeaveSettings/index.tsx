@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import AdminLayout from "../../../components/DefaultLayout/AdminLayout";
+import KachaSpinner from "../../../components/common/KachaSpinner";
+import useMinimumDelay from "../../../hooks/useMinimumDelay";
+import { KACHA_SPINNER_CYCLE_MS } from "../../../components/common/KachaSpinner";
 import {
   MdSettings,
   MdSave,
@@ -181,7 +184,9 @@ export default function LeaveSettingsPage() {
     notification_channels: "EMAIL,IN_APP",
   });
   const [hasChanges, setHasChanges] = useState(false);
-  const [activeTab, setActiveTab] = useState<"general" | "accrual" | "encashment" | "notifications">("general");
+  const [activeTab, setActiveTab] = useState<
+    "general" | "accrual" | "encashment" | "notifications"
+  >("general");
 
   // Fetch settings on mount
   useEffect(() => {
@@ -196,7 +201,8 @@ export default function LeaveSettingsPage() {
         sunday_off: leaveSettings.sunday_off ?? true,
         fiscal_year_start_month: leaveSettings.fiscal_year_start_month ?? 1,
         accrual_basis: leaveSettings.accrual_basis ?? "ANNIVERSARY",
-        require_ceo_approval_for_managers: leaveSettings.require_ceo_approval_for_managers ?? true,
+        require_ceo_approval_for_managers:
+          leaveSettings.require_ceo_approval_for_managers ?? true,
         auto_approve_after_days: leaveSettings.auto_approve_after_days ?? null,
         annual_leave_base_days: leaveSettings.annual_leave_base_days ?? 16,
         accrual_frequency: leaveSettings.accrual_frequency ?? "DAILY",
@@ -205,13 +211,16 @@ export default function LeaveSettingsPage() {
         increment_amount: leaveSettings.increment_amount ?? 1,
         max_annual_leave_cap: leaveSettings.max_annual_leave_cap ?? null,
         enable_encashment: leaveSettings.enable_encashment ?? true,
-        encashment_salary_divisor: leaveSettings.encashment_salary_divisor ?? 30,
+        encashment_salary_divisor:
+          leaveSettings.encashment_salary_divisor ?? 30,
         max_encashment_days: leaveSettings.max_encashment_days ?? 10,
         encashment_rounding: leaveSettings.encashment_rounding ?? "FLOOR",
         enable_leave_expiry: leaveSettings.enable_leave_expiry ?? true,
         expiry_notification_days: leaveSettings.expiry_notification_days ?? 30,
-        balance_notification_enabled: leaveSettings.balance_notification_enabled ?? true,
-        notification_channels: leaveSettings.notification_channels ?? "EMAIL,IN_APP",
+        balance_notification_enabled:
+          leaveSettings.balance_notification_enabled ?? true,
+        notification_channels:
+          leaveSettings.notification_channels ?? "EMAIL,IN_APP",
       });
       setHasChanges(false);
     }
@@ -234,7 +243,10 @@ export default function LeaveSettingsPage() {
     dispatch(leaveActions.getLeaveSettingsRequest());
   };
 
-  const handleToggleChange = (field: keyof LeaveSettingsFormData, value: boolean) => {
+  const handleToggleChange = (
+    field: keyof LeaveSettingsFormData,
+    value: boolean
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };
@@ -248,11 +260,7 @@ export default function LeaveSettingsPage() {
     setFormData((prev) => ({
       ...prev,
       [name]:
-        type === "number"
-          ? value === ""
-            ? null
-            : parseFloat(value)
-          : value,
+        type === "number" ? (value === "" ? null : parseFloat(value)) : value,
     }));
     setHasChanges(true);
   };
@@ -268,7 +276,8 @@ export default function LeaveSettingsPage() {
         sunday_off: leaveSettings.sunday_off ?? true,
         fiscal_year_start_month: leaveSettings.fiscal_year_start_month ?? 1,
         accrual_basis: leaveSettings.accrual_basis ?? "ANNIVERSARY",
-        require_ceo_approval_for_managers: leaveSettings.require_ceo_approval_for_managers ?? true,
+        require_ceo_approval_for_managers:
+          leaveSettings.require_ceo_approval_for_managers ?? true,
         auto_approve_after_days: leaveSettings.auto_approve_after_days ?? null,
         annual_leave_base_days: leaveSettings.annual_leave_base_days ?? 16,
         accrual_frequency: leaveSettings.accrual_frequency ?? "DAILY",
@@ -277,20 +286,31 @@ export default function LeaveSettingsPage() {
         increment_amount: leaveSettings.increment_amount ?? 1,
         max_annual_leave_cap: leaveSettings.max_annual_leave_cap ?? null,
         enable_encashment: leaveSettings.enable_encashment ?? true,
-        encashment_salary_divisor: leaveSettings.encashment_salary_divisor ?? 30,
+        encashment_salary_divisor:
+          leaveSettings.encashment_salary_divisor ?? 30,
         max_encashment_days: leaveSettings.max_encashment_days ?? 10,
         encashment_rounding: leaveSettings.encashment_rounding ?? "FLOOR",
         enable_leave_expiry: leaveSettings.enable_leave_expiry ?? true,
         expiry_notification_days: leaveSettings.expiry_notification_days ?? 30,
-        balance_notification_enabled: leaveSettings.balance_notification_enabled ?? true,
-        notification_channels: leaveSettings.notification_channels ?? "EMAIL,IN_APP",
+        balance_notification_enabled:
+          leaveSettings.balance_notification_enabled ?? true,
+        notification_channels:
+          leaveSettings.notification_channels ?? "EMAIL,IN_APP",
       });
       setHasChanges(false);
     }
   };
 
   // Tab button component
-  const TabButton = ({ tab, label, icon: Icon }: { tab: typeof activeTab; label: string; icon: React.ComponentType<any> }) => (
+  const TabButton = ({
+    tab,
+    label,
+    icon: Icon,
+  }: {
+    tab: typeof activeTab;
+    label: string;
+    icon: React.ComponentType<any>;
+  }) => (
     <button
       onClick={() => setActiveTab(tab)}
       className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all cursor-pointer ${
@@ -304,13 +324,16 @@ export default function LeaveSettingsPage() {
     </button>
   );
 
-  if (settingsLoading) {
+  const showSettingsLoading = useMinimumDelay(
+    settingsLoading,
+    KACHA_SPINNER_CYCLE_MS
+  );
+
+  if (showSettingsLoading) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center h-96">
-          <div className="animate-spin">
-            <MdRefresh className="text-4xl text-k-orange" />
-          </div>
+          <KachaSpinner size="xl" variant="screen" />
         </div>
       </AdminLayout>
     );
@@ -320,10 +343,7 @@ export default function LeaveSettingsPage() {
     <AdminLayout>
       {/* Header */}
       <div className="mb-4">
-        <BackButton
-          to="/admin/leaves"
-          label="Back to Leave Management"
-        />
+        <BackButton to="/admin/leaves" label="Back to Leave Management" />
       </div>
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -370,13 +390,16 @@ export default function LeaveSettingsPage() {
         <div className="mb-6 flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-xl text-sm">
             <MdHistory className="text-lg" />
-            <span className="font-medium">Policy Version:</span> v{leaveSettings.policy_version || 1}
+            <span className="font-medium">Policy Version:</span> v
+            {leaveSettings.policy_version || 1}
           </div>
           {leaveSettings.policy_effective_date && (
             <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-xl text-sm">
               <MdCalendarToday className="text-lg" />
               <span className="font-medium">Effective:</span>{" "}
-              {new Date(leaveSettings.policy_effective_date).toLocaleDateString()}
+              {new Date(
+                leaveSettings.policy_effective_date
+              ).toLocaleDateString()}
             </div>
           )}
         </div>
@@ -395,7 +418,11 @@ export default function LeaveSettingsPage() {
         <TabButton tab="general" label="General" icon={MdBusinessCenter} />
         <TabButton tab="accrual" label="Accrual" icon={MdTrendingUp} />
         <TabButton tab="encashment" label="Cash-Out" icon={MdAttachMoney} />
-        <TabButton tab="notifications" label="Notifications" icon={MdNotifications} />
+        <TabButton
+          tab="notifications"
+          label="Notifications"
+          icon={MdNotifications}
+        />
       </div>
 
       {/* Tab Content */}
@@ -469,7 +496,8 @@ export default function LeaveSettingsPage() {
                         Anniversary Date
                       </p>
                       <p className="text-xs text-gray-500">
-                        Leave is calculated from the employee's hire date anniversary
+                        Leave is calculated from the employee's hire date
+                        anniversary
                       </p>
                     </div>
                   </label>
@@ -599,11 +627,13 @@ export default function LeaveSettingsPage() {
                   Accrual Frequency
                 </label>
                 <div className="grid grid-cols-2 gap-3">
-                  <label className={`flex items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-colors ${
-                    formData.accrual_frequency === "DAILY" 
-                      ? "bg-k-orange text-white" 
-                      : "bg-gray-50 hover:bg-gray-100"
-                  }`}>
+                  <label
+                    className={`flex items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-colors ${
+                      formData.accrual_frequency === "DAILY"
+                        ? "bg-k-orange text-white"
+                        : "bg-gray-50 hover:bg-gray-100"
+                    }`}
+                  >
                     <input
                       type="radio"
                       name="accrual_frequency"
@@ -614,11 +644,13 @@ export default function LeaveSettingsPage() {
                     />
                     <span className="text-sm font-medium">Daily</span>
                   </label>
-                  <label className={`flex items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-colors ${
-                    formData.accrual_frequency === "MONTHLY" 
-                      ? "bg-k-orange text-white" 
-                      : "bg-gray-50 hover:bg-gray-100"
-                  }`}>
+                  <label
+                    className={`flex items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-colors ${
+                      formData.accrual_frequency === "MONTHLY"
+                        ? "bg-k-orange text-white"
+                        : "bg-gray-50 hover:bg-gray-100"
+                    }`}
+                  >
                     <input
                       type="radio"
                       name="accrual_frequency"
@@ -637,7 +669,11 @@ export default function LeaveSettingsPage() {
                 type="number"
                 value={formData.accrual_divisor}
                 onChange={handleInputChange}
-                hint={`Daily rate = Base days / ${formData.accrual_divisor} = ${(formData.annual_leave_base_days / formData.accrual_divisor).toFixed(4)} days`}
+                hint={`Daily rate = Base days / ${
+                  formData.accrual_divisor
+                } = ${(
+                  formData.annual_leave_base_days / formData.accrual_divisor
+                ).toFixed(4)} days`}
               />
             </div>
           </SettingsCard>
@@ -675,26 +711,64 @@ export default function LeaveSettingsPage() {
                 hint="Maximum total annual leave days allowed"
               />
               <div className="bg-blue-50 p-4 rounded-xl overflow-x-auto">
-                <p className="text-xs font-semibold text-blue-700 mb-2">Example Calculation (Base: 16 days, +1 day every 2 years)</p>
+                <p className="text-xs font-semibold text-blue-700 mb-2">
+                  Example Calculation (Base: 16 days, +1 day every 2 years)
+                </p>
                 <table className="w-full text-xs text-blue-700">
                   <thead>
                     <tr className="border-b border-blue-200">
                       <th className="py-1 px-2 text-left">Year</th>
                       <th className="py-1 px-2 text-center">Base</th>
                       <th className="py-1 px-2 text-center">Tenure Bonus</th>
-                      <th className="py-1 px-2 text-center">Annual Entitlement</th>
-                      <th className="py-1 px-2 text-right">Cumulative (if unused)</th>
+                      <th className="py-1 px-2 text-center">
+                        Annual Entitlement
+                      </th>
+                      <th className="py-1 px-2 text-right">
+                        Cumulative (if unused)
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr><td className="py-1 px-2">1</td><td className="text-center">16</td><td className="text-center">0</td><td className="text-center">16</td><td className="text-right">16</td></tr>
-                    <tr><td className="py-1 px-2">2</td><td className="text-center">16</td><td className="text-center">0</td><td className="text-center">16</td><td className="text-right">32 (16+16)</td></tr>
-                    <tr><td className="py-1 px-2">3</td><td className="text-center">16</td><td className="text-center">+1</td><td className="text-center">17</td><td className="text-right">49 (32+17)</td></tr>
-                    <tr><td className="py-1 px-2">4</td><td className="text-center">16</td><td className="text-center">+1</td><td className="text-center">17</td><td className="text-right">66 (49+17)</td></tr>
-                    <tr><td className="py-1 px-2">5</td><td className="text-center">16</td><td className="text-center">+2</td><td className="text-center">18</td><td className="text-right">84 (66+18)</td></tr>
+                    <tr>
+                      <td className="py-1 px-2">1</td>
+                      <td className="text-center">16</td>
+                      <td className="text-center">0</td>
+                      <td className="text-center">16</td>
+                      <td className="text-right">16</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1 px-2">2</td>
+                      <td className="text-center">16</td>
+                      <td className="text-center">0</td>
+                      <td className="text-center">16</td>
+                      <td className="text-right">32 (16+16)</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1 px-2">3</td>
+                      <td className="text-center">16</td>
+                      <td className="text-center">+1</td>
+                      <td className="text-center">17</td>
+                      <td className="text-right">49 (32+17)</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1 px-2">4</td>
+                      <td className="text-center">16</td>
+                      <td className="text-center">+1</td>
+                      <td className="text-center">17</td>
+                      <td className="text-right">66 (49+17)</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1 px-2">5</td>
+                      <td className="text-center">16</td>
+                      <td className="text-center">+2</td>
+                      <td className="text-center">18</td>
+                      <td className="text-right">84 (66+18)</td>
+                    </tr>
                   </tbody>
                 </table>
-                <p className="mt-2 text-blue-600 italic text-[10px]">Accrual is distributed daily over 365 days.</p>
+                <p className="mt-2 text-blue-600 italic text-[10px]">
+                  Accrual is distributed daily over 365 days.
+                </p>
               </div>
             </div>
           </SettingsCard>
@@ -740,26 +814,28 @@ export default function LeaveSettingsPage() {
                     Rounding Method
                   </label>
                   <div className="grid grid-cols-3 gap-2">
-                    {(["FLOOR", "ROUND", "CEIL"] as EncashmentRounding[]).map((method) => (
-                      <label
-                        key={method}
-                        className={`flex items-center justify-center p-3 rounded-xl cursor-pointer transition-colors ${
-                          formData.encashment_rounding === method
-                            ? "bg-k-orange text-white"
-                            : "bg-gray-50 hover:bg-gray-100"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="encashment_rounding"
-                          value={method}
-                          checked={formData.encashment_rounding === method}
-                          onChange={handleInputChange}
-                          className="sr-only"
-                        />
-                        <span className="text-sm font-medium">{method}</span>
-                      </label>
-                    ))}
+                    {(["FLOOR", "ROUND", "CEIL"] as EncashmentRounding[]).map(
+                      (method) => (
+                        <label
+                          key={method}
+                          className={`flex items-center justify-center p-3 rounded-xl cursor-pointer transition-colors ${
+                            formData.encashment_rounding === method
+                              ? "bg-k-orange text-white"
+                              : "bg-gray-50 hover:bg-gray-100"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="encashment_rounding"
+                            value={method}
+                            checked={formData.encashment_rounding === method}
+                            onChange={handleInputChange}
+                            className="sr-only"
+                          />
+                          <span className="text-sm font-medium">{method}</span>
+                        </label>
+                      )
+                    )}
                   </div>
                 </div>
               </div>
@@ -774,10 +850,13 @@ export default function LeaveSettingsPage() {
           >
             <div className="space-y-4">
               <div className="bg-gray-50 p-4 rounded-xl space-y-2">
-                <p className="text-sm font-medium text-k-dark-grey">Calculation Formula:</p>
+                <p className="text-sm font-medium text-k-dark-grey">
+                  Calculation Formula:
+                </p>
                 <div className="bg-white p-3 rounded-lg border border-gray-200">
                   <code className="text-sm text-gray-700">
-                    Daily Rate = Monthly Salary ÷ {formData.encashment_salary_divisor}
+                    Daily Rate = Monthly Salary ÷{" "}
+                    {formData.encashment_salary_divisor}
                   </code>
                 </div>
                 <div className="bg-white p-3 rounded-lg border border-gray-200">
@@ -788,11 +867,22 @@ export default function LeaveSettingsPage() {
               </div>
               <div className="bg-green-50 p-4 rounded-xl">
                 <p className="text-xs text-green-700">
-                  <strong>Example:</strong> Employee with 25,000 ETB monthly salary and 5 eligible days:
+                  <strong>Example:</strong> Employee with 25,000 ETB monthly
+                  salary and 5 eligible days:
                   <br />
-                  Daily Rate = 25,000 ÷ {formData.encashment_salary_divisor} = {(25000 / formData.encashment_salary_divisor).toFixed(2)} ETB
+                  Daily Rate = 25,000 ÷ {
+                    formData.encashment_salary_divisor
+                  } = {(25000 / formData.encashment_salary_divisor).toFixed(2)}{" "}
+                  ETB
                   <br />
-                  Cash Value = 5 × {(25000 / formData.encashment_salary_divisor).toFixed(2)} = {(5 * 25000 / formData.encashment_salary_divisor).toFixed(2)} ETB
+                  Cash Value = 5 ×{" "}
+                  {(25000 / formData.encashment_salary_divisor).toFixed(
+                    2
+                  )} ={" "}
+                  {((5 * 25000) / formData.encashment_salary_divisor).toFixed(
+                    2
+                  )}{" "}
+                  ETB
                 </p>
               </div>
             </div>
@@ -854,38 +944,52 @@ export default function LeaveSettingsPage() {
                     type="checkbox"
                     checked={formData.notification_channels.includes("EMAIL")}
                     onChange={(e) => {
-                      const channels = formData.notification_channels.split(",").filter(Boolean);
+                      const channels = formData.notification_channels
+                        .split(",")
+                        .filter(Boolean);
                       if (e.target.checked) {
                         channels.push("EMAIL");
                       } else {
                         const idx = channels.indexOf("EMAIL");
                         if (idx > -1) channels.splice(idx, 1);
                       }
-                      setFormData((prev) => ({ ...prev, notification_channels: channels.join(",") }));
+                      setFormData((prev) => ({
+                        ...prev,
+                        notification_channels: channels.join(","),
+                      }));
                       setHasChanges(true);
                     }}
                     className="w-4 h-4 text-k-orange rounded cursor-pointer"
                   />
-                  <span className="text-sm text-k-dark-grey">Email Notifications</span>
+                  <span className="text-sm text-k-dark-grey">
+                    Email Notifications
+                  </span>
                 </label>
                 <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100">
                   <input
                     type="checkbox"
                     checked={formData.notification_channels.includes("IN_APP")}
                     onChange={(e) => {
-                      const channels = formData.notification_channels.split(",").filter(Boolean);
+                      const channels = formData.notification_channels
+                        .split(",")
+                        .filter(Boolean);
                       if (e.target.checked) {
                         channels.push("IN_APP");
                       } else {
                         const idx = channels.indexOf("IN_APP");
                         if (idx > -1) channels.splice(idx, 1);
                       }
-                      setFormData((prev) => ({ ...prev, notification_channels: channels.join(",") }));
+                      setFormData((prev) => ({
+                        ...prev,
+                        notification_channels: channels.join(","),
+                      }));
                       setHasChanges(true);
                     }}
                     className="w-4 h-4 text-k-orange rounded cursor-pointer"
                   />
-                  <span className="text-sm text-k-dark-grey">In-App Notifications</span>
+                  <span className="text-sm text-k-dark-grey">
+                    In-App Notifications
+                  </span>
                 </label>
               </div>
             </div>

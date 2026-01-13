@@ -1,75 +1,71 @@
-import React from "react";
-import FormField from "../../../../components/common/FormField";
+import { FiBriefcase, FiDollarSign } from "react-icons/fi";
+import Card from "../../../../components/Core/ui/Card";
+import InfoGrid from "../../../../components/Core/ui/InfoGrid";
+import Info from "../../../../components/Core/ui/Info";
+import SalaryItem from "../../../../components/Core/ui/SalaryItem";
 
-export default function JobDetails() {
-  // Job details are typically read-only for employees
-  const formData = {
-    jobTitle: "UI/UX Designer",
-    department: "Design & Marketing",
-    jobCategory: "Full Time",
-    employmentType: "Permanent",
-    joiningDate: "2023-01-15",
-    contractEndDate: "N/A",
-    branch: "Head Office",
-    manager: "Abebe Kebede"
+interface JobDetailsProps {
+  data?: {
+    employeeId?: string;
+    jobTitle?: string;
+    jobLevel?: string;
+    department?: string;
+    employmentType?: string;
+    startDate?: string;
+    grossSalary?: number;
+    basicSalary?: number;
+    allowances?: Array<{
+      amount: number;
+      allowanceType?: { name: string };
+    }>;
   };
+}
 
+export default function JobDetails({ data }: JobDetailsProps) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-6 animate-[slideUp_0.3s_ease-out]">
-      <div className="flex justify-between items-center mb-6 border-b pb-4">
-        <h2 className="text-xl font-bold text-k-dark-grey">Job Details</h2>
-        <span className="text-xs bg-gray-100 text-gray-500 px-3 py-1 rounded-full">Read Only</span>
-      </div>
+    <div className="space-y-6 animate-[slideUp_0.3s_ease-out]">
+      {/* Employment Details Card - Matching Admin UI */}
+      <Card
+        title="Employment Details"
+        icon={<FiBriefcase />}
+      >
+        <InfoGrid>
+          <Info label="Employee ID" value={data?.employeeId || "-"} />
+          <Info label="Job Title" value={data?.jobTitle || "-"} />
+          <Info label="Job Level" value={data?.jobLevel || "-"} />
+          <Info label="Department" value={data?.department || "-"} />
+          <Info label="Employment Type" value={data?.employmentType || "-"} />
+          <Info label="Start Date" value={data?.startDate || "-"} />
+        </InfoGrid>
+      </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <FormField
-          label="Job Title"
-          value={formData.jobTitle}
-          disabled
-        />
-
-        <FormField
-          label="Department"
-          value={formData.department}
-          disabled
-        />
-
-        <FormField
-          label="Job Category"
-          value={formData.jobCategory}
-          disabled
-        />
-
-        <FormField
-          label="Employment Type"
-          value={formData.employmentType}
-          disabled
-        />
-
-        <FormField
-          label="Joining Date"
-          value={formData.joiningDate}
-          disabled
-        />
-
-        <FormField
-          label="Contract End Date"
-          value={formData.contractEndDate}
-          disabled
-        />
-
-        <FormField
-          label="Branch / Location"
-          value={formData.branch}
-          disabled
-        />
-
-        <FormField
-          label="Reporting Manager"
-          value={formData.manager}
-          disabled
-        />
-      </div>
+      {/* Salary Breakdown Card - Matching Admin UI */}
+      <Card title="Salary Breakdown" icon={<FiDollarSign />}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <SalaryItem
+            label="Gross Salary"
+            amount={Number(data?.grossSalary || 0)}
+            highlight
+          />
+          <SalaryItem
+            label="Basic Salary"
+            amount={Number(data?.basicSalary || 0)}
+          />
+          {/* Render all allowances */}
+          {(data?.allowances || []).map((allowance, idx) => (
+            <SalaryItem
+              key={idx}
+              label={allowance.allowanceType?.name || "Allowance"}
+              amount={Number(allowance.amount || 0)}
+            />
+          ))}
+          {(!data?.allowances || data.allowances.length === 0) && (
+            <div className="col-span-2 text-gray-400 text-sm italic">
+              No allowances configured.
+            </div>
+          )}
+        </div>
+      </Card>
     </div>
   );
 }

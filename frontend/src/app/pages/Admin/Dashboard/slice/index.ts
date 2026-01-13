@@ -1,7 +1,7 @@
-import { PayloadAction, createSlice } from '@reduxjs/toolkit';
-import { useInjectReducer, useInjectSaga } from 'redux-injectors';
-import { dashboardSaga } from './saga';
-import { DashboardState, DashboardStats } from './types';
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { useInjectReducer, useInjectSaga } from "redux-injectors";
+import { dashboardSaga } from "./saga";
+import { DashboardState, DashboardStats } from "./types";
 
 export const initialState: DashboardState = {
   loading: false,
@@ -10,16 +10,24 @@ export const initialState: DashboardState = {
     totalEmployees: 0,
     totalDepartments: 0,
     activeEmployees: 0,
+    inactiveEmployees: 0,
     totalManagers: 0,
+    genderDist: { male: 0, female: 0 },
+    empTypeDist: {},
+    deptDist: {},
+    jobLevelDist: {},
+    managerDist: {},
+    departmentBreakdown: {},
+    tenureDistribution: {},
+    probationStatus: {},
   },
-  filters: {},
 };
 
 const slice = createSlice({
-  name: 'dashboard',
+  name: "dashboard",
   initialState,
   reducers: {
-    fetchStatsRequest(state, _action: PayloadAction<any | undefined>) {
+    fetchStatsRequest(state) {
       state.loading = true;
       state.error = null;
     },
@@ -30,12 +38,6 @@ const slice = createSlice({
     fetchStatsFailure(state, action: PayloadAction<string>) {
       state.loading = false;
       state.error = action.payload;
-    },
-    setFilters(state, action: PayloadAction<any>) {
-      state.filters = { ...state.filters, ...action.payload };
-    },
-    clearFilters(state) {
-      state.filters = {};
     },
   },
 });

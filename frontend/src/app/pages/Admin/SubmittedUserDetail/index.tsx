@@ -13,6 +13,10 @@ import PageHeader from "../../../components/common/PageHeader";
 import BackButton from "../../../components/common/BackButton";
 import Modal from "../../../components/common/Modal";
 import FormField from "../../../components/common/FormField";
+import useMinimumDelay from "../../../hooks/useMinimumDelay";
+import KachaSpinner, {
+  KACHA_SPINNER_CYCLE_MS,
+} from "../../../components/common/KachaSpinner";
 import { routeConstants } from "../../../../utils/constants";
 import {
   FiArrowLeft,
@@ -74,7 +78,11 @@ const SECTIONS = [
   { id: "education" as SectionId, label: "Education", icon: MdSchool },
   { id: "workExperience" as SectionId, label: "Work Experience", icon: MdWork },
   { id: "employment" as SectionId, label: "Employment", icon: FiBriefcase },
-  { id: "compensation" as SectionId, label: "Compensation", icon: FiDollarSign },
+  {
+    id: "compensation" as SectionId,
+    label: "Compensation",
+    icon: FiDollarSign,
+  },
   {
     id: "certifications" as SectionId,
     label: "Certifications",
@@ -95,6 +103,8 @@ export default function SubmittedUserDetail() {
   const users = useSelector(selectSubmittedUsers);
   const isLoading = useSelector(selectSubmittedUsersLoading);
   const isApproving = useSelector(selectApproving);
+
+  const showLoading = useMinimumDelay(isLoading, KACHA_SPINNER_CYCLE_MS);
 
   const jobTitles = useSelector(selectAllJobTitles) || [];
   const departments = useSelector(selectDepartments) || [];
@@ -117,9 +127,12 @@ export default function SubmittedUserDetail() {
     dispatch(departmentActions.fetchDepartmentsStart());
 
     // Fetch allowance types
-    adminService.getAllowanceTypes().then(setAllowanceTypes).catch((err: any) => {
+    adminService
+      .getAllowanceTypes()
+      .then(setAllowanceTypes)
+      .catch((err: any) => {
         console.error("Failed to fetch allowance types", err);
-    });
+      });
   }, [dispatch, jobTitleActions, departmentActions]);
 
   // Find user from list
@@ -188,12 +201,12 @@ export default function SubmittedUserDetail() {
     return `https://avatar.iran.liara.run/public/${num + offset}`;
   };
 
-  if (isLoading) {
+  if (showLoading) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center h-96">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-10 h-10 border-2 border-k-orange border-t-transparent rounded-full animate-spin"></div>
+            <KachaSpinner size="xl" />
             <span className="text-gray-500">Loading user details...</span>
           </div>
         </div>
@@ -293,7 +306,7 @@ export default function SubmittedUserDetail() {
             <BackButton
               to={routeConstants.submittedUsers}
               label="Back to Submitted Users"
-              className="!text-gray-300 hover:!text-white"
+              className="text-gray-300! hover:text-white!"
             />
             <h1 className="text-3xl font-bold mb-2">Review Submission</h1>
             <p className="text-gray-300">
@@ -538,7 +551,6 @@ function EmploymentSection({
       return;
     }
 
-
     try {
       setSaving(true);
       const payload = {
@@ -737,8 +749,6 @@ function EmploymentSection({
               icon={FiCalendar}
             />
           </div>
-
-
 
           <div className="flex justify-end gap-3 pt-2">
             <Button
@@ -1291,11 +1301,19 @@ function CompensationSection({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <InfoField
           label="Gross Salary"
-          value={latestEmployment.gross_salary ? `${Number(latestEmployment.gross_salary).toLocaleString()} ETB` : "-"}
+          value={
+            latestEmployment.gross_salary
+              ? `${Number(latestEmployment.gross_salary).toLocaleString()} ETB`
+              : "-"
+          }
         />
         <InfoField
           label="Basic Salary"
-          value={latestEmployment.basic_salary ? `${Number(latestEmployment.basic_salary).toLocaleString()} ETB` : "-"}
+          value={
+            latestEmployment.basic_salary
+              ? `${Number(latestEmployment.basic_salary).toLocaleString()} ETB`
+              : "-"
+          }
         />
       </div>
 
@@ -1303,20 +1321,32 @@ function CompensationSection({
         <h3 className="font-semibold text-k-dark-grey mb-4 flex items-center gap-2">
           <FiDollarSign className="text-k-orange" /> Allowances
         </h3>
-        {latestEmployment.allowances && latestEmployment.allowances.length > 0 ? (
+        {latestEmployment.allowances &&
+        latestEmployment.allowances.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {latestEmployment.allowances.map((a: any, index: number) => {
-              const typeName = a.allowanceType?.name || allowanceTypes.find((at: any) => at.id === a.allowance_type_id)?.name || "Allowance";
+              const typeName =
+                a.allowanceType?.name ||
+                allowanceTypes.find((at: any) => at.id === a.allowance_type_id)
+                  ?.name ||
+                "Allowance";
               return (
-                <div key={a.id || index} className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <div
+                  key={a.id || index}
+                  className="p-4 bg-gray-50 rounded-xl border border-gray-100"
+                >
                   <p className="text-sm text-gray-500 mb-1">{typeName}</p>
-                  <p className="font-bold text-k-dark-grey">{Number(a.amount).toLocaleString()} ETB</p>
+                  <p className="font-bold text-k-dark-grey">
+                    {Number(a.amount).toLocaleString()} ETB
+                  </p>
                 </div>
               );
             })}
           </div>
         ) : (
-          <p className="text-gray-500 text-sm italic">No allowances assigned.</p>
+          <p className="text-gray-500 text-sm italic">
+            No allowances assigned.
+          </p>
         )}
       </div>
     </div>

@@ -6,7 +6,7 @@ import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 // ==========================================
 export interface TableColumn<T> {
   key: string;
-  header: string;
+  header: string | ReactNode;
   render?: (item: T, index: number) => ReactNode;
   className?: string;
   headerClassName?: string;

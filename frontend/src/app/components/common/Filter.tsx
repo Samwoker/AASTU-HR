@@ -17,6 +17,7 @@ interface FilterProps {
   options: FilterOption[];
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 export function Filter({
@@ -25,9 +26,14 @@ export function Filter({
   options,
   placeholder = "Filter",
   className,
+  disabled,
 }: FilterProps) {
   return (
-    <SelectPrimitive.Root value={value} onValueChange={onChange}>
+    <SelectPrimitive.Root
+      value={value}
+      onValueChange={onChange}
+      disabled={disabled}
+    >
       <SelectPrimitive.Trigger
         className={cn(
           "flex items-center justify-between gap-2 h-12 px-4 rounded-xl border shadow-sm bg-white/70 backdrop-blur-sm text-base",

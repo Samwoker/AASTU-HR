@@ -78,7 +78,7 @@ export default function VerticalBarChart({
               animationDuration={800}
             >
               {data.map((_, index) => (
-                <Cell key={index} fill="#FFCC00" />
+                <Cell key={index} fill="#ffda00" />
               ))}
             </Bar>
           </BarChart>

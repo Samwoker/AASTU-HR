@@ -1,191 +1,644 @@
 import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
-import { useEmployeesSlice } from "../Employees/slice";
-import {
-  selectCompletedEmployees,
-  selectEmployeesLoading,
-} from "../Employees/slice/selectors";
 import AdminLayout from "../../../components/DefaultLayout/AdminLayout";
 import Button from "../../../components/common/Button";
-import PageHeader from "../../../components/common/PageHeader";
-import BackButton from "../../../components/common/BackButton";
-import Modal from "../../../components/common/Modal";
-import FormField from "../../../components/common/FormField";
-import { routeConstants } from "../../../../utils/constants";
+import Card from "../../../components/Core/ui/Card";
+import InfoGrid from "../../../components/Core/ui/InfoGrid";
+import Info from "../../../components/Core/ui/Info";
+import Badge from "../../../components/Core/ui/Badge";
+import SalaryItem from "../../../components/Core/ui/SalaryItem";
 import {
   FiArrowLeft,
-  FiMail,
-  FiPhone,
-  FiMapPin,
-  FiCalendar,
-  FiAward,
-  FiBookOpen,
-  FiFile,
   FiUser,
-  FiDownload,
-  FiExternalLink,
   FiBriefcase,
   FiDollarSign,
+  FiPhone,
+  FiMapPin,
+  FiBook,
+  FiAward,
+  FiFileText,
+  FiCheck,
+  FiEdit2,
+  FiMail,
+  FiCalendar,
   FiTrendingUp,
-  FiTrendingDown,
-  FiRepeat,
-  FiMaximize2,
+  FiDownload,
 } from "react-icons/fi";
-import { MdTimeline } from "react-icons/md";
+import { useEmployeeDetailSlice } from "./slice";
 import {
-  MdPerson,
-  MdContactPhone,
-  MdSchool,
-  MdWork,
-  MdVerifiedUser,
-  MdUploadFile,
-} from "react-icons/md";
-import { CompletedEmployee } from "../Employees/slice/types";
+  selectEmployee,
+  selectEmployeeLoading,
+  selectUpdateSuccess,
+  selectEmployeeError,
+  selectDetailsCache,
+} from "./slice/selectors";
+// Types imported but not used directly in component logic can be removed or kept if needed for casting.
+// Removed unused import.
 
-import ToastService from "../../../../utils/ToastService";
-import makeCall from "../../../API";
+// Import Onboarding Steps for Editing
+import StepPersonalInfo from "../../../components/Employee/Onboarding/Wizard/StepPersonalInfo";
+import StepContactInfo from "../../../components/Employee/Onboarding/Wizard/StepContactInfo";
+import EditEmploymentForm from "./EditEmploymentForm";
+import StepEducation from "../../../components/Employee/Onboarding/Wizard/StepEducation";
+import StepWorkExperience from "../../../components/Employee/Onboarding/Wizard/StepWorkExperience";
+import StepCertifications from "../../../components/Employee/Onboarding/Wizard/StepCertifications";
+import StepDocuments from "../../../components/Employee/Onboarding/Wizard/StepDocuments";
+import CareerTimeline from "../../../components/Employee/CareerTimeline";
+import { getFileUrl } from "../../../utils/fileUtils";
+import LoadingSkeleton from "../../../components/common/LoadingSkeleton";
 import apiRoutes from "../../../API/apiRoutes";
-import adminService from "../../../services/adminService";
 
-import { useJobTitlesSlice } from "../Settings/JobTitles/slice";
-import { useDepartments } from "../Departments/slice";
-import { selectAllJobTitles } from "../Settings/JobTitles/slice/selectors";
-import {
-  selectDepartments,
-  selectDepartmentsLoading,
-} from "../Departments/slice/selectors";
-
-// Career Management imports
-import PromotionModal from "../../../components/Career/PromotionModal";
-import DemotionModal from "../../../components/Career/DemotionModal";
-import TransferModal from "../../../components/Career/TransferModal";
-import CareerHistoryTimeline from "../../../components/Career/CareerHistoryTimeline";
-
-// Section type definitions
-type SectionId =
-  | "personal"
-  | "contact"
-  | "education"
-  | "workExperience"
-  | "employment"
-  | "compensation"
-  | "certifications"
-  | "documents"
-  | "careerHistory";
-
-const SECTIONS = [
-  { id: "personal" as SectionId, label: "Personal Details", icon: MdPerson },
-  {
-    id: "contact" as SectionId,
-    label: "Contact Details",
-    icon: MdContactPhone,
-  },
-  { id: "education" as SectionId, label: "Education", icon: MdSchool },
-  { id: "workExperience" as SectionId, label: "Work Experience", icon: MdWork },
-  { id: "employment" as SectionId, label: "Employment", icon: FiBriefcase },
-  { id: "compensation" as SectionId, label: "Compensation", icon: FiDollarSign },
-  {
-    id: "certifications" as SectionId,
-    label: "Certifications",
-    icon: MdVerifiedUser,
-  },
-  { id: "documents" as SectionId, label: "Documents", icon: MdUploadFile },
-  { id: "careerHistory" as SectionId, label: "Career History", icon: MdTimeline },
+// Tabs Configuration
+const TABS = [
+  { id: "personal", label: "Personal", icon: <FiUser /> },
+  { id: "contact", label: "Contact", icon: <FiPhone /> },
+  { id: "employment", label: "Employment", icon: <FiBriefcase /> },
+  { id: "career", label: "Career Path", icon: <FiTrendingUp /> },
+  { id: "education", label: "Education", icon: <FiBook /> },
+  { id: "experience", label: "Experience", icon: <FiBriefcase /> },
+  { id: "certifications", label: "Certifications", icon: <FiAward /> },
+  { id: "documents", label: "Documents", icon: <FiFileText /> },
 ];
 
-export default function EmployeeDetail() {
-  const dispatch = useDispatch();
+export default function EmployeeDetailsPage() {
+  const { employeeId, id } = useParams<{
+    employeeId?: string;
+    id?: string;
+  }>();
+  const resolvedEmployeeId = employeeId || id;
   const navigate = useNavigate();
-  const { employeeId } = useParams<{ employeeId: string }>();
-  const { actions } = useEmployeesSlice();
+  const dispatch = useDispatch();
+  const { actions } = useEmployeeDetailSlice();
 
-  const { actions: jobTitleActions } = useJobTitlesSlice();
-  const { actions: departmentActions } = useDepartments();
+  const detailsCache = useSelector(selectDetailsCache);
+  const cachedEmployee = resolvedEmployeeId
+    ? detailsCache[resolvedEmployeeId]?.data
+    : null;
+  const reduxEmployee = useSelector(selectEmployee);
 
-  const completedEmployees = useSelector(selectCompletedEmployees);
-  const isLoading = useSelector(selectEmployeesLoading);
+  // Use redux employee if present, otherwise fallback to cache for instant view
+  const employee = reduxEmployee || cachedEmployee;
 
-  const jobTitles = useSelector(selectAllJobTitles) || [];
-  const departments = useSelector(selectDepartments) || [];
-  const departmentsLoading = useSelector(selectDepartmentsLoading);
-  const [allowanceTypes, setAllowanceTypes] = useState<any[]>([]);
-
-  const [activeSection, setActiveSection] = useState<SectionId>("personal");
-  const [employee, setEmployee] = useState<CompletedEmployee | null>(null);
-
-  // Career management modal states
-  const [showPromotionModal, setShowPromotionModal] = useState(false);
-  const [showDemotionModal, setShowDemotionModal] = useState(false);
-  const [showTransferModal, setShowTransferModal] = useState(false);
-
-  // Fetch employees if not loaded
-  useEffect(() => {
-    if (completedEmployees.length === 0) {
-      dispatch(actions.fetchCompletedEmployeesRequest());
+  const normalizeExternalUrl = (url: string) => {
+    const trimmed = String(url || "").trim();
+    if (!trimmed) return "";
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+      return trimmed;
     }
-  }, [dispatch, actions, completedEmployees.length]);
+    return `https://${trimmed}`;
+  };
 
-  useEffect(() => {
-    dispatch(jobTitleActions.fetchAllJobTitlesRequest());
-    dispatch(departmentActions.fetchDepartmentsStart());
-    
-    // Fetch allowance types
-    adminService.getAllowanceTypes().then(setAllowanceTypes).catch((err: any) => {
-        console.error("Failed to fetch allowance types", err);
-    });
-  }, [dispatch, jobTitleActions, departmentActions]);
+  const ViewLink = ({ url }: { url: string }) => {
+    const href = normalizeExternalUrl(url);
+    if (!href) return null;
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        className="text-xs text-[#DB5E00] hover:underline font-medium"
+      >
+        View
+      </a>
+    );
+  };
 
-  // Find employee from list
-  useEffect(() => {
-    if (completedEmployees.length > 0 && employeeId) {
-      const found = completedEmployees.find(
-        (e: any) =>
-          e.employee_id === employeeId || e.id?.toString() === employeeId
+  const documentsArray: any[] = (() => {
+    const raw = (employee as any)?.documents;
+    if (!raw) return [];
+
+    // Some APIs return a list of document objects; others return a bucket object with arrays of URLs.
+    if (Array.isArray(raw)) return raw;
+
+    if (raw && typeof raw === "object") {
+      // If it's the bucket format (cv/photo/etc arrays of urls), flatten all arrays
+      return Object.values(raw).flatMap((v: any) =>
+        Array.isArray(v) ? v : []
       );
-      if (found) {
-        setEmployee(found);
-      }
     }
-  }, [completedEmployees, employeeId]);
 
-  const handleGoBack = () => {
-    navigate("/admin/employees");
-  };
+    return [];
+  })();
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+  const loading = useSelector(selectEmployeeLoading);
+  const updateSuccess = useSelector(selectUpdateSuccess);
+  const error = useSelector(selectEmployeeError);
+
+  const [activeTab, setActiveTab] = useState("personal");
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState<any>(null);
+
+  useEffect(() => {
+    if (resolvedEmployeeId) {
+      dispatch(actions.fetchEmployeeRequest(resolvedEmployeeId));
+    }
+    // We keep the employee in state for a bit, but clear on unmount is standard.
+    // However, since we have the cache, the NEXT mount will be instant.
+    return () => {
+      dispatch(actions.clearEmployee());
+    };
+  }, [resolvedEmployeeId, dispatch, actions]);
+
+  // Map Redux Employee -> Wizard Form Data
+  useEffect(() => {
+    if (employee && !isEditing) {
+      const documentsArray: any[] = (() => {
+        const raw = (employee as any).documents;
+        if (Array.isArray(raw)) return raw;
+        if (raw && typeof raw === "object") {
+          return Object.values(raw).flatMap((v: any) =>
+            Array.isArray(v) ? v : []
+          );
+        }
+        return [];
+      })();
+
+      const filterDocumentsByType = (types: string[]) =>
+        documentsArray.filter(
+          (d: any) =>
+            d && typeof d === "object" && types.includes(d.document_type)
+        );
+
+      const mappedData = {
+        // Personal
+        fullName: employee.full_name,
+        gender: employee.gender,
+        dateOfBirth: employee.date_of_birth
+          ? employee.date_of_birth.substring(0, 10)
+          : "",
+        tinNumber: employee.tin_number,
+        pensionNumber: employee.pension_number,
+        placeOfWork: employee.place_of_work,
+
+        // Contact
+        region: employee.addresses?.[0]?.region || "",
+        city: employee.addresses?.[0]?.city || "",
+        subCity: employee.addresses?.[0]?.sub_city || "",
+        woreda: employee.addresses?.[0]?.woreda || "",
+        phones:
+          employee.phones?.map((p) => ({
+            id: p.id,
+            number: p.phone_number,
+            type: p.phone_type || "Mobile",
+            isPrimary: p.is_primary,
+          })) || [],
+
+        // Employment
+        employee_id: employee.employee_id,
+        title:
+          typeof employee.job_title === "object"
+            ? (employee.job_title as any)?.title ||
+              (employee.job_title as any)?.name
+            : employee.job_title,
+        titleId:
+          typeof employee.job_title === "object"
+            ? (employee.job_title as any)?.id
+            : undefined,
+        level: employee.job_level,
+        department:
+          typeof employee.department === "object"
+            ? (employee.department as any)?.name
+            : employee.department,
+        departmentId:
+          typeof employee.department === "object"
+            ? (employee.department as any)?.id
+            : undefined,
+        employment_type: employee.employment_type,
+        start_date: employee.start_date
+          ? employee.start_date.substring(0, 10)
+          : "",
+
+        // Salary - Source from Active Employment to ensure all allowances are captured
+        // The backend might split them in 'salary' helper, but 'employments' has the raw list
+        ...(() => {
+          const activeEmployment =
+            employee.employments?.find((e: any) => e.is_active) ||
+            employee.employments?.[0];
+          return {
+            gross_salary:
+              activeEmployment?.gross_salary || employee.salary?.gross || 0,
+            basic_salary:
+              activeEmployment?.basic_salary || employee.salary?.basic || 0,
+            allowances:
+              activeEmployment?.allowances?.map((a: any) => ({
+                name: a.allowanceType?.name || "Unknown",
+                amount: a.amount,
+              })) || [],
+          };
+        })(),
+
+        // Collections - explicitly name them to match Wizard expectations
+        education: (employee.educations || []).map((edu) => ({
+          level: edu.educationLevel?.name || "",
+          fieldOfStudy: edu.fieldOfStudy?.name || "",
+          institution: edu.institution?.name || "",
+          institutionCategory: edu.institution?.category || "Private",
+          programType: edu.program_type || "",
+          hasCostSharing:
+            edu.has_cost_sharing ||
+            (edu.costSharings && edu.costSharings.length > 0) ||
+            false,
+          costSharingDocumentNumber:
+            edu.costSharings?.[0]?.document_number || "",
+          costSharingIssuingInstitution:
+            edu.costSharings?.[0]?.issuing_institution || "",
+          costSharingIssueDate: edu.costSharings?.[0]?.issue_date
+            ? edu.costSharings[0].issue_date.substring(0, 10)
+            : "",
+          costSharingTotalCost:
+            edu.costSharings?.[0]?.declared_total_cost || "",
+          costSharingRemarks: edu.costSharings?.[0]?.remarks || "",
+          costSharingDocument: null,
+          document: null,
+          id: edu.id,
+          documentUrl: edu.document_url,
+          costSharingDocumentUrl:
+            edu.costSharings?.[0]?.document_url ||
+            edu.cost_sharing_document_url,
+        })),
+        workExperience: (employee.employmentHistories || []).map((exp) => ({
+          companyName: exp.company_name || "",
+          jobTitle: exp.job_title || "",
+          level: exp.job_level || "",
+          department: exp.department || "",
+          startDate: exp.start_date ? exp.start_date.substring(0, 10) : "",
+          endDate: exp.end_date ? exp.end_date.substring(0, 10) : "",
+          isCurrent: exp.is_current || false,
+          employmentType: exp.employment_type || "",
+          documentUrl: exp.document_url || "",
+          id: exp.id,
+        })),
+        certifications: (employee.licensesAndCertifications || []).map(
+          (cert) => ({
+            name: cert.name || "",
+            issuingOrganization: cert.issuing_organization || "",
+            issueDate: cert.issue_date ? cert.issue_date.substring(0, 10) : "",
+            expirationDate: cert.expiration_date
+              ? cert.expiration_date.substring(0, 10)
+              : "",
+            credentialId: cert.credential_id || "",
+            credentialUrl: cert.credential_url || "",
+            documentUrl: cert.document_url || "",
+            id: cert.id,
+          })
+        ),
+        documents: {
+          cv: filterDocumentsByType(["CV"]),
+          // Map various ID types to the idDocument field
+          idDocument: filterDocumentsByType([
+            "ID_DOCUMENT",
+            "ID_CARD",
+            "PASSPORT",
+            "ID/Passport",
+          ]),
+          // If old data was PHOTO and we want to show it:
+          // The issue is PHOTO is filtered out by backend updateDocuments.
+          // Yet fetchEmployee returns it.
+          // If we mapped 'PHOTO' to idDocument here, it would show up.
+          // But on save, we save as 'ID_DOCUMENT'.
+          // So let's include 'PHOTO' in the fetch mapping so user sees existing ones (if any survived).
+          // But strict separating is safer. 'ID_DOCUMENT' is the new target.
+          taxForms: filterDocumentsByType(["TAX", "TAX_FORM"]),
+          pensionForms: filterDocumentsByType(["PENSION", "PENSION_FORM"]),
+        },
+      };
+      setFormData(mappedData);
+    }
+  }, [employee, isEditing]);
+
+  // Handle successful update to close edit mode
+  useEffect(() => {
+    if (updateSuccess) {
+      setIsEditing(false);
+    }
+  }, [updateSuccess]);
+
+  // Entity Maps for ID lookup
+  const [deptMap, setDeptMap] = useState<Record<string, number>>({});
+  const [jobMap, setJobMap] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    // Fetch all departments and job titles to map names to IDs
+    const fetchEntities = async () => {
+      try {
+        const [deptRes, jobRes] = await Promise.all([
+          // We might need to import apiRoutes and makeCall OR use a service
+          // But wait, makeCall is not imported here directly usually?
+          // It is imported in saga.
+          // Let's use the slice actions? No, slice doesn't have fetchDepartments.
+          // We can blindly import makeCall here for this fix.
+          import("../../../API").then((mod) =>
+            mod.default({
+              route: apiRoutes.departments,
+              method: "GET",
+              isSecureRoute: true,
+            })
+          ),
+          import("../../../API").then((mod) =>
+            mod.default({
+              route: apiRoutes.jobTitles,
+              method: "GET",
+              isSecureRoute: true,
+            })
+          ),
+        ]);
+
+        const extractArray = (payload: any, fallbackKeys: string[] = []) => {
+          // Most common shapes:
+          // - { status, message, data: [...] }
+          // - { status, message, data: { items: [...] } }
+          // - AxiosResponse where payload = response.data
+          const root = payload?.data ?? payload;
+          const candidate = root?.data ?? root;
+          if (Array.isArray(candidate)) return candidate;
+          for (const key of fallbackKeys) {
+            const v = candidate?.[key] ?? root?.[key];
+            if (Array.isArray(v)) return v;
+          }
+          return [];
+        };
+
+        const deptList = extractArray(deptRes, [
+          "departments",
+          "rows",
+          "items",
+        ]);
+        if (deptList.length > 0) {
+          const map: Record<string, number> = {};
+          deptList.forEach((d: any) => {
+            if (!d) return;
+            const name = d.name ?? d.department_name;
+            const id = d.id;
+            if (name && id != null) map[String(name)] = Number(id);
+          });
+          setDeptMap(map);
+        }
+
+        const jobList = extractArray(jobRes, [
+          "jobTitles",
+          "job_titles",
+          "rows",
+          "items",
+        ]);
+        if (jobList.length > 0) {
+          const map: Record<string, number> = {};
+          jobList.forEach((j: any) => {
+            if (!j) return;
+            const title = j.title ?? j.name;
+            const id = j.id;
+            if (title && id != null) map[String(title)] = Number(id);
+          });
+          setJobMap(map);
+        }
+      } catch (e) {
+        console.error("Failed to fetch entity maps", e);
+      }
+    };
+    fetchEntities();
+  }, []);
+
+  const handleWizardChange = (field: string, value: any) => {
+    setFormData((prev: any) => {
+      const updates: any = { [field]: value };
+      // Auto-update IDs if names change
+      if (field === "department") {
+        updates.departmentId = deptMap[value];
+      }
+      if (field === "title") {
+        updates.titleId = jobMap[value];
+      }
+      return { ...prev, ...updates };
     });
   };
 
-  const getGenderLabel = (gender: string | null) => {
-    if (!gender) return "N/A";
-    return gender === "M" ? "Male" : gender === "F" ? "Female" : gender;
+  const updateFormData = (field: string, value: any) => {
+    setFormData((prev: any) => ({ ...prev, [field]: value }));
   };
 
-  const getAvatarUrl = (gender: string | null, id: string) => {
-    const num =
-      (id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) % 50) +
-      1;
-    const offset =
-      gender?.toLowerCase() === "f" || gender?.toLowerCase() === "female"
-        ? 50
-        : 0;
-    return `https://avatar.iran.liara.run/public/${num + offset}`;
+  const handleSave = () => {
+    if (!employee || !formData) return;
+
+    // Map Wizard Form Data -> Redux/Backend Employee
+    const submissionData: any = {
+      full_name: formData.fullName,
+      gender: formData.gender,
+      date_of_birth: formData.dateOfBirth,
+      tin_number: formData.tinNumber,
+      pension_number: formData.pensionNumber,
+      place_of_work: formData.placeOfWork,
+
+      job_title: formData.title,
+      job_title_id: Number(formData.titleId), // Assuming title might be an ID if selected from dropdown
+      job_level: formData.level,
+      department: formData.department,
+      department_id: Number(formData.departmentId), // Assuming department might be an ID if selected from dropdown
+      employment_type: formData.employment_type,
+      start_date: formData.start_date,
+
+      gross_salary: Number(formData.gross_salary),
+      basic_salary: Number(formData.basic_salary),
+      transport_allowance: Number(
+        (formData.allowances || []).find(
+          (a: any) => a.name === "Transportation Allowance"
+        )?.amount || 0
+      ),
+      housing_allowance: Number(
+        (formData.allowances || []).find(
+          (a: any) => a.name === "Housing Allowance"
+        )?.amount || 0
+      ),
+      meal_allowance: Number(
+        (formData.allowances || []).find(
+          (a: any) => a.name === "Meal Allowance"
+        )?.amount || 0
+      ),
+      allowances: (formData.allowances || [])
+        .filter(
+          (a: any) =>
+            ![
+              "Transportation Allowance",
+              "Housing Allowance",
+              "Meal Allowance",
+            ].includes(a.name)
+        )
+        .map((a: any) => ({
+          name: a.name,
+          amount: Number(a.amount),
+        })),
+
+      // Address & Phones need careful handling as backend likely expects specific format
+      // For now, assume address is updated via updating the FIRST address in array
+      address: [
+        {
+          ...(employee.addresses?.[0]?.id
+            ? { id: employee.addresses[0].id }
+            : {}),
+          region: formData.region,
+          city: formData.city,
+          sub_city: formData.subCity,
+          woreda: formData.woreda,
+        },
+      ],
+      phones: (formData.phones || []).map((p: any) => {
+        const phone: any = {
+          phone_number: p.number,
+          phone_type: p.type,
+          is_primary: p.isPrimary,
+        };
+        if (p.id) phone.id = p.id;
+        return phone;
+      }),
+
+      education: (formData.education || []).map((edu: any) => ({
+        id: edu.id,
+        institution: edu.institution,
+        institution_category: edu.institutionCategory, // Added this field
+        field_of_study: edu.fieldOfStudy,
+        level: edu.level,
+        program_type: edu.programType,
+        has_cost_sharing:
+          edu.hasCostSharing === true ||
+          !!edu.costSharingDocumentUrl ||
+          !!edu.costSharingDocument,
+        costSharingDocumentUrl: edu.id ? edu.costSharingDocumentUrl : undefined,
+        // Detailed cost sharing fields for backend support
+        costSharingDocumentNumber: edu.costSharingDocumentNumber,
+        costSharingIssuingInstitution: edu.costSharingIssuingInstitution,
+        costSharingIssueDate: edu.costSharingIssueDate,
+        costSharingTotalCost: edu.costSharingTotalCost,
+        costSharingRemarks: edu.costSharingRemarks,
+        documentUrl: edu.documentUrl,
+        // Carry over file objects for saga to handle
+        costSharingDocument: edu.costSharingDocument,
+        document: edu.document,
+      })),
+      work_experience: (formData.workExperience || formData.experience || [])
+        .filter(
+          (exp: any) =>
+            exp.companyName || exp.company_name || exp.jobTitle || exp.job_title
+        )
+        .map((exp: any) => ({
+          id: exp.id,
+          phone_number: exp.phone_number || "", // Ensure phone is present if schema needs it (though not in error)
+          company_name: exp.companyName || exp.company_name || "", // Default to empty string
+          job_title: exp.jobTitle || exp.job_title || "", // Default to empty string
+          job_level: exp.level || exp.job_level || "", // Default to empty string
+          department: exp.department || "",
+          employment_type:
+            exp.employmentType || exp.employment_type || "Full Time", // Provide default
+          // Strict Date Check: prevent "Invalid Date" string or empty string
+          ...(exp.startDate &&
+          exp.startDate !== "Invalid Date" &&
+          !isNaN(Date.parse(exp.startDate))
+            ? { start_date: exp.startDate }
+            : {}),
+          ...(exp.endDate &&
+          exp.endDate !== "Invalid Date" &&
+          !isNaN(Date.parse(exp.endDate))
+            ? { end_date: exp.endDate }
+            : {}),
+          currentlyWorksHere: exp.isCurrent,
+          documentUrl: exp.documentUrl,
+          document: exp.document,
+        })),
+      certifications: (formData.certifications || []).map((cert: any) => ({
+        id: cert.id,
+        name: cert.name,
+        issuing_organization: cert.issuingOrganization,
+        issue_date: cert.issueDate,
+        expiration_date: cert.expirationDate,
+        credential_id: cert.credentialId,
+        credential_url: cert.credentialUrl,
+        documentUrl: cert.documentUrl,
+        // Carry over file object
+        certificateDocument: cert.certificateDocument,
+      })),
+      documents: [
+        ...(formData.documents?.cv || []).map((d: any) =>
+          d.id || d.url || d.document_url
+            ? {
+                id: d.id,
+                type: "CV",
+                url: d.document_url || d.url,
+                name: d.file_name || d.name,
+              }
+            : { file: d, type: "CV" }
+        ),
+        ...(formData.documents?.idDocument || []).map((d: any) =>
+          d.id || d.url || d.document_url
+            ? {
+                id: d.id,
+                type: "ID_DOCUMENT",
+                url: d.document_url || d.url,
+                name: d.file_name || d.name,
+              }
+            : { file: d, type: "ID_DOCUMENT" }
+        ),
+        ...(formData.documents?.taxForms || []).map((d: any) =>
+          d.id || d.url || d.document_url
+            ? {
+                id: d.id,
+                type: "TAX_FORM",
+                url: d.document_url || d.url,
+                name: d.file_name || d.name,
+              }
+            : { file: d, type: "TAX_FORM" }
+        ),
+        ...(formData.documents?.pensionForms || []).map((d: any) =>
+          d.id || d.url || d.document_url
+            ? {
+                id: d.id,
+                type: "PENSION_FORM",
+                url: d.document_url || d.url,
+                name: d.file_name || d.name,
+              }
+            : { file: d, type: "PENSION_FORM" }
+        ),
+      ],
+    };
+
+    dispatch(
+      actions.updateEmployeeRequest({
+        id: employee.id,
+        section: activeTab,
+        ...submissionData,
+      })
+    );
   };
 
-  if (isLoading) {
+  const handleApprove = () => {
+    if (resolvedEmployeeId)
+      dispatch(actions.approveEmployeeRequest(resolvedEmployeeId));
+  };
+
+  if (loading && !employee) {
     return (
       <AdminLayout>
-        <div className="flex items-center justify-center h-96">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-10 h-10 border-2 border-k-orange border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-gray-500">Loading employee details...</span>
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <LoadingSkeleton variant="rectangular" width="100%" height={400} />
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error && !employee) {
+    return (
+      <AdminLayout>
+        <div className="min-h-[60vh] flex flex-col items-center justify-center text-center">
+          <div className="text-red-500 text-xl font-bold mb-2">
+            Failed to load employee
           </div>
+          <div className="text-gray-600 mb-4">{error}</div>
+          <Button
+            variant="primary"
+            onClick={() =>
+              resolvedEmployeeId &&
+              dispatch(actions.fetchEmployeeRequest(resolvedEmployeeId))
+            }
+          >
+            Retry
+          </Button>
         </div>
       </AdminLayout>
     );
@@ -194,1159 +647,793 @@ export default function EmployeeDetail() {
   if (!employee) {
     return (
       <AdminLayout>
-        <div className="flex flex-col items-center justify-center h-96 gap-4">
-          <FiUser className="w-16 h-16 text-gray-300" />
-          <h2 className="text-xl font-semibold text-gray-600">
-            Employee not found
-          </h2>
-          <p className="text-gray-500">
-            The employee you're looking for doesn't exist.
-          </p>
-          <Button onClick={handleGoBack} icon={FiArrowLeft} variant="outline">
-            Back to Employees
-          </Button>
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <span className="text-gray-500 text-lg">Employee not found</span>
         </div>
       </AdminLayout>
     );
   }
 
-  const emp = employee.employee;
+  const isPending = employee.onboarding_status !== "COMPLETED";
 
-  const renderSection = () => {
-    switch (activeSection) {
+  const isPendingApproval = employee.onboarding_status === "PENDING_APPROVAL";
+
+  const renderContent = () => {
+    // EDIT MODE
+    if (isEditing) {
+      const stepProps = {
+        formData,
+        handleChange: handleWizardChange,
+        updateFormData, // Some steps use this
+        errors: {}, // Handle errors if needed
+      };
+
+      return (
+        <Card
+          title={`Edit ${TABS.find((t) => t.id === activeTab)?.label}`}
+          className="border-[#DB5E00] border-2"
+        >
+          <div className="py-4">
+            {activeTab === "personal" && <StepPersonalInfo {...stepProps} />}
+            {activeTab === "contact" && <StepContactInfo {...stepProps} />}
+            {activeTab === "employment" && (
+              <EditEmploymentForm {...stepProps} />
+            )}
+            {activeTab === "education" && <StepEducation {...stepProps} />}
+            {activeTab === "experience" && (
+              <StepWorkExperience {...stepProps} />
+            )}
+            {activeTab === "certifications" && (
+              <StepCertifications {...stepProps} />
+            )}
+            {activeTab === "documents" && <StepDocuments {...stepProps} />}
+          </div>
+          <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+            <Button variant="secondary" onClick={() => setIsEditing(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} loading={loading}>
+              Save Changes
+            </Button>
+          </div>
+        </Card>
+      );
+    }
+
+    // READ MODE
+    const editAction = (
+      <Button
+        variant="outline"
+        className="text-sm px-3 py-1.5 h-auto ml-auto"
+        onClick={() => setIsEditing(true)}
+        icon={FiEdit2}
+      >
+        Edit
+      </Button>
+    );
+
+    switch (activeTab) {
       case "personal":
         return (
-          <PersonalSection
-            employee={emp}
-            formatDate={formatDate}
-            getGenderLabel={getGenderLabel}
-          />
+          <Card
+            title="Personal Information"
+            icon={<FiUser />}
+            action={editAction}
+          >
+            <InfoGrid>
+              <Info label="Full Name" value={employee.full_name} />
+              <Info label="Gender" value={employee.gender} />
+              <Info label="Date of Birth" value={employee.date_of_birth} />
+              <Info label="TIN Number" value={employee.tin_number || "-"} />
+              <Info
+                label="Pension Number"
+                value={employee.pension_number || "-"}
+              />
+              <Info
+                label="Place of Work"
+                value={employee.place_of_work || "-"}
+              />
+            </InfoGrid>
+          </Card>
         );
       case "contact":
-        return <ContactSection employee={emp} email={employee.email} />;
-      case "education":
         return (
-          <EducationSection
-            educations={emp?.educations}
-            formatDate={formatDate}
-          />
-        );
-      case "workExperience":
-        return (
-          <WorkExperienceSection
-            histories={emp?.employmentHistories}
-            formatDate={formatDate}
-          />
-        );
-      case "employment":
-        return (
-          <EmploymentSection
-            employee={emp}
-            jobTitles={jobTitles}
-            departments={departments}
-            departmentsLoading={departmentsLoading}
-          />
-        );
-      case "compensation":
-        return (
-          <CompensationSection
-            employee={emp}
-            allowanceTypes={allowanceTypes}
-          />
-        );
-      case "certifications":
-        return (
-          <CertificationsSection
-            certifications={emp?.licensesAndCertifications}
-          />
-        );
-      case "documents":
-        return <DocumentsSection documents={emp?.documents} />;
-      case "careerHistory":
-        return <CareerHistoryTimeline employeeId={employee.employee_id} />;
-      default:
-        return (
-          <PersonalSection
-            employee={emp}
-            formatDate={formatDate}
-            getGenderLabel={getGenderLabel}
-          />
-        );
-    }
-  };
-
-  // Get latest employment for career modals
-  const latestEmployment = emp?.employments?.[emp.employments.length - 1];
-
-  const handleCareerActionSuccess = () => {
-    dispatch(actions.fetchCompletedEmployeesRequest());
-  };
-
-  return (
-    <AdminLayout>
-      <div className="min-h-screen pb-12">
-        {/* Header Banner */}
-        <PageHeader className="rounded-b-3xl -mx-6 md:-mx-8 -mt-6 md:-mt-8 mb-8 pt-8 pb-24 h-52">
-          <div className="max-w-7xl mx-auto relative z-10">
-            <BackButton
-              to={routeConstants.employees}
-              label="Back to Employees"
-              className="!text-gray-300 hover:!text-white"
-            />
-            <h1 className="text-3xl font-bold mb-2">Employee Profile</h1>
-            <p className="text-gray-300">
-              View employee information and details
-            </p>
-          </div>
-        </PageHeader>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-24 relative z-10">
-          <div className="flex flex-col lg:flex-row gap-8 items-start">
-            {/* Sidebar */}
-            <div className="w-full lg:w-80 shrink-0 lg:sticky lg:top-24 self-start">
-              {/* Profile Card */}
-              <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 text-center">
-                <div className="relative inline-block mx-auto mb-4">
-                  <div className="w-24 h-24 rounded-full bg-k-yellow border-4 border-white overflow-hidden shadow-lg">
-                    {emp?.documents?.photo?.[0] ? (
-                      <img
-                        src={emp.documents.photo[0]}
-                        alt={emp.full_name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <img
-                        src={getAvatarUrl(emp?.gender, employee.employee_id)}
-                        alt={emp?.full_name}
-                        className="w-full h-full object-cover"
-                      />
+          <div className="space-y-6">
+            <Card title="Address" icon={<FiMapPin />} action={editAction}>
+              {employee.addresses?.[0] ? (
+                <InfoGrid>
+                  <Info label="Region" value={employee.addresses[0].region} />
+                  <Info label="City" value={employee.addresses[0].city} />
+                  <Info
+                    label="Sub City"
+                    value={employee.addresses[0].sub_city}
+                  />
+                  <Info label="Woreda" value={employee.addresses[0].woreda} />
+                </InfoGrid>
+              ) : (
+                <p className="text-gray-500 italic">No address found.</p>
+              )}
+            </Card>
+            <Card title="Phone Numbers" icon={<FiPhone />}>
+              {employee.phones?.map((phone, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-2 last:mb-0"
+                >
+                  <div className="font-medium text-gray-900">
+                    {phone.phone_number}
+                  </div>
+                  <div className="flex gap-2 text-xs">
+                    <span className="text-gray-500 capitalize">
+                      {phone.phone_type || "Mobile"}
+                    </span>
+                    {phone.is_primary && (
+                      <span className="text-[#DB5E00] font-medium">
+                        • Primary
+                      </span>
                     )}
                   </div>
                 </div>
-                <h2 className="text-xl font-bold text-k-dark-grey">
-                  {emp?.full_name || employee.employee_id}
-                </h2>
-                <p className="text-k-medium-grey text-sm mb-2">
-                  {employee.email}
-                </p>
-                <p className="text-k-medium-grey text-sm mb-4">
-                  {employee.employee_id}
-                </p>
-                <div
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                    employee.is_active
-                      ? "bg-green-100 text-green-700"
-                      : "bg-gray-100 text-gray-600"
-                  }`}
-                >
-                  {employee.is_active ? "Active Employee" : "Inactive"}
-                </div>
-
-                {/* Full Profile Link */}
-                <button
-                  onClick={() => navigate(`/admin/employees/${employee.employee_id}/full-profile`)}
-                  className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-k-orange/10 text-k-orange rounded-xl text-sm font-medium hover:bg-k-orange/20 transition-colors"
-                >
-                  <FiMaximize2 className="w-4 h-4" />
-                  View Full Profile
-                </button>
-              </div>
-
-              {/* Career Actions */}
-              <div className="bg-white rounded-2xl shadow-sm p-4 mb-6">
-                <h3 className="text-sm font-semibold text-gray-600 mb-3">Career Actions</h3>
-                <div className="space-y-2">
-                  <button
-                    onClick={() => setShowPromotionModal(true)}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 transition-colors"
-                  >
-                    <FiTrendingUp className="w-4 h-4" />
-                    Promote
-                  </button>
-                  <button
-                    onClick={() => setShowDemotionModal(true)}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors"
-                  >
-                    <FiTrendingDown className="w-4 h-4" />
-                    Demote
-                  </button>
-                  <button
-                    onClick={() => setShowTransferModal(true)}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors"
-                  >
-                    <FiRepeat className="w-4 h-4" />
-                    Transfer
-                  </button>
-                </div>
-              </div>
-
-              {/* Navigation */}
-              <div className="bg-white rounded-2xl shadow-sm p-4 h-fit overflow-x-auto no-scrollbar">
-                <nav className="flex lg:block gap-2 space-y-0 lg:space-y-2 min-w-max lg:min-w-0">
-                  {SECTIONS.map((section) => {
-                    const Icon = section.icon;
-                    const isActive = activeSection === section.id;
-
-                    return (
-                      <button
-                        key={section.id}
-                        onClick={() => setActiveSection(section.id)}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer whitespace-nowrap lg:w-full ${
-                          isActive
-                            ? "bg-k-orange text-white shadow-md"
-                            : "text-k-dark-grey hover:bg-orange-50 hover:text-k-orange"
-                        }`}
-                      >
-                        <Icon
-                          size={20}
-                          className={`shrink-0 ${
-                            isActive ? "text-white" : "text-k-medium-grey"
-                          }`}
-                        />
-                        {section.label}
-                      </button>
-                    );
-                  })}
-                </nav>
-              </div>
-            </div>
-
-            {/* Main Content */}
-            <div className="flex-1 min-w-0 w-full">{renderSection()}</div>
+              ))}
+              {(!employee.phones || employee.phones.length === 0) && (
+                <p className="text-gray-500 italic">No phone numbers.</p>
+              )}
+            </Card>
           </div>
-        </div>
-      </div>
-
-      {/* Career Management Modals */}
-      <PromotionModal
-        isOpen={showPromotionModal}
-        onClose={() => setShowPromotionModal(false)}
-        employeeId={employee.employee_id}
-        employeeName={emp?.full_name || employee.employee_id}
-        currentJobTitle={latestEmployment?.jobTitle?.title}
-        currentDepartment={latestEmployment?.department?.name}
-        currentSalary={latestEmployment?.gross_salary ? Number(latestEmployment.gross_salary) : 0}
-        onSuccess={handleCareerActionSuccess}
-      />
-
-      <DemotionModal
-        isOpen={showDemotionModal}
-        onClose={() => setShowDemotionModal(false)}
-        employeeId={employee.employee_id}
-        employeeName={emp?.full_name || employee.employee_id}
-        currentJobTitle={latestEmployment?.jobTitle?.title}
-        currentSalary={latestEmployment?.gross_salary ? Number(latestEmployment.gross_salary) : 0}
-        onSuccess={handleCareerActionSuccess}
-      />
-
-      <TransferModal
-        isOpen={showTransferModal}
-        onClose={() => setShowTransferModal(false)}
-        employeeId={employee.employee_id}
-        employeeName={emp?.full_name || employee.employee_id}
-        currentJobTitle={latestEmployment?.jobTitle?.title}
-        currentDepartment={latestEmployment?.department?.name}
-        onSuccess={handleCareerActionSuccess}
-      />
-    </AdminLayout>
-  );
-}
-
-function getLatestEmployment(employments: any[]) {
-  if (!Array.isArray(employments) || employments.length === 0) return null;
-
-  return employments.reduce((latest, current) => {
-    if (!latest) return current;
-
-    const latestCreated = latest?.created_at
-      ? Date.parse(latest.created_at)
-      : 0;
-    const currentCreated = current?.created_at
-      ? Date.parse(current.created_at)
-      : 0;
-
-    if (currentCreated && latestCreated) {
-      return currentCreated > latestCreated ? current : latest;
-    }
-
-    const latestId = typeof latest?.id === "number" ? latest.id : 0;
-    const currentId = typeof current?.id === "number" ? current.id : 0;
-    return currentId > latestId ? current : latest;
-  }, null as any);
-}
-
-function toDateInputValue(value?: string | null) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toISOString().slice(0, 10);
-}
-
-function EmploymentSection({
-  employee,
-  jobTitles,
-  departments,
-  departmentsLoading,
-}: {
-  employee: any;
-  jobTitles: any[];
-  departments: any[];
-  departmentsLoading: boolean;
-}) {
-  const latestEmployment = getLatestEmployment(employee?.employments || []);
-
-  const [editOpen, setEditOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [employment, setEmployment] = useState<any>(latestEmployment);
-
-  useEffect(() => {
-    setEmployment(latestEmployment);
-  }, [latestEmployment]);
-
-  const [form, setForm] = useState({
-    employee_id: employee?.id || "",
-    manager_id: "",
-    department_id: "",
-    job_title_id: "",
-    employment_type: "Full Time",
-    start_date: "",
-  });
-
-  useEffect(() => {
-    if (!employment) return;
-    setForm({
-      employee_id: employment.employee_id || employee?.id || "",
-      manager_id: employment.manager_id || "",
-      department_id:
-        employment.department_id !== undefined &&
-        employment.department_id !== null
-          ? String(employment.department_id)
-          : employment.department?.id
-          ? String(employment.department.id)
-          : "",
-      job_title_id:
-        employment.job_title_id !== undefined &&
-        employment.job_title_id !== null
-          ? String(employment.job_title_id)
-          : employment.jobTitle?.id
-          ? String(employment.jobTitle.id)
-          : "",
-      employment_type: employment.employment_type || "Full Time",
-      start_date: toDateInputValue(employment.start_date),
-    });
-  }, [employment, employee?.id]);
-
-  const employmentTypes = ["Full Time", "Part-Time", "Contract", "Outsourced"];
-
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
-  ) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const openEdit = () => {
-    setEditOpen(true);
-  };
-
-  const closeEdit = () => {
-    if (saving) return;
-    setEditOpen(false);
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.department_id) {
-      ToastService.error("Department is required");
-      return;
-    }
-    if (!form.job_title_id) {
-      ToastService.error("Job title is required");
-      return;
-    }
-
-
-    try {
-      setSaving(true);
-      const payload = {
-        employee_id: form.employee_id,
-        employment_type: form.employment_type,
-        start_date: form.start_date,
-        department_id: Number(form.department_id),
-        job_title_id: Number(form.job_title_id),
-        manager_id: form.manager_id || undefined,
-      };
-
-      if (employment?.id) {
-        await makeCall({
-          method: "PUT",
-          route: apiRoutes.employmentById(Number(employment.id)),
-          body: payload,
-          isSecureRoute: true,
-        });
-
-        ToastService.success("Employment updated successfully!");
-
-        setEmployment((prev: any) =>
-          prev
-            ? {
-                ...prev,
-                ...payload,
-                department_id: payload.department_id,
-                job_title_id: payload.job_title_id,
-                department:
-                  departments.find(
-                    (d: any) => String(d?.id) === form.department_id
-                  ) || prev.department,
-                jobTitle:
-                  jobTitles.find(
-                    (j: any) => String(j?.id) === form.job_title_id
-                  ) || prev.jobTitle,
-              }
-            : prev
         );
-      } else {
-        const res = await makeCall({
-          method: "POST",
-          route: apiRoutes.employments,
-          body: payload,
-          isSecureRoute: true,
-        });
-
-        ToastService.success("Employment added successfully!");
-
-        const createdEmployment =
-          (res as any)?.data?.data?.employment ||
-          (res as any)?.data?.data ||
-          (res as any)?.data?.employment ||
-          (res as any)?.data;
-
-        setEmployment({
-          ...(createdEmployment || {}),
-          ...payload,
-          department:
-            departments.find(
-              (d: any) => String(d?.id) === form.department_id
-            ) || createdEmployment?.department,
-          jobTitle:
-            jobTitles.find((j: any) => String(j?.id) === form.job_title_id) ||
-            createdEmployment?.jobTitle,
-        });
-      }
-
-      setEditOpen(false);
-    } catch (err: any) {
-      ToastService.error(err?.message || "Failed to update employment");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="bg-white rounded-2xl shadow-sm p-6 animate-[slideUp_0.3s_ease-out]">
-      <div className="flex justify-between items-center mb-6 border-b pb-4">
-        <h2 className="text-xl font-bold text-k-dark-grey">Employment</h2>
-        <Button
-          variant="outline"
-          type="button"
-          icon={FiBriefcase}
-          onClick={openEdit}
-        >
-          {employment?.id ? "Edit Employment" : "Add Employment"}
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <InfoField
-          label="Department"
-          value={employment?.department?.name || "-"}
-        />
-        <InfoField
-          label="Job Title"
-          value={
-            employment?.jobTitle?.title
-              ? `${employment.jobTitle.title}${
-                  employment.jobTitle.level
-                    ? ` - ${employment.jobTitle.level}`
-                    : ""
-                }`
-              : "-"
-          }
-        />
-        <InfoField
-          label="Employment Type"
-          value={employment?.employment_type || "-"}
-        />
-        <InfoField
-          label="Start Date"
-          value={
-            employment?.start_date
-              ? new Date(employment.start_date).toLocaleDateString()
-              : "-"
-          }
-        />
-        <InfoField label="Manager ID" value={employment?.manager_id || "-"} />
-      </div>
-
-      <Modal
-        isOpen={editOpen}
-        onClose={closeEdit}
-        title={employment?.id ? "Update Employment" : "Add Employment"}
-        size="xl"
-      >
-        <form onSubmit={handleSave} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-              label="Employee ID"
-              name="employee_id"
-              value={form.employee_id}
-              onChange={handleChange}
-              required
-              disabled
-              icon={FiUser}
-            />
-
-            <FormField
-              label="Manager ID (Optional)"
-              name="manager_id"
-              value={form.manager_id}
-              onChange={handleChange}
-              icon={FiUser}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-              type="select"
-              label="Department"
-              name="department_id"
-              value={form.department_id}
-              onChange={handleChange}
-              required
-              disabled={departmentsLoading}
-              options={(departments || []).map((d: any) => ({
-                label: d?.name,
-                value: String(d?.id),
-              }))}
-            />
-
-            <FormField
-              type="select"
-              label="Job Title"
-              name="job_title_id"
-              value={form.job_title_id}
-              onChange={handleChange}
-              required
-              options={(jobTitles || []).map((j: any) => ({
-                label: `${j?.title || "-"}${j?.level ? ` - ${j.level}` : ""}`,
-                value: String(j?.id),
-              }))}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-              type="select"
-              label="Employment Type"
-              name="employment_type"
-              value={form.employment_type}
-              onChange={handleChange}
-              options={employmentTypes.map((t) => ({ label: t, value: t }))}
-            />
-
-            <FormField
-              label="Start Date"
-              type="date"
-              name="start_date"
-              value={form.start_date}
-              onChange={handleChange}
-              required
-              icon={FiCalendar}
-            />
-          </div>
-
-
-
-          <div className="flex justify-end gap-3 pt-2">
-            <Button
-              variant="secondary"
-              type="button"
-              onClick={closeEdit}
-              disabled={saving}
+      case "employment":
+        return (
+          <div className="space-y-6">
+            <Card
+              title="Employment Details"
+              icon={<FiBriefcase />}
+              action={
+                <div className="flex gap-2 ml-auto">
+                  <Button
+                    variant="outline"
+                    className="text-sm px-3 py-1.5 h-auto border-[#DB5E00] text-[#DB5E00] hover:bg-orange-50"
+                    onClick={() =>
+                      resolvedEmployeeId &&
+                      navigate(`/admin/employees/${resolvedEmployeeId}/promote`)
+                    }
+                    icon={FiTrendingUp}
+                  >
+                    Career Event
+                  </Button>
+                  {editAction}
+                </div>
+              }
             >
-              Cancel
-            </Button>
-            <Button type="submit" loading={saving} disabled={saving}>
-              {employment?.id ? "Update Employment" : "Add Employment"}
-            </Button>
+              <InfoGrid>
+                <Info
+                  label="Employee ID"
+                  value={employee.employee_id || employee.id}
+                />
+                <Info label="Job Title" value={employee.job_title} />
+                <Info label="Job Level" value={employee.job_level || "-"} />
+                <Info label="Department" value={employee.department} />
+                <Info
+                  label="Employment Type"
+                  value={employee.employment_type || "-"}
+                />
+                <Info label="Start Date" value={employee.start_date || "-"} />
+              </InfoGrid>
+            </Card>
+            <Card title="Salary Breakdown" icon={<FiDollarSign />}>
+              {(() => {
+                const activeEmployment =
+                  employee.employments?.find((e: any) => e.is_active) ||
+                  employee.employments?.[0];
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <SalaryItem
+                      label="Gross Salary"
+                      amount={Number(activeEmployment?.gross_salary) || 0}
+                      highlight
+                    />
+                    <SalaryItem
+                      label="Basic Salary"
+                      amount={Number(activeEmployment?.basic_salary) || 0}
+                    />
+                    {/* Render all allowances from the active employment */}
+                    {(activeEmployment?.allowances || []).map(
+                      (allowance: any, idx: number) => (
+                        <SalaryItem
+                          key={idx}
+                          label={allowance.allowanceType?.name || "Allowance"}
+                          amount={Number(allowance.amount) || 0}
+                        />
+                      )
+                    )}
+                    {(!activeEmployment?.allowances ||
+                      activeEmployment.allowances.length === 0) && (
+                      <div className="col-span-2 text-gray-400 text-sm italic">
+                        No allowances configured.
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </Card>
           </div>
-        </form>
-      </Modal>
-    </div>
-  );
-}
+        );
+      case "education":
+        return (
+          <Card title="Education" icon={<FiBook />} action={editAction}>
+            <div className="space-y-4">
+              {employee.educations?.map((edu, idx) => (
+                <div
+                  key={idx}
+                  className="p-4 bg-gray-50 rounded-lg border border-gray-100"
+                >
+                  <h3 className="font-bold text-gray-900">
+                    {edu.institution?.name || "Unknown Institution"}
+                  </h3>
+                  <p className="text-[#DB5E00] font-medium">
+                    {edu.fieldOfStudy?.name || "Unknown Field of Study"}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {edu.educationLevel?.name || "Unknown Level"} •{" "}
+                    {edu.program_type} •{" "}
+                    <span className="text-gray-400 italic text-[11px] uppercase tracking-tighter bg-gray-100 px-1.5 py-0.5 rounded">
+                      {edu.institution?.category || "Unknown Type"}
+                    </span>
+                  </p>
+                  <div className="flex flex-wrap gap-3 mt-3">
+                    {(edu.has_cost_sharing || edu.hasCostSharing) && (
+                      <Badge variant="warning">Cost Sharing</Badge>
+                    )}
+                    {(edu.cost_sharing_document_url ||
+                      edu.costSharings?.[0]?.document_url) && (
+                      <span className="text-xs flex items-center gap-2 bg-orange-50 px-2 py-1 rounded">
+                        <FiFileText className="text-[#DB5E00]" />
+                        <span className="text-gray-700">Cost Sharing Doc</span>
+                        <ViewLink
+                          url={
+                            edu.cost_sharing_document_url ||
+                            edu.costSharings?.[0]?.document_url
+                          }
+                        />
+                      </span>
+                    )}
 
-// Section Components
-function PersonalSection({
-  employee,
-  formatDate,
-  getGenderLabel,
-}: {
-  employee: any;
-  formatDate: (date: string | null) => string;
-  getGenderLabel: (gender: string | null) => string;
-}) {
-  return (
-    <div className="bg-white rounded-2xl shadow-sm p-6 animate-[slideUp_0.3s_ease-out]">
-      <div className="flex justify-between items-center mb-6 border-b pb-4">
-        <h2 className="text-xl font-bold text-k-dark-grey">Personal Details</h2>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <InfoField label="Full Name" value={employee?.full_name} />
-        <InfoField label="Gender" value={getGenderLabel(employee?.gender)} />
-        <InfoField
-          label="Date of Birth"
-          value={formatDate(employee?.date_of_birth)}
-        />
-        <InfoField
-          label="TIN Number"
-          value={employee?.tin_number || "Not provided"}
-        />
-        <InfoField
-          label="Pension Number"
-          value={employee?.pension_number || "Not provided"}
-        />
-        <InfoField
-          label="Place of Work"
-          value={employee?.place_of_work || "Not assigned"}
-        />
-      </div>
-    </div>
-  );
-}
-
-function ContactSection({ employee, email }: { employee: any; email: string }) {
-  return (
-    <div className="bg-white rounded-2xl shadow-sm p-6 animate-[slideUp_0.3s_ease-out]">
-      <div className="flex justify-between items-center mb-6 border-b pb-4">
-        <h2 className="text-xl font-bold text-k-dark-grey">Contact Details</h2>
-      </div>
-      <div className="space-y-4">
-        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-          <div className="w-10 h-10 rounded-full bg-k-orange/10 flex items-center justify-center">
-            <FiMail className="w-5 h-5 text-k-orange" />
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Email Address</p>
-            <p className="font-medium text-k-dark-grey">{email}</p>
-          </div>
-        </div>
-
-        {employee?.phones?.map((phone: any, index: number) => (
-          <div
-            key={phone.id || index}
-            className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
-          >
-            <div className="w-10 h-10 rounded-full bg-k-orange/10 flex items-center justify-center">
-              <FiPhone className="w-5 h-5 text-k-orange" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm text-gray-500">
-                {phone.phone_type}{" "}
-                {phone.is_primary && (
-                  <span className="text-k-orange">(Primary)</span>
-                )}
-              </p>
-              <p className="font-medium text-k-dark-grey">
-                {phone.phone_number}
-              </p>
-            </div>
-          </div>
-        ))}
-
-        {employee?.addresses?.map((address: any, index: number) => (
-          <div
-            key={address.id || index}
-            className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
-          >
-            <div className="w-10 h-10 rounded-full bg-k-orange/10 flex items-center justify-center">
-              <FiMapPin className="w-5 h-5 text-k-orange" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Address</p>
-              <p className="font-medium text-k-dark-grey">
-                {[
-                  address.city,
-                  address.sub_city,
-                  address.woreda,
-                  address.region,
-                ]
-                  .filter(Boolean)
-                  .join(", ") || "Not provided"}
-              </p>
-            </div>
-          </div>
-        ))}
-
-        {(!employee?.phones || employee.phones.length === 0) &&
-          (!employee?.addresses || employee.addresses.length === 0) && (
-            <p className="text-gray-500 text-center py-8">
-              No contact information provided.
-            </p>
-          )}
-      </div>
-    </div>
-  );
-}
-
-function EducationSection({
-  educations,
-  formatDate,
-}: {
-  educations: any[] | undefined;
-  formatDate: (date: string | null) => string;
-}) {
-  if (!educations || educations.length === 0) {
-    return (
-      <div className="bg-white rounded-2xl shadow-sm p-6">
-        <h2 className="text-xl font-bold text-k-dark-grey mb-6 border-b pb-4">
-          Education
-        </h2>
-        <p className="text-gray-500 text-center py-8">
-          No education records provided.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-white rounded-2xl shadow-sm p-6 animate-[slideUp_0.3s_ease-out]">
-      <h2 className="text-xl font-bold text-k-dark-grey mb-6 border-b pb-4">
-        Education
-      </h2>
-      <div className="space-y-4">
-        {educations.map((edu, index) =>
-          (() => {
-            const level =
-              edu?.level ??
-              edu?.educationLevel ??
-              edu?.education_level ??
-              edu?.education_level_id;
-
-            const fieldOfStudy =
-              edu?.fieldOfStudy ??
-              edu?.field_of_study ??
-              edu?.field_of_study_id;
-
-            const institution =
-              edu?.institution ?? edu?.institution_name ?? edu?.institution_id;
-
-            const programType =
-              edu?.programType ?? edu?.program_type ?? edu?.program_type_id;
-
-            const start = edu?.startDate ?? edu?.start_date;
-            const end = edu?.endDate ?? edu?.end_date;
-            const isCurrent = edu?.isCurrent ?? edu?.is_current;
-            const hasCostSharing = edu?.hasCostSharing ?? edu?.has_cost_sharing;
-            const costSharingUrl =
-              edu?.costSharingUrl ??
-              edu?.costSharingDocument ??
-              edu?.cost_sharing_document_url ??
-              edu?.cost_sharing_url ??
-              edu?.costSharingLink ??
-              edu?.cost_sharing_link ??
-              null;
-
-            const durationText = `${formatDate(start)} - ${
-              isCurrent && !end ? "Present" : formatDate(end)
-            }`;
-
-            return (
-              <div
-                key={edu.id || index}
-                className="p-4 bg-gray-50 rounded-xl border-l-4 border-k-orange"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-k-orange/10 flex items-center justify-center shrink-0">
-                    <FiBookOpen className="w-5 h-5 text-k-orange" />
+                    {Array.isArray(edu.document_urls) &&
+                      edu.document_urls.length > 0 && (
+                        <span className="text-xs flex items-center gap-2 bg-orange-50 px-2 py-1 rounded">
+                          <FiFileText className="text-[#DB5E00]" />
+                          <span className="text-gray-700">Documents</span>
+                          <span className="flex flex-wrap gap-3">
+                            {edu.document_urls.map((url: string, i: number) => (
+                              <ViewLink key={i} url={url} />
+                            ))}
+                          </span>
+                        </span>
+                      )}
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="font-medium text-k-dark-grey truncate">
-                          {level ? `Level ${level}` : "Education"}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-0.5 truncate">
-                          {fieldOfStudy ?? "-"}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-0.5 truncate">
-                          {institution ?? "-"}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-xs text-gray-600 bg-white border border-gray-200 px-2 py-1 rounded-full">
-                          {programType ?? "-"}
-                        </span>
-                        {hasCostSharing && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-k-orange/10 text-k-orange border border-k-orange/20">
-                            Cost Sharing
-                          </span>
+                  {(edu.has_cost_sharing || edu.hasCostSharing) &&
+                    (edu.costSharings?.[0] || edu.cost_sharing_details) && (
+                      <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-y-2 text-sm">
+                        {edu.costSharings?.[0] ? (
+                          <>
+                            <div className="flex justify-between sm:justify-start sm:gap-4">
+                              <span className="text-gray-500">Doc Number:</span>
+                              <span className="font-medium text-gray-800">
+                                {edu.costSharings[0].document_number || "-"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between sm:justify-start sm:gap-4">
+                              <span className="text-gray-500">
+                                Issuing Inst:
+                              </span>
+                              <span className="font-medium text-gray-800">
+                                {edu.costSharings[0].issuing_institution || "-"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between sm:justify-start sm:gap-4">
+                              <span className="text-gray-500">Issue Date:</span>
+                              <span className="font-medium text-gray-800">
+                                {edu.costSharings[0].issue_date
+                                  ? new Date(
+                                      edu.costSharings[0].issue_date
+                                    ).toLocaleDateString()
+                                  : "-"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between sm:justify-start sm:gap-4">
+                              <span className="text-gray-500">Total Cost:</span>
+                              <span className="font-medium text-gray-800">
+                                {edu.costSharings[0].declared_total_cost}{" "}
+                                {edu.costSharings[0].currency}
+                              </span>
+                            </div>
+                            {edu.costSharings[0].remarks && (
+                              <div className="sm:col-span-2 flex flex-col mt-1">
+                                <span className="text-gray-500 text-xs">
+                                  Remarks:
+                                </span>
+                                <span className="text-gray-700 italic">
+                                  {edu.costSharings[0].remarks}
+                                </span>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="sm:col-span-2 flex flex-col mt-1">
+                            <span className="text-gray-500 text-xs">
+                              Details:
+                            </span>
+                            <span className="text-gray-700 italic">
+                              {edu.cost_sharing_details || "-"}
+                            </span>
+                          </div>
                         )}
                       </div>
+                    )}
+                </div>
+              ))}
+              {(!employee.educations || employee.educations.length === 0) && (
+                <p className="text-gray-500 italic">No education records.</p>
+              )}
+            </div>
+          </Card>
+        );
+      case "experience":
+        return (
+          <Card
+            title="Work Experience"
+            icon={<FiBriefcase />}
+            action={editAction}
+          >
+            <div className="space-y-4">
+              {(employee.employmentHistories || []).map(
+                (exp: any, idx: number) => (
+                  <div
+                    key={idx}
+                    className="p-4 bg-gray-50 rounded-lg border border-gray-100"
+                  >
+                    <h3 className="font-bold text-gray-900">
+                      {exp.previous_job_title_text || exp.job_title || "-"}
+                    </h3>
+                    <p className="text-gray-600">
+                      {exp.previous_company_name || exp.company_name || "-"}
+                    </p>
+
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500 mt-1">
+                      {exp.previous_level && (
+                        <span>Level: {exp.previous_level}</span>
+                      )}
+                      {exp.department_name && (
+                        <span>Department: {exp.department_name}</span>
+                      )}
+                      <span>
+                        {exp.start_date
+                          ? new Date(exp.start_date).toLocaleDateString()
+                          : "-"}{" "}
+                        -{" "}
+                        {exp.is_current
+                          ? "Present"
+                          : exp.end_date
+                          ? new Date(exp.end_date).toLocaleDateString()
+                          : "-"}
+                      </span>
                     </div>
 
-                    <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
-                      <FiCalendar className="w-4 h-4" />
-                      {durationText}
-                    </div>
-
-                    {costSharingUrl && (
+                    {Array.isArray(exp.document_urls) &&
+                      exp.document_urls.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-3">
+                          <span className="text-xs text-gray-500 flex items-center gap-2">
+                            <FiFileText className="text-[#DB5E00]" />
+                            <span>Documents:</span>
+                          </span>
+                          {exp.document_urls.map((url: string, i: number) => (
+                            <ViewLink key={i} url={url} />
+                          ))}
+                        </div>
+                      )}
+                  </div>
+                )
+              )}
+              {(!employee.employmentHistories ||
+                employee.employmentHistories.length === 0) && (
+                <p className="text-gray-500 italic">No work experience.</p>
+              )}
+            </div>
+          </Card>
+        );
+      case "certifications":
+        return (
+          <Card title="Certifications" icon={<FiAward />} action={editAction}>
+            <div className="space-y-4">
+              {employee.licensesAndCertifications?.map((cert, idx) => (
+                <div
+                  key={idx}
+                  className="p-4 bg-gray-50 rounded-lg border border-gray-100"
+                >
+                  <h3 className="font-bold text-gray-900">{cert.name}</h3>
+                  <p className="text-gray-600">{cert.issuing_organization}</p>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500 mt-1">
+                    <span>
+                      Issued: {new Date(cert.issue_date).toLocaleDateString()}
+                    </span>
+                    {cert.expiration_date && (
+                      <span>
+                        Expires:{" "}
+                        {new Date(cert.expiration_date).toLocaleDateString()}
+                      </span>
+                    )}
+                    {cert.credential_id && (
+                      <span>ID: {cert.credential_id}</span>
+                    )}
+                  </div>
+                  <div className="flex gap-3 mt-3">
+                    {cert.credential_url && (
                       <a
-                        href={costSharingUrl}
+                        href={(() => {
+                          const url = cert.credential_url.trim();
+                          if (!url) return "#";
+                          return url.startsWith("http://") ||
+                            url.startsWith("https://")
+                            ? url
+                            : `https://${url}`;
+                        })()}
                         target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 mt-2 text-sm text-k-orange hover:underline"
+                        rel="noreferrer"
+                        className="text-xs flex items-center gap-1 text-[#DB5E00] hover:underline font-medium bg-orange-50 px-2 py-1 rounded max-w-full"
+                        title={cert.credential_url} // Tooltip full URL
                       >
-                        <FiExternalLink className="w-4 h-4" />
-                        Cost sharing resource
+                        <FiFileText className="shrink-0" />
+                        <span className="truncate max-w-50">
+                          {cert.credential_url}
+                        </span>
+                      </a>
+                    )}
+                    {cert.document_url && (
+                      <a
+                        href={cert.document_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs flex items-center gap-1 text-[#DB5E00] hover:underline font-medium bg-orange-50 px-2 py-1 rounded"
+                      >
+                        <FiFileText /> Certificate File
                       </a>
                     )}
                   </div>
                 </div>
-              </div>
-            );
-          })()
-        )}
-      </div>
-    </div>
-  );
-}
+              ))}
+              {(!employee.licensesAndCertifications ||
+                employee.licensesAndCertifications.length === 0) && (
+                <p className="text-gray-500 italic">No certifications.</p>
+              )}
+            </div>
+          </Card>
+        );
+      case "documents":
+        return (
+          <Card title="Documents" icon={<FiFileText />} action={editAction}>
+            {(() => {
+              const raw = (employee as any)?.documents;
 
-function WorkExperienceSection({
-  histories,
-  formatDate,
-}: {
-  histories: any[] | undefined;
-  formatDate: (date: string | null) => string;
-}) {
-  if (!histories || histories.length === 0) {
-    return (
-      <div className="bg-white rounded-2xl shadow-sm p-6">
-        <h2 className="text-xl font-bold text-k-dark-grey mb-6 border-b pb-4">
-          Work Experience
-        </h2>
-        <p className="text-gray-500 text-center py-8">
-          No work experience records provided.
-        </p>
-      </div>
-    );
-  }
+              const extractUrl = (v: any) => {
+                if (!v) return "";
+                if (typeof v === "string") return v;
+                return v.document_url || v.url || v.fileUrl || "";
+              };
+
+              if (!raw) {
+                return (
+                  <p className="text-gray-500 italic">No documents found.</p>
+                );
+              }
+
+              // Format A: array of document objects
+              if (Array.isArray(raw)) {
+                const items = raw
+                  .map((d: any) => ({
+                    label: d.file_name || d.document_type || "Document",
+                    type: d.document_type || "",
+                    url: extractUrl(d),
+                  }))
+                  .filter((d: any) => d.url);
+
+                if (items.length === 0) {
+                  return (
+                    <p className="text-gray-500 italic">No documents found.</p>
+                  );
+                }
+
+                return (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {items.map((doc: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded border border-gray-100"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <FiFileText className="text-[#DB5E00]" />
+                            <span className="text-sm font-bold text-gray-800 truncate">
+                              {doc.label}
+                            </span>
+                          </div>
+                          {doc.type && (
+                            <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mt-1">
+                              {doc.type}
+                            </div>
+                          )}
+                        </div>
+                        <ViewLink url={doc.url} />
+                      </div>
+                    ))}
+                  </div>
+                );
+              }
+
+              // Format B: bucket object with arrays of URL strings (cv/photo/etc)
+              if (raw && typeof raw === "object") {
+                const buckets: Array<{ key: string; label: string }> = [
+                  { key: "cv", label: "CV" },
+                  { key: "photo", label: "Photo" },
+                  { key: "certificates", label: "Certificates" },
+                  { key: "experienceLetters", label: "Experience Letters" },
+                  { key: "taxForms", label: "Tax Forms" },
+                  { key: "pensionForms", label: "Pension Forms" },
+                ];
+
+                const rows = buckets
+                  .map((b) => {
+                    const list = (raw as any)[b.key];
+                    const urls: string[] = Array.isArray(list)
+                      ? list.map(extractUrl).filter(Boolean)
+                      : [];
+                    return { ...b, urls };
+                  })
+                  .filter((r) => r.urls.length > 0);
+
+                if (rows.length === 0) {
+                  return (
+                    <p className="text-gray-500 italic">No documents found.</p>
+                  );
+                }
+
+                return (
+                  <div className="space-y-3">
+                    {rows.map((row) => (
+                      <div
+                        key={row.key}
+                        className="p-4 bg-gray-50 rounded-lg border border-gray-100"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <FiFileText className="text-[#DB5E00]" />
+                          <h3 className="font-bold text-gray-900">
+                            {row.label}
+                          </h3>
+                        </div>
+                        <div className="flex flex-wrap gap-3">
+                          {row.urls.map((url, idx) => (
+                            <ViewLink key={idx} url={url} />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              }
+
+              return (
+                <p className="text-gray-500 italic">No documents found.</p>
+              );
+            })()}
+          </Card>
+        );
+      case "career":
+        return (
+          <Card
+            title="Career Progression"
+            icon={<FiTrendingUp />}
+            action={
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="text-sm border-orange-200 text-orange-700 hover:bg-orange-50 px-3 py-1.5"
+                  onClick={() =>
+                    resolvedEmployeeId &&
+                    dispatch(
+                      actions.generateExperienceLetterRequest(resolvedEmployeeId)
+                    )
+                  }
+                  disabled={loading}
+                  icon={FiDownload}
+                >
+                  Experience Letter
+                </Button>
+                <Button
+                  variant="outline"
+                  className="text-sm border-orange-200 text-orange-700 hover:bg-orange-50 px-3 py-1.5"
+                  onClick={() =>
+                    resolvedEmployeeId &&
+                    dispatch(
+                      actions.generateCertificateOfServiceRequest(resolvedEmployeeId)
+                    )
+                  }
+                  disabled={loading}
+                  icon={FiFileText}
+                >
+                  Certificate of Service
+                </Button>
+              </div>
+            }
+          >
+            <div className="py-2">
+              <CareerTimeline
+                events={employee.careerEvents || []}
+                initialData={{
+                  job_title: employee.job_title,
+                  job_level: employee.job_level,
+                  department: employee.department,
+                  start_date: employee.start_date,
+                  gross_salary: employee.employments?.find(
+                    (e: any) => e.is_active
+                  )?.gross_salary,
+                }}
+              />
+            </div>
+          </Card>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-6 animate-[slideUp_0.3s_ease-out]">
-      <h2 className="text-xl font-bold text-k-dark-grey mb-6 border-b pb-4">
-        Work Experience
-      </h2>
-      <div className="space-y-4">
-        {histories.map((hist, index) =>
-          (() => {
-            const company =
-              hist?.previousCompanyName ??
-              hist?.previous_company_name ??
-              hist?.previous_company ??
-              "-";
-
-            const title =
-              hist?.jobTitle ??
-              hist?.previous_job_title_text ??
-              hist?.previous_job_title ??
-              null;
-
-            const level = hist?.previousLevel ?? hist?.previous_level ?? null;
-            const department =
-              hist?.departmentName ?? hist?.department_name ?? null;
-
-            const start = hist?.startDate ?? hist?.start_date;
-            const end = hist?.endDate ?? hist?.end_date;
-            const durationText = `${formatDate(start)} - ${
-              end ? formatDate(end) : "Present"
-            }`;
-
-            return (
-              <div
-                key={hist.id || index}
-                className="p-4 bg-gray-50 rounded-xl border-l-4 border-k-orange"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-k-orange/10 flex items-center justify-center shrink-0">
-                    <FiBriefcase className="w-5 h-5 text-k-orange" />
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="font-medium text-k-dark-grey truncate">
-                          {company}
-                        </p>
-                        {title && (
-                          <p className="text-sm text-gray-600 mt-0.5 truncate">
-                            {title}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2 shrink-0">
-                        {department && (
-                          <span className="text-xs text-gray-600 bg-white border border-gray-200 px-2 py-1 rounded-full">
-                            {department}
-                          </span>
-                        )}
-                        {level && (
-                          <span className="text-xs text-gray-600 bg-white border border-gray-200 px-2 py-1 rounded-full">
-                            {level}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
-                      <FiCalendar className="w-4 h-4" />
-                      {durationText}
-                    </div>
-                  </div>
-                </div>
+    <AdminLayout>
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="flex">
+              <div className="shrink-0">
+                <svg
+                  className="h-5 w-5 text-red-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
               </div>
-            );
-          })()
-        )}
-      </div>
-    </div>
-  );
-}
-
-function CertificationsSection({
-  certifications,
-}: {
-  certifications: any[] | undefined;
-}) {
-  if (!certifications || certifications.length === 0) {
-    return (
-      <div className="bg-white rounded-2xl shadow-sm p-6">
-        <h2 className="text-xl font-bold text-k-dark-grey mb-6 border-b pb-4">
-          Certifications
-        </h2>
-        <p className="text-gray-500 text-center py-8">
-          No certifications provided.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-white rounded-2xl shadow-sm p-6 animate-[slideUp_0.3s_ease-out]">
-      <h2 className="text-xl font-bold text-k-dark-grey mb-6 border-b pb-4">
-        Certifications
-      </h2>
-      <div className="space-y-4">
-        {certifications.map((cert, index) => (
-          <div key={cert.id || index} className="p-4 bg-gray-50 rounded-xl">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-k-orange/10 flex items-center justify-center shrink-0">
-                <FiAward className="w-5 h-5 text-k-orange" />
-              </div>
-              <div>
-                <p className="font-medium text-k-dark-grey">{cert.name}</p>
-                <p className="text-sm text-gray-500">
-                  {cert.issuing_organization}
+              <div className="ml-3">
+                <p className="text-sm text-red-700">
+                  <span className="font-bold">Error:</span> {error}
                 </p>
-                {cert.credential_url && (
-                  <a
-                    href={cert.credential_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 mt-2 text-sm text-k-orange hover:underline"
-                  >
-                    <FiExternalLink className="w-4 h-4" />
-                    View Credential
-                  </a>
-                )}
               </div>
             </div>
           </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+        )}
 
-function DocumentsSection({ documents }: { documents: any | null }) {
-  const hasDocuments =
-    documents &&
-    (documents.cv?.length > 0 ||
-      documents.certificates?.length > 0 ||
-      documents.photo?.length > 0 ||
-      documents.experienceLetters?.length > 0 ||
-      documents.taxForms?.length > 0 ||
-      documents.pensionForms?.length > 0);
-
-  if (!hasDocuments) {
-    return (
-      <div className="bg-white rounded-2xl shadow-sm p-6">
-        <h2 className="text-xl font-bold text-k-dark-grey mb-6 border-b pb-4">
-          Documents
-        </h2>
-        <p className="text-gray-500 text-center py-8">No documents uploaded.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-white rounded-2xl shadow-sm p-6 animate-[slideUp_0.3s_ease-out]">
-      <h2 className="text-xl font-bold text-k-dark-grey mb-6 border-b pb-4">
-        Documents
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {documents.cv?.length > 0 && (
-          <DocumentCard title="CV/Resume" files={documents.cv} />
-        )}
-        {documents.certificates?.length > 0 && (
-          <DocumentCard title="Certificates" files={documents.certificates} />
-        )}
-        {documents.photo?.length > 0 && (
-          <DocumentCard title="Photo" files={documents.photo} />
-        )}
-        {documents.experienceLetters?.length > 0 && (
-          <DocumentCard
-            title="Experience Letters"
-            files={documents.experienceLetters}
-          />
-        )}
-        {documents.taxForms?.length > 0 && (
-          <DocumentCard title="Tax Forms" files={documents.taxForms} />
-        )}
-        {documents.pensionForms?.length > 0 && (
-          <DocumentCard title="Pension Forms" files={documents.pensionForms} />
-        )}
-      </div>
-    </div>
-  );
-}
-
-function DocumentCard({ title, files }: { title: string; files: string[] }) {
-  return (
-    <div className="p-4 bg-gray-50 rounded-xl">
-      <div className="flex items-center gap-2 mb-3">
-        <FiFile className="w-5 h-5 text-k-orange" />
-        <p className="font-medium text-k-dark-grey">{title}</p>
-      </div>
-      <div className="space-y-2">
-        {files.map((file, index) => (
-          <a
-            key={index}
-            href={file}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm text-k-orange hover:underline"
+        {/* HEADER */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <button
+            onClick={() => navigate("/admin/employees")}
+            className="flex items-center text-gray-500 hover:text-gray-800 transition-colors"
           >
-            <FiDownload className="w-4 h-4" />
-            View Document {index + 1}
-          </a>
-        ))}
-      </div>
-    </div>
-  );
-}
+            <FiArrowLeft className="mr-2" /> Back to Employees
+          </button>
 
-function InfoField({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | null | undefined;
-}) {
-  return (
-    <div className="p-3 bg-gray-50 rounded-xl">
-      <p className="text-sm text-gray-500 mb-1">{label}</p>
-      <p className="font-medium text-k-dark-grey">{value || "N/A"}</p>
-    </div>
-  );
-}
-
-function CompensationSection({
-  employee,
-  allowanceTypes,
-}: {
-  employee: any;
-  allowanceTypes: any[];
-}) {
-  const latestEmployment = getLatestEmployment(employee?.employments || []);
-  const navigate = useNavigate();
-
-  if (!latestEmployment) {
-    return (
-      <div className="bg-white rounded-2xl shadow-sm p-6">
-        <h2 className="text-xl font-bold text-k-dark-grey mb-6 border-b pb-4">
-          Compensation
-        </h2>
-        <p className="text-gray-500 text-center py-8">
-          No employment record found. Please add employment first to manage compensation.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-white rounded-2xl shadow-sm p-6 animate-[slideUp_0.3s_ease-out]">
-      <div className="flex justify-between items-center mb-6 border-b pb-4">
-        <h2 className="text-xl font-bold text-k-dark-grey">Compensation</h2>
-        <Button
-          variant="outline"
-          type="button"
-          icon={FiDollarSign}
-          onClick={() =>
-            navigate(
-              `${routeConstants.createEmployment}?employeeId=${employee.id}&employmentId=${latestEmployment.id}`
-            )
-          }
-        >
-          Update Compensation
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <InfoField
-          label="Gross Salary"
-          value={latestEmployment.gross_salary ? `${Number(latestEmployment.gross_salary).toLocaleString()} ETB` : "-"}
-        />
-        <InfoField
-          label="Basic Salary"
-          value={latestEmployment.basic_salary ? `${Number(latestEmployment.basic_salary).toLocaleString()} ETB` : "-"}
-        />
-      </div>
-
-      <div className="border-t pt-6">
-        <h3 className="font-semibold text-k-dark-grey mb-4 flex items-center gap-2">
-          <FiDollarSign className="text-k-orange" /> Allowances
-        </h3>
-        {latestEmployment.allowances && latestEmployment.allowances.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {latestEmployment.allowances.map((a: any, index: number) => {
-              const typeName = a.allowanceType?.name || allowanceTypes.find((at: any) => at.id === a.allowance_type_id)?.name || "Allowance";
-              return (
-                <div key={a.id || index} className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <p className="text-sm text-gray-500 mb-1">{typeName}</p>
-                  <p className="font-bold text-k-dark-grey">{Number(a.amount).toLocaleString()} ETB</p>
-                </div>
-              );
-            })}
+          <div className="flex items-center gap-3">
+            {isPendingApproval && (
+              <Button
+                className="bg-green-600 hover:bg-green-700 text-white border-transparent"
+                onClick={handleApprove}
+                icon={FiCheck}
+              >
+                Approve Application
+              </Button>
+            )}
           </div>
-        ) : (
-          <p className="text-gray-500 text-sm italic">No allowances assigned.</p>
-        )}
+        </div>
+
+        {/* PROFILE HEADER */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-center gap-6 relative">
+          {loading && employee && (
+            <div className="absolute top-4 right-4 z-20">
+              <LoadingSkeleton variant="circular" width={24} height={24} />
+            </div>
+          )}
+          <div className="w-20 h-20 rounded-full bg-[#fcefe9] flex items-center justify-center text-[#DB5E00] text-3xl font-bold overflow-hidden border-2 border-[#DB5E00]/10 shadow-inner">
+            {employee.profilePicture ? (
+              <img
+                src={getFileUrl(employee.profilePicture)}
+                alt={employee.full_name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              employee.full_name?.charAt(0)
+            )}
+          </div>
+          <div className="text-center md:text-left flex-1">
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">
+              {employee.full_name}
+            </h1>
+            <p className="text-gray-500 font-medium mb-4">
+              {employee.job_title} • {employee.department}
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm text-gray-600 mb-4">
+              {(employee.email || employee.appUsers?.[0]?.email) && (
+                <div className="flex items-center gap-2">
+                  <FiMail className="text-gray-400" />
+                  <span>{employee.email || employee.appUsers?.[0]?.email}</span>
+                </div>
+              )}
+              {employee.phones?.[0] && (
+                <div className="flex items-center gap-2">
+                  <FiPhone className="text-gray-400" />
+                  <span>{employee.phones[0].phone_number}</span>
+                </div>
+              )}
+              {employee.addresses?.[0] && (
+                <div className="flex items-center gap-2">
+                  <FiMapPin className="text-gray-400" />
+                  <span>
+                    {employee.addresses[0].city}, {employee.addresses[0].region}
+                  </span>
+                </div>
+              )}
+              {employee.start_date && (
+                <div className="flex items-center gap-2">
+                  <FiCalendar className="text-gray-400" />
+                  <span>
+                    Joined {new Date(employee.start_date).toLocaleDateString()}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-center md:justify-start gap-3">
+              <Badge variant={isPending ? "warning" : "success"}>
+                {employee.onboarding_status || "Active"}
+              </Badge>
+              <span className="text-sm text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded border border-gray-100">
+                {employee.employee_id || employee.id}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* SIDEBAR TABS */}
+          <div className="lg:col-span-1 space-y-1">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setIsEditing(false);
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
+                  activeTab === tab.id
+                    ? "bg-[#DB5E00] text-white shadow-md shadow-orange-200"
+                    : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* MAIN CONTENT */}
+          <div className="lg:col-span-3 pb-20">
+            <div className="animate-in fade-in duration-300">
+              {renderContent()}
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }

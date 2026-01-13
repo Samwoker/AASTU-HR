@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  MdRefresh,
   MdNotificationsActive,
   MdClose,
   MdReply,
   MdVisibility,
 } from "react-icons/md";
 import Modal from "../../../components/common/Modal";
+import KachaSpinner from "../../../components/common/KachaSpinner";
 import StatusBadge from "../../../components/common/StatusBadge";
 import ExportDropdown from "../../../components/common/ExportDropdown";
 import FilterDropdown from "../../../components/common/FilterDropdown";
@@ -79,8 +79,12 @@ export default function LeaveHistory() {
   const [showExport, setShowExport] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [filters, setFilters] = useState({ status: "All", type: "All" });
-  const [selectedRecall, setSelectedRecall] = useState<LeaveRecall | null>(null);
-  const [selectedLeave, setSelectedLeave] = useState<LeaveApplication | null>(null);
+  const [selectedRecall, setSelectedRecall] = useState<LeaveRecall | null>(
+    null
+  );
+  const [selectedLeave, setSelectedLeave] = useState<LeaveApplication | null>(
+    null
+  );
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showRecallModal, setShowRecallModal] = useState(false);
 
@@ -121,7 +125,9 @@ export default function LeaveHistory() {
 
   const handleCancelLeave = (e: React.MouseEvent, leave: LeaveApplication) => {
     e.stopPropagation();
-    if (window.confirm("Are you sure you want to cancel this leave application?")) {
+    if (
+      window.confirm("Are you sure you want to cancel this leave application?")
+    ) {
       dispatch(leaveActions.cancelLeaveApplicationRequest(leave.id));
     }
   };
@@ -151,6 +157,7 @@ export default function LeaveHistory() {
 
   const canCancel = (leave: LeaveApplication) => {
     const status = leave.current_status;
+    if (!status) return false;
     if (status.startsWith("PENDING")) return true;
     if (status === "APPROVED") {
       const start = new Date(leave.start_date);
@@ -183,7 +190,11 @@ export default function LeaveHistory() {
             className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
             title="Refresh"
           >
-            <MdRefresh size={18} className={loading ? "animate-spin" : ""} />
+            {loading ? (
+              <KachaSpinner size="sm" />
+            ) : (
+              <span className="text-lg">↻</span>
+            )}
           </button>
           <FilterDropdown
             isOpen={showFilter}
@@ -194,13 +205,24 @@ export default function LeaveHistory() {
               {
                 key: "status",
                 label: "Status",
-                options: ["All", "Pending", "Approved", "Rejected", "Cancelled"],
+                options: [
+                  "All",
+                  "Pending",
+                  "Approved",
+                  "Rejected",
+                  "Cancelled",
+                ],
               },
               {
                 key: "type",
                 label: "Leave Type",
-                options: ["All", ...leaveApplications.map(app => app.leaveType?.name || "").filter(Boolean)],
-              }
+                options: [
+                  "All",
+                  ...leaveApplications
+                    .map((app) => app.leaveType?.name || "")
+                    .filter(Boolean),
+                ],
+              },
             ]}
           />
           <ExportDropdown
@@ -224,7 +246,9 @@ export default function LeaveHistory() {
                   <MdNotificationsActive className="text-k-orange text-xl" />
                 </div>
                 <div>
-                  <p className="font-bold text-orange-900">Immediate Action Required: Leave Recall</p>
+                  <p className="font-bold text-orange-900">
+                    Immediate Action Required: Leave Recall
+                  </p>
                   <p className="text-sm text-orange-800">
                     Your manager has requested you to return early on{" "}
                     <strong>{formatDate(recall.recall_date)}</strong>.
@@ -262,7 +286,7 @@ export default function LeaveHistory() {
                 <th className="p-4">Days</th>
                 <th className="p-4">Start Date</th>
                 <th className="p-4">End Date</th>
-                 <th className="p-4">Return Date</th>
+                <th className="p-4">Return Date</th>
                 <th className="p-4">Reason</th>
                 <th className="p-4">Status</th>
                 <th className="p-4 rounded-r-lg text-center">Actions</th>

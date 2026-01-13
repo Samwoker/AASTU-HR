@@ -1,13 +1,40 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import FormField from "../../../../components/common/FormField";
 import Button from "../../../../components/common/Button";
 import { MdSave, MdAdd, MdDelete, MdPhone, MdEdit } from "react-icons/md";
 import toast from "react-hot-toast";
 import onboardingService from "../../../../services/onboardingService";
 
-export default function ContactDetails({ initialData, onRefresh }) {
+type PhoneType = "Private" | "Work" | "Home";
+
+interface ContactPhone {
+  number: string;
+  type: PhoneType;
+  isPrimary: boolean;
+}
+
+interface ContactFormData {
+  region: string;
+  city: string;
+  subCity: string;
+  woreda: string;
+  houseNumber: string;
+  phones: ContactPhone[];
+}
+
+interface ContactDetailsProps {
+  initialData?: Partial<ContactFormData> | null;
+  onRefresh?: () => void | Promise<void>;
+}
+
+type ContactFieldName = keyof Omit<ContactFormData, "phones">;
+
+export default function ContactDetails({
+  initialData,
+  onRefresh,
+}: ContactDetailsProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ContactFormData>({
     region: "",
     city: "",
     subCity: "",
@@ -29,14 +56,24 @@ export default function ContactDetails({ initialData, onRefresh }) {
     }
   }, [initialData, isEditing]);
 
-  const handleChange = (e) => {
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const fieldName = name as ContactFieldName;
+    setFormData((prev) => ({ ...prev, [fieldName]: value }));
   };
 
-  const handlePhoneChange = (index, field, value) => {
+  const handlePhoneChange = (
+    index: number,
+    field: keyof ContactPhone,
+    value: ContactPhone[keyof ContactPhone]
+  ) => {
     const newPhones = [...formData.phones];
-    newPhones[index][field] = value;
+    newPhones[index] = {
+      ...newPhones[index],
+      [field]: value,
+    } as ContactPhone;
     setFormData((prev) => ({ ...prev, phones: newPhones }));
   };
 
@@ -50,14 +87,14 @@ export default function ContactDetails({ initialData, onRefresh }) {
     }));
   };
 
-  const removePhone = (index) => {
+  const removePhone = (index: number) => {
     if (formData.phones.length > 1) {
       const newPhones = formData.phones.filter((_, i) => i !== index);
       setFormData((prev) => ({ ...prev, phones: newPhones }));
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const save = async () => {
@@ -159,7 +196,7 @@ export default function ContactDetails({ initialData, onRefresh }) {
             {isEditing && (
               <Button
                 type="button"
-                variant="text"
+                variant="link"
                 size="sm"
                 onClick={addPhone}
                 icon={MdAdd}
@@ -179,17 +216,19 @@ export default function ContactDetails({ initialData, onRefresh }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
                   <FormField
                     label="Phone Number"
+                    name={`phones.${index}.number`}
                     value={phone.number}
                     onChange={(e) =>
                       handlePhoneChange(index, "number", e.target.value)
                     }
                     disabled={!isEditing}
                     icon={MdPhone}
-                    placeholder="09..."
+                    placeholder="+251..."
                   />
                   <FormField
                     label="Type"
                     type="select"
+                    name={`phones.${index}.type`}
                     value={phone.type}
                     onChange={(e) =>
                       handlePhoneChange(index, "type", e.target.value)

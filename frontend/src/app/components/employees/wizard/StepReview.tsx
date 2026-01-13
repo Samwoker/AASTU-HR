@@ -239,15 +239,7 @@ export default function StepReview({ formData, onEditStep }: StepReviewProps) {
       <ReviewSection title="Documents" onEdit={() => onEditStep(6)}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
           <FileList label="CV / Resume" files={formData.documents.cv} />
-          <FileList
-            label="Educational Certificates"
-            files={formData.documents.certificates}
-          />
           <FileList label="Photo / ID" files={formData.documents.photo} />
-          <FileList
-            label="Work Experience Letters"
-            files={formData.documents.experienceLetters}
-          />
           <FileList label="Tax Forms" files={formData.documents.taxForms} />
           <FileList
             label="Pension Forms"

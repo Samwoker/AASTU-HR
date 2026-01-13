@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import EmployeeLayout from "../../../components/DefaultLayout/EmployeeLayout";
 import LeaveHistory from "./LeaveHistory";
 import LeaveForm from "./LeaveForm";
+import KachaSpinner from "../../../components/common/KachaSpinner";
 import {
   MdCalendarToday,
   MdSick,
@@ -12,7 +13,6 @@ import {
   MdWork,
   MdPregnantWoman,
   MdInfo,
-  MdRefresh,
 } from "react-icons/md";
 import { useLeaveSlice, leaveActions } from "../../../slice/leaveSlice";
 import {
@@ -24,7 +24,10 @@ import {
   selectAccrualSettings,
   selectCurrentFiscalYear,
 } from "../../../slice/leaveSlice/selectors";
-import { LeaveType, EnhancedLeaveBalance } from "../../../slice/leaveSlice/types";
+import {
+  LeaveType,
+  EnhancedLeaveBalance,
+} from "../../../slice/leaveSlice/types";
 import {
   EnhancedLeaveBalanceCard,
   LeaveBalanceCardSkeleton,
@@ -111,7 +114,9 @@ export default function LeaveApplication() {
   useLeaveSlice();
   const dispatch = useDispatch();
   const [showForm, setShowForm] = useState(false);
-  const [selectedLeaveType, setSelectedLeaveType] = useState<LeaveType | null>(null);
+  const [selectedLeaveType, setSelectedLeaveType] = useState<LeaveType | null>(
+    null
+  );
   const [viewMode, setViewMode] = useState<"enhanced" | "simple">("enhanced");
 
   const applicableLeaveTypes = useSelector(selectApplicableLeaveTypes);
@@ -149,19 +154,23 @@ export default function LeaveApplication() {
   };
 
   // Get balance for a specific leave type from enhanced balance
-  const getBalanceForType = (leaveTypeId: number): EnhancedLeaveBalance | null => {
+  const getBalanceForType = (
+    leaveTypeId: number
+  ): EnhancedLeaveBalance | null => {
     if (enhancedBalance && enhancedBalance.length > 0) {
-      return enhancedBalance.find(
-        (b) => b.leave_type_id === leaveTypeId
-      ) || null;
+      return (
+        enhancedBalance.find((b) => b.leave_type_id === leaveTypeId) || null
+      );
     }
     return null;
   };
 
   // Get leave type by ID
   const getLeaveTypeById = (leaveTypeId: number): LeaveType | undefined => {
-    return applicableLeaveTypes.find((lt) => lt.id === leaveTypeId) ||
-           allLeaveTypes.find((lt) => lt.id === leaveTypeId);
+    return (
+      applicableLeaveTypes.find((lt) => lt.id === leaveTypeId) ||
+      allLeaveTypes.find((lt) => lt.id === leaveTypeId)
+    );
   };
 
   const isLoading = leaveTypesLoading || leaveBalanceLoading;
@@ -194,7 +203,11 @@ export default function LeaveApplication() {
               className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-k-orange transition-colors"
               disabled={isLoading}
             >
-              <MdRefresh className={`text-lg ${isLoading ? "animate-spin" : ""}`} />
+              {isLoading ? (
+                <KachaSpinner size="sm" />
+              ) : (
+                <span className="text-lg">↻</span>
+              )}
               Refresh
             </button>
           )}
@@ -210,11 +223,13 @@ export default function LeaveApplication() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-blue-700">
                   <strong>Fiscal Year {fiscalYear}:</strong>{" "}
-                  {accrualSettings.frequency === "DAILY" 
-                    ? `Daily accrual at ${accrualSettings.daily_rate?.toFixed(4)} days/day`
-                    : `Monthly accrual`
-                  }
-                  {accrualSettings.base_days && ` • Base: ${accrualSettings.base_days} days`}
+                  {accrualSettings.frequency === "DAILY"
+                    ? `Daily accrual at ${accrualSettings.daily_rate?.toFixed(
+                        4
+                      )} days/day`
+                    : `Monthly accrual`}
+                  {accrualSettings.base_days &&
+                    ` • Base: ${accrualSettings.base_days} days`}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -261,7 +276,10 @@ export default function LeaveApplication() {
                 .map((balance) => {
                   const leaveType = getLeaveTypeById(balance.leave_type_id);
                   return (
-                    <div key={balance.id || balance.leave_type_id} className="mb-6">
+                    <div
+                      key={balance.id || balance.leave_type_id}
+                      className="mb-6"
+                    >
                       <EnhancedLeaveBalanceCard
                         balance={balance}
                         leaveType={leaveType}
@@ -271,7 +289,7 @@ export default function LeaveApplication() {
                     </div>
                   );
                 })}
-              
+
               {/* Other Leave Types - Grid */}
               <div className="grid gap-6 mb-10 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 {enhancedBalance
@@ -301,7 +319,11 @@ export default function LeaveApplication() {
                   key={leaveType.id}
                   type={leaveType.name}
                   code={leaveType.code}
-                  days={balance?.total_entitlement || leaveType.default_allowance_days || 0}
+                  days={
+                    balance?.total_entitlement ||
+                    leaveType.default_allowance_days ||
+                    0
+                  }
                   balance={balance?.remaining_days || 0}
                   icon={getLeaveIcon(leaveType.code)}
                   onApply={() => handleApply(leaveType)}

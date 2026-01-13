@@ -1,4 +1,5 @@
 import React, { ComponentType } from "react";
+import KachaSpinner from "./KachaSpinner";
 
 interface ButtonProps {
   children: React.ReactNode;
@@ -55,7 +56,9 @@ export default function Button({
       {...props}
     >
       {loading && (
-        <span className="absolute w-5 h-5 border-2 border-transparent border-t-current rounded-full animate-spin" />
+        <span className="absolute">
+          <KachaSpinner size="sm" />
+        </span>
       )}
       {!loading && Icon && iconPosition === "left" && (
         <span className="flex items-center text-xl -mr-1">

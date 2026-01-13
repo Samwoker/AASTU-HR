@@ -39,8 +39,14 @@ export default function EmployeeDashboard() {
       // ignore
     }
 
+    if (status === "PENDING_APPROVAL") {
+      navigate("/employee/waiting-approval", { replace: true });
+      return;
+    }
+
     if (["PENDING", "IN_PROGRESS"].includes(status)) {
       navigate("/employee/onboarding", { replace: true });
+      return;
     }
   }, [navigate, user]);
 

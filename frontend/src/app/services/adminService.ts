@@ -75,6 +75,18 @@ const adminService = {
     const response = await api.get("/employees");
     return response.data?.data?.employees || response.data?.employees || [];
   },
+
+  // Employee Detail
+  getEmployeeDetail: async (id: string): Promise<any> => {
+    const response = await api.get(`/employees/${id}/detail`);
+    return response.data;
+  },
+
+  // Employee Self-Profile (for employees to fetch their own details)
+  getMyProfile: async (): Promise<any> => {
+    const response = await api.get(`/employees/me`);
+    return response.data;
+  },
 };
 
 export default adminService;

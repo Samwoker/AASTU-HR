@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import FormField from "../../common/FormField";
+import FormAutocomplete from "../../Core/ui/FormAutocomplete";
 import Button from "../../common/Button";
 import Checkbox from "../../common/Checkbox";
 import {
@@ -36,6 +37,31 @@ export default function StepEducation({
     // Auto-calculate graduation year if end date changes
     if (field === "endDate" && value) {
       newEducation[index].graduationYear = new Date(value).getFullYear();
+    }
+
+    // Auto-sync cost sharing duplicates
+    if (newEducation[index].costSharing) {
+      if (field === "institution")
+        newEducation[index].costSharing.issuingInstitution = value;
+      if (field === "fieldOfStudy")
+        newEducation[index].costSharing.department = value;
+      if (field === "startDate" && value)
+        newEducation[index].costSharing.yearOfEntrance = new Date(
+          value
+        ).getFullYear();
+      if (field === "endDate" && value)
+        newEducation[index].costSharing.graduationDate = value;
+
+      // Also sync if enabling cost sharing
+      if (field === "hasCostSharing" && value === true) {
+        const edu = newEducation[index];
+        if (edu.institution)
+          edu.costSharing.issuingInstitution = edu.institution;
+        if (edu.fieldOfStudy) edu.costSharing.department = edu.fieldOfStudy;
+        if (edu.startDate)
+          edu.costSharing.yearOfEntrance = new Date(edu.startDate).getFullYear();
+        if (edu.endDate) edu.costSharing.graduationDate = edu.endDate;
+      }
     }
 
     updateFormData("education", newEducation);
@@ -122,6 +148,20 @@ export default function StepEducation({
         programType: "Regular",
         hasCostSharing: false,
         costSharingDocument: null,
+        costSharing: {
+          documentNumber: "",
+          issuingInstitution: "",
+          issueDate: "",
+          department: "",
+          yearOfEntrance: "",
+          graduationDate: "",
+          declaredTotalCost: "",
+          currency: "ETB",
+          commitmentType: "",
+          regulationReference: "",
+          remarks: "",
+        },
+        document_urls: [],
         startDate: "",
         endDate: "",
         graduationYear: "",
@@ -188,31 +228,32 @@ export default function StepEducation({
               </FormField>
 
               {/* Field of Study */}
-              <FormField
+              <FormAutocomplete
                 label="Field of Study"
                 value={edu.fieldOfStudy}
-                onChange={(e) =>
-                  handleEducationChange(index, "fieldOfStudy", e.target.value)
+                onChange={(val) =>
+                  handleEducationChange(index, "fieldOfStudy", val)
                 }
+                type="fieldsOfStudy"
                 placeholder="e.g. Computer Science"
                 required
-                error={errors[`edu_field_${index}`]}
               />
 
               {/* Institution */}
-              <FormField
+              <FormAutocomplete
                 label="Institution"
                 value={edu.institution}
-                onChange={(e) =>
-                  handleEducationChange(index, "institution", e.target.value)
+                onChange={(val) =>
+                  handleEducationChange(index, "institution", val)
                 }
+                type="institutions"
                 placeholder="e.g. Addis Ababa University"
                 required
-                error={errors[`edu_inst_${index}`]}
               />
 
               {/* Program Type */}
               <FormField
+                name={`edu_prog_${index}`}
                 label="Program Type"
                 type="select"
                 value={edu.programType}
@@ -230,6 +271,7 @@ export default function StepEducation({
 
               {/* Dates */}
               <FormField
+                name={`edu_start_${index}`}
                 label="Start Date"
                 type="date"
                 value={edu.startDate}
@@ -239,6 +281,7 @@ export default function StepEducation({
               />
 
               <FormField
+                name={`edu_end_${index}`}
                 label="End Date"
                 type="date"
                 value={edu.endDate}
@@ -469,9 +512,224 @@ export default function StepEducation({
                         {errors[`edu_cost_doc_${index}`]}
                       </p>
                     )}
+
+                    {/* Comprehensive Cost Sharing Form */}
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        name={`edu_cost_doc_num_${index}`}
+                        label="Document Number"
+                        value={edu.costSharing?.documentNumber || ""}
+                        onChange={(e) =>
+                          handleEducationChange(index, "costSharing", {
+                            ...edu.costSharing,
+                            documentNumber: e.target.value,
+                          })
+                        }
+                        placeholder="e.g. CS-2023-001"
+                      />
+
+
+
+                      <FormField
+                        name={`edu_cost_issue_date_${index}`}
+                        label="Issue Date"
+                        type="date"
+                        value={edu.costSharing?.issueDate || ""}
+                        onChange={(e) =>
+                          handleEducationChange(index, "costSharing", {
+                            ...edu.costSharing,
+                            issueDate: e.target.value,
+                          })
+                        }
+                      />
+
+
+
+                      <FormField
+                        name={`edu_cost_total_${index}`}
+                        label="Declared Total Cost"
+                        type="number"
+                        value={edu.costSharing?.declaredTotalCost || ""}
+                        onChange={(e) =>
+                          handleEducationChange(index, "costSharing", {
+                            ...edu.costSharing,
+                            declaredTotalCost: e.target.value,
+                          })
+                        }
+                        placeholder="e.g. 50000"
+                      />
+
+                      <FormField
+                        name={`edu_cost_currency_${index}`}
+                        label="Currency"
+                        type="select"
+                        value={edu.costSharing?.currency || "ETB"}
+                        onChange={(e) =>
+                          handleEducationChange(index, "costSharing", {
+                            ...edu.costSharing,
+                            currency: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="ETB">ETB</option>
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                      </FormField>
+
+                      <FormField
+                        name={`edu_cost_commitment_${index}`}
+                        label="Commitment Type"
+                        type="select"
+                        value={edu.costSharing?.commitmentType || ""}
+                        onChange={(e) =>
+                          handleEducationChange(index, "costSharing", {
+                            ...edu.costSharing,
+                            commitmentType: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="">Select Type</option>
+                        <option value="Full_Study">Full Study</option>
+                        <option value="Partial_Study">Partial Study</option>
+                        <option value="Service_Obligation">Service Obligation</option>
+                      </FormField>
+
+                      <FormField
+                        name={`edu_cost_regulation_${index}`}
+                        label="Regulation Reference"
+                        value={edu.costSharing?.regulationReference || ""}
+                        onChange={(e) =>
+                          handleEducationChange(index, "costSharing", {
+                            ...edu.costSharing,
+                            regulationReference: e.target.value,
+                          })
+                        }
+                        placeholder="e.g. Regulation No. 1234/2020"
+                      />
+
+                      <div className="md:col-span-2">
+                        <FormField
+                          name={`edu_cost_remarks_${index}`}
+                          label="Remarks"
+                          value={edu.costSharing?.remarks || ""}
+                          onChange={(e) =>
+                            handleEducationChange(index, "costSharing", {
+                              ...edu.costSharing,
+                              remarks: e.target.value,
+                            })
+                          }
+                          placeholder="Additional notes about the cost sharing agreement..."
+                          type="textarea"
+                          rows={2}
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Education Documents Section */}
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <label className="block text-sm font-medium text-k-dark-grey mb-2">
+                Education Documents (Degree/Diploma/Certificates)
+              </label>
+              
+              <div className="flex flex-wrap gap-4 mb-3">
+                {edu.document_urls && edu.document_urls.map((doc: any, docIdx: number) => (
+                  <div key={docIdx} className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm">
+                    {doc.uploading ? (
+                      <span className="text-xs text-k-orange flex items-center gap-1">
+                        Uploading... 
+                        <MdCancel 
+                          onClick={() => cancelUpload(doc.uploadId)} 
+                          className="cursor-pointer hover:text-error" 
+                        />
+                      </span>
+                    ) : doc.error ? (
+                      <span className="text-xs text-error flex items-center gap-1"><MdError /> Error</span>
+                    ) : (
+                      <>
+                        <MdCheck className="text-success" size={16} />
+                        <a 
+                          href={doc.url || doc} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="text-xs text-blue-600 hover:underline truncate max-w-[150px]"
+                        >
+                          {doc.name || "Document"}
+                        </a>
+                      </>
+                    )}
+                    <button 
+                      onClick={() => {
+                        const newDocs = [...(edu.document_urls || [])].filter((_, i) => i !== docIdx);
+                        handleEducationChange(index, "document_urls", newDocs);
+                      }} 
+                      className="text-gray-400 hover:text-error ml-2"
+                    >
+                      <MdCancel />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700 shadow-sm">
+                <MdCloudUpload size={20} className="text-k-orange" />
+                <span>Upload Document</span>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,.doc,.docx,.jpg,.png"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const uploadId = `edu-doc-${index}-${Date.now()}`;
+                      const abortController = new AbortController();
+                      abortControllersRef.current[uploadId] = abortController;
+
+                      try {
+                        const currentDocs = edu.document_urls || [];
+                        const newDoc = { file, name: file.name, uploading: true, uploadId, url: "" };
+                        handleEducationChange(index, "document_urls", [...currentDocs, newDoc]);
+
+                        const { uploadFile } = await import("../../../services/fileUploadService");
+                        const url = await uploadFile(file, {
+                          signal: abortController.signal,
+                          timeout: 5 * 60 * 1000,
+                        });
+
+                        if (abortController.signal.aborted) return;
+
+                        const updatedDocs = [...(formData.education[index].document_urls || [])];
+                        const docIndex = updatedDocs.findIndex((d: any) => d.uploadId === uploadId);
+                        if (docIndex !== -1) {
+                          updatedDocs[docIndex] = { ...updatedDocs[docIndex], url, uploading: false };
+                          handleEducationChange(index, "document_urls", updatedDocs);
+                          toast.success(`"${file.name}" uploaded successfully`);
+                        }
+                      } catch (error: any) {
+                        if (error?.message === "Upload cancelled") {
+                          const updatedDocs = [...(formData.education[index].document_urls || [])].filter((d: any) => d.uploadId !== uploadId);
+                          handleEducationChange(index, "document_urls", updatedDocs);
+                          return;
+                        }
+                        const errorMessage = error?.message || "Upload failed";
+                        const updatedDocs = [...(formData.education[index].document_urls || [])];
+                        const docIndex = updatedDocs.findIndex((d: any) => d.uploadId === uploadId);
+                        if (docIndex !== -1) {
+                          updatedDocs[docIndex] = { ...updatedDocs[docIndex], error: errorMessage, uploading: false };
+                          handleEducationChange(index, "document_urls", updatedDocs);
+                          toast.error(`Failed to upload "${file.name}"`);
+                        }
+                      } finally {
+                        delete abortControllersRef.current[uploadId];
+                      }
+                    }
+                    e.target.value = "";
+                  }}
+                />
+              </label>
             </div>
 
             <button

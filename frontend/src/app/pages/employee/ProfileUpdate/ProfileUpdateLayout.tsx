@@ -1,15 +1,6 @@
-import React, { useCallback, useEffect, useState } from "react";
-import {
-  MdPerson,
-  MdContactPhone,
-  MdSchool,
-  MdWork,
-  MdVerifiedUser,
-  MdAttachMoney,
-  MdUploadFile,
-  MdEdit,
-  MdCameraAlt,
-} from "react-icons/md";
+import { useCallback, useEffect, useState } from "react";
+import { MdCameraAlt } from "react-icons/md";
+import { FiTrendingUp, FiDownload, FiFileText } from "react-icons/fi";
 import ProfileSidebar from "./ProfileSidebar";
 import PersonalDetails from "./sections/PersonalDetails";
 import ContactDetails from "./sections/ContactDetails";
@@ -19,6 +10,10 @@ import CertificationsWrapper from "./sections/CertificationsWrapper";
 import FinancialDetails from "./sections/FinancialDetails";
 import JobDetails from "./sections/JobDetails";
 import DocumentsWrapper from "./sections/DocumentsWrapper";
+import CareerTimeline from "../../../components/Employee/CareerTimeline";
+import adminService from "../../../services/adminService";
+import makeCall from "../../../API";
+import apiRoutes from "../../../API/apiRoutes";
 import Modal from "../../../components/common/Modal";
 import Button from "../../../components/common/Button";
 import toast from "react-hot-toast";
@@ -92,6 +87,8 @@ export default function ProfileUpdateLayout() {
       taxForms: [],
       pensionForms: [],
     },
+    careerEvents: [],
+    jobDetails: {},
   });
 
   const loadProfile = useCallback(async () => {
@@ -276,6 +273,38 @@ export default function ProfileUpdateLayout() {
         };
       }
 
+      // Fetch full employee detail for Career Path and Job Details using /employees/me
+      try {
+          const detailResponse = await adminService.getMyProfile();
+          const detail = detailResponse.data?.employee || detailResponse.employee || detailResponse;
+          
+          if (detail) {
+              // Populate Career Events
+              if (detail.careerEvents) {
+                  next.careerEvents = detail.careerEvents;
+              }
+              
+              // Populate Job Details (Employment) - get from active employment
+              const activeEmployment = detail.employments?.find((e: any) => e.is_active) || detail.employments?.[0];
+              next.jobDetails = {
+                  employeeId: detail.id,
+                  jobTitle: detail.job_title || activeEmployment?.jobTitle?.title || "",
+                  jobLevel: activeEmployment?.jobTitle?.level || "",
+                  department: detail.department || activeEmployment?.department?.name || "",
+                  employmentType: detail.employment_type || activeEmployment?.employment_type || "Full Time",
+                  startDate: detail.start_date || activeEmployment?.start_date || "",
+                  contractEndDate: activeEmployment?.contract_end_date || "N/A",
+                  branch: detail.place_of_work || "Head Office",
+                  manager: activeEmployment?.manager?.full_name || "N/A",
+                  grossSalary: activeEmployment?.gross_salary || 0,
+                  basicSalary: activeEmployment?.basic_salary || 0,
+                  allowances: activeEmployment?.allowances || []
+              };
+          }
+      } catch (error) {
+          console.error("Failed to fetch additional employee details", error);
+      }
+
       setProfileData(next);
     } catch (error: any) {
       console.error("Failed to load profile:", error);
@@ -348,8 +377,87 @@ export default function ProfileUpdateLayout() {
         );
       case "financial":
         return <FinancialDetails />;
-      case "job":
-        return <JobDetails />;
+      case "employment":
+        return <JobDetails data={profileData.jobDetails} />;
+      case "career":
+        return (
+            <div className="bg-white rounded-2xl shadow-sm p-6 animate-[slideUp_0.3s_ease-out]">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-[#DB5E00]">
+                            <FiTrendingUp className="text-xl" />
+                        </div>
+                        <h2 className="text-xl font-bold text-k-dark-grey">Career Progression</h2>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        <Button
+                            variant="outline"
+                            className="text-sm px-3 py-1.5 h-auto border-[#DB5E00] text-[#DB5E00] hover:bg-orange-50"
+                            onClick={async () => {
+                                if (!user?.employee_id) return;
+                                try {
+                                    const response = await makeCall({
+                                        route: apiRoutes.experienceLetter(user.employee_id),
+                                        method: "GET",
+                                        responseType: "blob",
+                                    });
+                                    const url = window.URL.createObjectURL(new Blob([response.data]));
+                                    const link = document.createElement("a");
+                                    link.href = url;
+                                    link.setAttribute("download", `Experience_Letter.pdf`);
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    link.remove();
+                                    toast.success("Experience Letter downloaded");
+                                } catch {
+                                    toast.error("Failed to download Experience Letter");
+                                }
+                            }}
+                            icon={FiDownload}
+                        >
+                            Experience Letter
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="text-sm px-3 py-1.5 h-auto border-[#DB5E00] text-[#DB5E00] hover:bg-orange-50"
+                            onClick={async () => {
+                                if (!user?.employee_id) return;
+                                try {
+                                    const response = await makeCall({
+                                        route: apiRoutes.certificateOfService(user.employee_id),
+                                        method: "GET",
+                                        responseType: "blob",
+                                    });
+                                    const url = window.URL.createObjectURL(new Blob([response.data]));
+                                    const link = document.createElement("a");
+                                    link.href = url;
+                                    link.setAttribute("download", `Certificate_of_Service.pdf`);
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    link.remove();
+                                    toast.success("Certificate of Service downloaded");
+                                } catch {
+                                    toast.error("Failed to download Certificate of Service");
+                                }
+                            }}
+                            icon={FiFileText}
+                        >
+                            Certificate of Service
+                        </Button>
+                    </div>
+                </div>
+                <CareerTimeline 
+                    events={profileData.careerEvents || []} 
+                    initialData={{
+                        job_title: profileData.jobDetails?.jobTitle,
+                        job_level: profileData.jobDetails?.jobLevel,
+                        department: profileData.jobDetails?.department,
+                        start_date: profileData.jobDetails?.startDate,
+                        gross_salary: profileData.jobDetails?.grossSalary
+                    }}
+                />
+            </div>
+        );
       case "documents":
         return (
           <DocumentsWrapper

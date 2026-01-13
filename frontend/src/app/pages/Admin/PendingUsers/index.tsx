@@ -9,18 +9,14 @@ import {
 import { PendingUser } from "./slice/types";
 import AdminLayout from "../../../components/DefaultLayout/AdminLayout";
 import BackButton from "../../../components/common/BackButton";
+import KachaSpinner from "../../../components/common/KachaSpinner";
+import useMinimumDelay from "../../../hooks/useMinimumDelay";
+import { KACHA_SPINNER_CYCLE_MS } from "../../../components/common/KachaSpinner";
 import { routeConstants } from "../../../../utils/constants";
 import ToastService from "../../../../utils/ToastService";
 import makeCall from "../../../API";
 import apiRoutes from "../../../API/apiRoutes";
-import {
-  FiMail,
-  FiPhone,
-  FiClock,
-  FiUsers,
-  FiLoader,
-  FiBriefcase,
-} from "react-icons/fi";
+import { FiMail, FiPhone, FiClock, FiUsers, FiBriefcase } from "react-icons/fi";
 
 export default function PendingUsers() {
   const dispatch = useDispatch();
@@ -29,6 +25,8 @@ export default function PendingUsers() {
 
   const users = useSelector(selectPendingUsers);
   const isLoading = useSelector(selectPendingUsersLoading);
+
+  const showLoading = useMinimumDelay(isLoading, KACHA_SPINNER_CYCLE_MS);
 
   useEffect(() => {
     dispatch(actions.fetchPendingUsersRequest());
@@ -108,8 +106,8 @@ export default function PendingUsers() {
     }
     return (
       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-        <FiLoader className="w-3 h-3 mr-1 animate-spin" />
-        In Progress
+        <KachaSpinner size="sm" />
+        <span className="ml-1">In Progress</span>
       </span>
     );
   };
@@ -124,10 +122,7 @@ export default function PendingUsers() {
   return (
     <AdminLayout>
       <div className="max-w-7xl mx-auto space-y-8">
-        <BackButton 
-          to={routeConstants.employees} 
-          label="Back to Employees"
-        />
+        <BackButton to={routeConstants.employees} label="Back to Employees" />
 
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -209,14 +204,14 @@ export default function PendingUsers() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {isLoading ? (
+                {showLoading ? (
                   <tr>
                     <td
                       colSpan={7}
                       className="px-6 py-8 text-center text-gray-500"
                     >
                       <div className="flex flex-col items-center gap-2">
-                        <div className="w-8 h-8 border-2 border-k-orange border-t-transparent rounded-full animate-spin"></div>
+                        <KachaSpinner size="lg" />
                         <span>Loading pending users...</span>
                       </div>
                     </td>

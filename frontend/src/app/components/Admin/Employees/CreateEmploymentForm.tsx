@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Button from "../../common/Button";
 import FormField from "../../common/FormField";
+import KachaSpinner from "../../common/KachaSpinner";
 import {
   FiCalendar,
   FiDollarSign,
   FiUser,
   FiBriefcase,
   FiLayers,
-  FiLoader,
 } from "react-icons/fi";
 import ToastService from "../../../../utils/ToastService";
 
@@ -420,11 +420,7 @@ export default function CreateEmploymentForm({
           placeholder="e.g. Engineering"
           icon={() => (
             <div className="text-gray-400">
-              {departmentsLoading ? (
-                <FiLoader className="animate-spin" />
-              ) : (
-                <FiLayers />
-              )}
+              {departmentsLoading ? <KachaSpinner size="sm" /> : <FiLayers />}
             </div>
           )}
           autoComplete="off"

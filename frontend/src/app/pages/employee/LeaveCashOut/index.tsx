@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { routeConstants } from "../../../../utils/constants";
 import EmployeeLayout from "../../../components/DefaultLayout/EmployeeLayout";
+import KachaSpinner from "../../../components/common/KachaSpinner";
 import {
   MdAttachMoney,
   MdCalculate,
@@ -12,7 +13,6 @@ import {
   MdCheck,
   MdClose,
   MdAccessTime,
-  MdRefresh,
   MdArrowBack,
   MdGavel,
 } from "react-icons/md";
@@ -32,8 +32,15 @@ import { CashOutRequest } from "../../../slice/leaveSlice/types";
 
 // Status badge component
 const StatusBadge = ({ status }: { status: string }) => {
-  const statusConfig: Record<string, { bg: string; text: string; icon: React.ComponentType<any> }> = {
-    PENDING: { bg: "bg-yellow-100", text: "text-yellow-700", icon: MdAccessTime },
+  const statusConfig: Record<
+    string,
+    { bg: string; text: string; icon: React.ComponentType<any> }
+  > = {
+    PENDING: {
+      bg: "bg-yellow-100",
+      text: "text-yellow-700",
+      icon: MdAccessTime,
+    },
     APPROVED: { bg: "bg-green-100", text: "text-green-700", icon: MdCheck },
     REJECTED: { bg: "bg-red-100", text: "text-red-700", icon: MdClose },
     PAID: { bg: "bg-blue-100", text: "text-blue-700", icon: MdCheck },
@@ -43,7 +50,9 @@ const StatusBadge = ({ status }: { status: string }) => {
   const Icon = config.icon;
 
   return (
-    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
+    <span
+      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}
+    >
       <Icon className="text-sm" />
       {status}
     </span>
@@ -56,11 +65,13 @@ const CashOutRequestCard = ({ request }: { request: CashOutRequest }) => (
     <div className="flex justify-between items-start mb-3">
       <div>
         <p className="text-sm text-gray-500">
-          {request.created_at ? new Date(request.created_at).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          }) : "N/A"}
+          {request.created_at
+            ? new Date(request.created_at).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
+            : "N/A"}
         </p>
         <p className="font-semibold text-k-dark-grey mt-1">
           {request.days_cashed_out} days
@@ -71,11 +82,18 @@ const CashOutRequestCard = ({ request }: { request: CashOutRequest }) => (
     <div className="flex justify-between items-center pt-3 border-t border-gray-100">
       <div>
         <span className="text-xs text-gray-500">Daily Rate</span>
-        <p className="font-medium text-sm">{(request.monthly_salary / request.salary_divisor)?.toLocaleString() || "N/A"} ETB</p>
+        <p className="font-medium text-sm">
+          {(
+            request.monthly_salary / request.salary_divisor
+          )?.toLocaleString() || "N/A"}{" "}
+          ETB
+        </p>
       </div>
       <div className="text-right">
         <span className="text-xs text-gray-500">Total Amount</span>
-        <p className="font-bold text-k-orange">{request.cash_value?.toLocaleString() || "N/A"} ETB</p>
+        <p className="font-bold text-k-orange">
+          {request.cash_value?.toLocaleString() || "N/A"} ETB
+        </p>
       </div>
     </div>
     {request.rejection_reason && (
@@ -134,8 +152,13 @@ export default function LeaveCashOut() {
   };
 
   const handleSubmitRequest = () => {
-    if (daysToRequest > 0 && daysToRequest <= (calculation?.eligible_days || 0)) {
-      dispatch(leaveActions.requestCashOutRequest({ days_to_cash_out: daysToRequest }));
+    if (
+      daysToRequest > 0 &&
+      daysToRequest <= (calculation?.eligible_days || 0)
+    ) {
+      dispatch(
+        leaveActions.requestCashOutRequest({ days_to_cash_out: daysToRequest })
+      );
     } else {
       toast.error("Please enter a valid number of days");
     }
@@ -146,9 +169,10 @@ export default function LeaveCashOut() {
   };
 
   // Calculate estimated amount
-  const estimatedAmount = calculation && daysToRequest > 0
-    ? daysToRequest * calculation.daily_rate
-    : 0;
+  const estimatedAmount =
+    calculation && daysToRequest > 0
+      ? daysToRequest * calculation.daily_rate
+      : 0;
 
   // Check if user has pending request
   const hasPendingRequest = myRequests.some((r) => r.status === "PENDING");
@@ -219,7 +243,11 @@ export default function LeaveCashOut() {
                 className="text-gray-500 hover:text-k-orange"
                 disabled={loading}
               >
-                <MdRefresh className={`text-xl ${loading ? "animate-spin" : ""}`} />
+                {loading ? (
+                  <KachaSpinner size="sm" />
+                ) : (
+                  <span className="text-xl">↻</span>
+                )}
               </button>
             </div>
 
@@ -232,13 +260,16 @@ export default function LeaveCashOut() {
               <>
                 {!calculation.eligible ? (
                   <InfoBanner variant="warning" className="mb-4">
-                    {calculation.reason || "You are not currently eligible for leave cash-out."}
+                    {calculation.reason ||
+                      "You are not currently eligible for leave cash-out."}
                   </InfoBanner>
                 ) : (
                   <>
                     <div className="grid grid-cols-2 gap-4 mb-6">
                       <div className="bg-green-50 p-4 rounded-xl">
-                        <p className="text-xs text-green-600 mb-1">Eligible Days</p>
+                        <p className="text-xs text-green-600 mb-1">
+                          Eligible Days
+                        </p>
                         <p className="text-3xl font-bold text-green-700">
                           {calculation.eligible_days}
                         </p>
@@ -252,17 +283,31 @@ export default function LeaveCashOut() {
                     </div>
 
                     <div className="bg-orange-50 p-4 rounded-xl mb-6">
-                      <p className="text-xs text-orange-600 mb-1">Maximum Cash-Out Value</p>
+                      <p className="text-xs text-orange-600 mb-1">
+                        Maximum Cash-Out Value
+                      </p>
                       <p className="text-2xl font-bold text-k-orange">
                         {calculation.max_amount?.toLocaleString()} ETB
                       </p>
                     </div>
 
                     <div className="bg-gray-50 p-4 rounded-xl text-xs text-gray-600 space-y-1">
-                      <p><strong>Calculation:</strong></p>
-                      <p>Monthly Salary: {calculation.monthly_salary?.toLocaleString()} ETB</p>
-                      <p>Salary Divisor: {calculation.settings?.salary_divisor}</p>
-                      <p>Daily Rate = {calculation.monthly_salary?.toLocaleString()} ÷ {calculation.settings?.salary_divisor} = {calculation.daily_rate?.toLocaleString()} ETB</p>
+                      <p>
+                        <strong>Calculation:</strong>
+                      </p>
+                      <p>
+                        Monthly Salary:{" "}
+                        {calculation.monthly_salary?.toLocaleString()} ETB
+                      </p>
+                      <p>
+                        Salary Divisor: {calculation.settings?.salary_divisor}
+                      </p>
+                      <p>
+                        Daily Rate ={" "}
+                        {calculation.monthly_salary?.toLocaleString()} ÷{" "}
+                        {calculation.settings?.salary_divisor} ={" "}
+                        {calculation.daily_rate?.toLocaleString()} ETB
+                      </p>
                     </div>
                   </>
                 )}
@@ -284,8 +329,8 @@ export default function LeaveCashOut() {
 
               {hasPendingRequest ? (
                 <InfoBanner variant="warning">
-                  You have a pending cash-out request. Please wait for it to be processed
-                  before submitting a new one.
+                  You have a pending cash-out request. Please wait for it to be
+                  processed before submitting a new one.
                 </InfoBanner>
               ) : !calculation?.eligible ? (
                 <InfoBanner variant="info">
@@ -307,7 +352,9 @@ export default function LeaveCashOut() {
                           min={1}
                           max={calculation.eligible_days}
                           value={daysToRequest || ""}
-                          onChange={(e) => setDaysToRequest(parseInt(e.target.value) || 0)}
+                          onChange={(e) =>
+                            setDaysToRequest(parseInt(e.target.value) || 0)
+                          }
                           placeholder={`Max: ${calculation.eligible_days} days`}
                           className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-k-orange/20 focus:border-k-orange"
                         />
@@ -327,13 +374,18 @@ export default function LeaveCashOut() {
                       <div className="bg-green-50 p-4 rounded-xl">
                         <div className="flex justify-between items-center">
                           <div>
-                            <p className="text-xs text-green-600">Estimated Amount</p>
+                            <p className="text-xs text-green-600">
+                              Estimated Amount
+                            </p>
                             <p className="text-2xl font-bold text-green-700">
                               {estimatedAmount.toLocaleString()} ETB
                             </p>
                           </div>
                           <div className="text-right text-xs text-green-600">
-                            <p>{daysToRequest} days × {calculation.daily_rate?.toLocaleString()} ETB</p>
+                            <p>
+                              {daysToRequest} days ×{" "}
+                              {calculation.daily_rate?.toLocaleString()} ETB
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -346,16 +398,22 @@ export default function LeaveCashOut() {
                       variant="primary"
                       icon={MdSend}
                       className="w-full mt-6"
-                      disabled={daysToRequest <= 0 || daysToRequest > calculation.eligible_days}
+                      disabled={
+                        daysToRequest <= 0 ||
+                        daysToRequest > calculation.eligible_days
+                      }
                     >
                       Review Request
                     </Button>
                   ) : (
                     <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
                       <p className="text-sm text-yellow-800 mb-4">
-                        <strong>Confirm your request:</strong><br />
-                        You are about to request cash-out for <strong>{daysToRequest} days</strong> for
-                        an estimated amount of <strong>{estimatedAmount.toLocaleString()} ETB</strong>.
+                        <strong>Confirm your request:</strong>
+                        <br />
+                        You are about to request cash-out for{" "}
+                        <strong>{daysToRequest} days</strong> for an estimated
+                        amount of{" "}
+                        <strong>{estimatedAmount.toLocaleString()} ETB</strong>.
                       </p>
                       <div className="flex gap-3">
                         <Button
@@ -390,25 +448,31 @@ export default function LeaveCashOut() {
                 <li className="flex gap-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0" />
                   <p className="text-xs text-blue-700">
-                    <strong>Enablement:</strong> Leave cash-out must be enabled by the organization for your specific employment category.
+                    <strong>Enablement:</strong> Leave cash-out must be enabled
+                    by the organization for your specific employment category.
                   </p>
                 </li>
                 <li className="flex gap-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0" />
                   <p className="text-xs text-blue-700">
-                    <strong>Maximum Days:</strong> There is an annual limit on how many days can be converted (currently <strong>10 days</strong>).
+                    <strong>Maximum Days:</strong> There is an annual limit on
+                    how many days can be converted (currently{" "}
+                    <strong>10 days</strong>).
                   </p>
                 </li>
                 <li className="flex gap-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0" />
                   <p className="text-xs text-blue-700">
-                    <strong>Accrued Balance:</strong> You can only cash out from your <strong>accrued</strong> annual leave balance, not your total annual entitlement.
+                    <strong>Accrued Balance:</strong> You can only cash out from
+                    your <strong>accrued</strong> annual leave balance, not your
+                    total annual entitlement.
                   </p>
                 </li>
                 <li className="flex gap-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0" />
                   <p className="text-xs text-blue-700">
-                    <strong>Pending Requests:</strong> You cannot have another active or pending cash-out request in the system.
+                    <strong>Pending Requests:</strong> You cannot have another
+                    active or pending cash-out request in the system.
                   </p>
                 </li>
               </ul>
@@ -419,7 +483,9 @@ export default function LeaveCashOut() {
 
       {activeTab === "history" && (
         <div className="bg-white rounded-2xl shadow-card p-6">
-          <h2 className="text-lg font-semibold text-k-dark-grey mb-6">Request History</h2>
+          <h2 className="text-lg font-semibold text-k-dark-grey mb-6">
+            Request History
+          </h2>
 
           {myRequests.length === 0 ? (
             <div className="text-center py-12">

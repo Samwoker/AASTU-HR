@@ -20,12 +20,13 @@ export interface EmployeePayload {
   dateOfBirth?: string;
   tinNumber?: string;
   pensionNumber?: string;
-  employment: EmploymentPayload;
+  employment?: EmploymentPayload;
 }
 
 export interface AllowancePayload {
   allowance_type_id: number;
   amount: number;
+  currency?: string;
   effective_date: string;
 }
 

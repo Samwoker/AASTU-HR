@@ -1,5 +1,4 @@
 import React, { ChangeEvent, ReactNode, ComponentType } from "react";
-import { MdArrowDropDown } from "react-icons/md";
 import { IconType } from "react-icons";
 import { Filter } from "./Filter";
 
@@ -47,6 +46,10 @@ export default function FormField({
   suffix,
   ...props
 }: FormFieldProps) {
+  const isControlled = value !== undefined;
+  const shouldForceReadOnly =
+    isControlled && !onChange && props.readOnly !== false;
+
   const baseInputClasses = `w-full h-12 px-4 font-base text-base text-k-dark-grey bg-white/70 backdrop-blur-sm border rounded-xl transition-all duration-200 placeholder:text-k-medium-grey placeholder:opacity-70 focus:outline-none ${
     error
       ? "border-error focus:border-error focus:ring-4 focus:ring-red-200"
@@ -76,10 +79,11 @@ export default function FormField({
 
         return (
           <Filter
-            value={String(value)}
+            value={value !== undefined ? String(value) : ""}
             onChange={handleFilterChange}
             options={filterOptions}
             placeholder={placeholder || "Select option"}
+            disabled={props.disabled || (isControlled && !onChange)}
             className={`${
               error
                 ? "border-error focus:ring-red-200"
@@ -97,7 +101,8 @@ export default function FormField({
             name={name}
             value={value}
             onChange={onChange}
-            className={`${baseInputClasses} ${inputClassName} appearance-none cursor-pointer ${
+            disabled={props.disabled || (isControlled && !onChange)}
+            className={`${baseInputClasses} ${inputClassName} appearance-none cursor-pointer pr-10 ${
               Icon ? "pl-11" : ""
             }`}
             aria-invalid={error ? "true" : "false"}
@@ -107,7 +112,20 @@ export default function FormField({
             {children}
           </select>
           <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-k-medium-grey pointer-events-none">
-            <MdArrowDropDown size={24} />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2.5"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
           </div>
         </div>
       );
@@ -120,8 +138,9 @@ export default function FormField({
           name={name}
           value={value}
           onChange={onChange}
+          readOnly={props.readOnly || shouldForceReadOnly}
           placeholder={placeholder}
-          className={`${baseInputClasses} ${inputClassName} py-3 h-auto min-h-[100px] resize-y`}
+          className={`${baseInputClasses} ${inputClassName} py-3 h-auto min-h-25 resize-y`}
           aria-invalid={error ? "true" : "false"}
           aria-describedby={helperText ? `${name}-helper` : undefined}
           {...props}
@@ -136,8 +155,11 @@ export default function FormField({
         type={type}
         value={value}
         onChange={onChange}
+        readOnly={props.readOnly || shouldForceReadOnly}
         placeholder={placeholder}
-        onClick={(e) => type === "date" && e.target.showPicker?.()}
+        onClick={(e) =>
+          type === "date" && (e.target as HTMLInputElement).showPicker?.()
+        }
         className={`${baseInputClasses} ${inputClassName} ${
           Icon ? "pl-11" : ""
         } ${type === "date" ? "cursor-pointer" : ""}`}

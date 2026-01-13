@@ -377,7 +377,7 @@ export default function LeaveManagement() {
   const handleAdjustBalance = (balance: LeaveBalance) => {
     setSelectedBalance(balance);
     setAdjustmentType("add");
-    setAdjustmentDays(0);
+    setAdjustmentDays(balance.total_entitlement || 0);
     setAdjustmentReason("");
     setShowAdjustModal(true);
   };
@@ -518,13 +518,13 @@ export default function LeaveManagement() {
       count: actualPendingApplications.length,
     },
     { id: "all", label: "All Applications" },
+    { id: "balances", label: "Employee Balances" },
     { id: "cash_out", label: "Cash-Out Requests", count: pendingCashOutCount },
     {
       id: "expiring",
       label: "Expiring Balances",
       count: expiringBalances.length,
     },
-    { id: "balances", label: "Employee Balances" },
   ];
 
   // Table columns

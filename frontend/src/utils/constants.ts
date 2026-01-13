@@ -5,7 +5,9 @@ export const routeConstants = {
   resetPassword: "/reset-password",
   setupAccount: "/setup-account/:token",
   dashboard: "/admin/dashboard",
-  createUser: "/admin/create-user",
+  createUser: "/admin/users/create",
+  assignManager: "/admin/managers/assign",
+  managerDetail: "/admin/managers/:managerId",
   createEmployment: "/admin/employment/create",
   createEmployee: "/admin/employees/create",
   employees: "/admin/employees",
@@ -24,11 +26,16 @@ export const routeConstants = {
   employeeProfile: "/employee/profile",
   employeeDashboard: "/employee/dashboard",
   settings: "/admin/settings",
+  // Missing routes restored
+  waitingApproval: "/employee/waiting-approval",
+  promoteEmployee: "/admin/employees/:id/promote",
+  
   // Admin Leave Management
   adminLeaves: "/admin/leaves",
   adminLeaveTypes: "/admin/leave-types",
   adminPublicHolidays: "/admin/public-holidays",
   adminLeaveSettings: "/admin/leave-settings",
+  buildTeam: "/admin/managers/:managerId/build-team",
   notFound: "*",
   noAuthorized: "/no-authorized",
 };

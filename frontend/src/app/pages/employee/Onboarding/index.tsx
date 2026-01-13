@@ -8,6 +8,9 @@ import StepCertifications from "../../../components/employees/wizard/StepCertifi
 import StepDocuments from "../../../components/employees/wizard/StepDocuments";
 import StepReview from "../../../components/employees/wizard/StepReview";
 import RegistrationModal from "../../../components/employees/RegistrationModal";
+import useMinimumDelay from "../../../hooks/useMinimumDelay";
+import { KACHA_SPINNER_CYCLE_MS } from "../../../components/common/KachaSpinner";
+import KachaSpinner from "../../../components/common/KachaSpinner";
 import Button from "../../../components/common/Button";
 import { MdCheck, MdArrowBack, MdArrowForward, MdError } from "react-icons/md";
 import toast from "react-hot-toast";
@@ -45,6 +48,7 @@ interface Education {
   startDate?: string;
   endDate?: string;
   isCurrent?: boolean;
+  costSharingDetails?: string;
 }
 
 interface WorkExperience {
@@ -56,6 +60,7 @@ interface WorkExperience {
   startDate: string;
   endDate?: string;
   isCurrent?: boolean;
+  document_urls?: (FileItem | string)[];
 }
 
 interface Certification {
@@ -242,10 +247,11 @@ export default function EmployeeOnboarding() {
           newErrors[`edu_prog_${index}`] = "Program Type is required";
 
         if (edu.hasCostSharing) {
-          if (!edu.costSharingDocument) {
-            newErrors[`edu_cost_doc_${index}`] =
-              "Cost Sharing Document is required";
+          if (!edu.costSharingDocument && !edu.costSharingDetails) {
+            newErrors[`edu_cost_doc_details_${index}`] =
+              "Cost Sharing Document or Details is required";
           } else if (
+            edu.costSharingDocument &&
             typeof edu.costSharingDocument === "object" &&
             "error" in edu.costSharingDocument &&
             edu.costSharingDocument.error
@@ -253,6 +259,7 @@ export default function EmployeeOnboarding() {
             newErrors[`edu_cost_doc_${index}`] =
               "Cost Sharing Document upload failed. Please retry.";
           } else if (
+            edu.costSharingDocument &&
             typeof edu.costSharingDocument === "object" &&
             "url" in edu.costSharingDocument &&
             !edu.costSharingDocument.url
@@ -294,18 +301,6 @@ export default function EmployeeOnboarding() {
         });
       if (!hasValidCv) {
         newErrors.cv = "CV/Resume is required and must be uploaded";
-      }
-
-      const hasValidCertificates =
-        formData.documents.certificates &&
-        Array.isArray(formData.documents.certificates) &&
-        formData.documents.certificates.some((item) => {
-          if (typeof item === "string") return true;
-          return item.url && !item.error;
-        });
-      if (!hasValidCertificates) {
-        newErrors.certificates =
-          "Educational Certificates are required and must be uploaded";
       }
 
       const hasValidPhoto =
@@ -357,9 +352,9 @@ export default function EmployeeOnboarding() {
           }
 
           if (onboardingStatus === "PENDING_APPROVAL") {
-             setIsSubmitted(true);
-             setIsLoadingStatus(false);
-             return;
+            setIsSubmitted(true);
+            setIsLoadingStatus(false);
+            return;
           }
 
           // Only show loading toast if we're actually going to load data
@@ -430,6 +425,7 @@ export default function EmployeeOnboarding() {
                 edu.cost_sharing_document_url ||
                 edu.costSharingDocument ||
                 null,
+              costSharingDetails: edu.cost_sharing_details || "",
               startDate:
                 edu.start_date || edu.startDate
                   ? new Date(edu.start_date || edu.startDate)
@@ -486,6 +482,7 @@ export default function EmployeeOnboarding() {
                       .split("T")[0]
                   : "",
               isCurrent: exp.is_current || exp.isCurrent || false,
+              document_urls: exp.document_urls || [],
             }));
 
             setFormData((prev) => ({
@@ -610,6 +607,7 @@ export default function EmployeeOnboarding() {
                 programType: edu.programType,
                 hasCostSharing: edu.hasCostSharing || false,
                 costSharingDocument: costSharingUrl || undefined,
+                costSharingDetails: edu.costSharingDetails || undefined,
                 startDate: edu.startDate || undefined,
                 endDate: edu.endDate || undefined,
                 isCurrent: edu.isCurrent || false,
@@ -629,6 +627,10 @@ export default function EmployeeOnboarding() {
               department: exp.department || undefined,
               startDate: exp.startDate,
               endDate: exp.endDate || undefined,
+              document_urls:
+                (exp.document_urls
+                  ?.map((item) => (typeof item === "string" ? item : item.url))
+                  .filter(Boolean) as string[]) || undefined,
             })),
           });
           toast.dismiss(loadingToast);
@@ -740,16 +742,6 @@ export default function EmployeeOnboarding() {
       }
 
       if (
-        formData.documents.certificates &&
-        Array.isArray(formData.documents.certificates) &&
-        formData.documents.certificates.length > 0
-      ) {
-        submissionData.documents.certificates = formData.documents.certificates
-          .map(extractUrl)
-          .filter((url): url is string => url !== null);
-      }
-
-      if (
         formData.documents.photo &&
         Array.isArray(formData.documents.photo) &&
         formData.documents.photo.length > 0
@@ -757,17 +749,6 @@ export default function EmployeeOnboarding() {
         submissionData.documents.photo = formData.documents.photo
           .map(extractUrl)
           .filter((url): url is string => url !== null);
-      }
-
-      if (
-        formData.documents.experienceLetters &&
-        Array.isArray(formData.documents.experienceLetters) &&
-        formData.documents.experienceLetters.length > 0
-      ) {
-        submissionData.documents.experienceLetters =
-          formData.documents.experienceLetters
-            .map(extractUrl)
-            .filter((url): url is string => url !== null);
       }
 
       if (
@@ -969,18 +950,25 @@ export default function EmployeeOnboarding() {
 
   const CurrentStepComponent = STEPS[currentStep - 1].component;
 
+  const showLoadingStatus = useMinimumDelay(
+    isLoadingStatus,
+    KACHA_SPINNER_CYCLE_MS
+  );
+
   // Redirect immediately if onboarding is completed (prevent flash)
   if (shouldRedirect) {
     return null;
   }
 
   // Show loading state while fetching onboarding status
-  if (isLoadingStatus) {
+  if (showLoadingStatus) {
     return (
       <div className="min-h-screen bg-k-light-grey flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-k-orange mx-auto mb-4"></div>
-          <p className="text-k-medium-grey">Loading your onboarding data...</p>
+          <KachaSpinner size="xl" variant="screen" showText={false} />
+          <p className="text-k-medium-grey mt-4">
+            Loading your onboarding data...
+          </p>
         </div>
       </div>
     );
@@ -988,20 +976,28 @@ export default function EmployeeOnboarding() {
 
   if (isSubmitted) {
     return (
-       <div className="min-h-screen bg-k-light-grey flex items-center justify-center p-4">
-         <div className="bg-white rounded-2xl shadow-card p-8 md:p-12 max-w-lg w-full text-center">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <MdCheck className="w-10 h-10 text-green-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-k-dark-grey mb-3">Application Submitted!</h2>
-            <p className="text-k-medium-grey mb-8">
-               Thank you for completing your onboarding. Your application has been submitted and is currently pending approval from HR. You will be notified once it is reviewed.
-            </p>
-            <Button onClick={() => navigate("/employee/dashboard")} variant="primary" fullWidth>
-               Go to Dashboard
-            </Button>
-         </div>
-       </div>
+      <div className="min-h-screen bg-k-light-grey flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-card p-8 md:p-12 max-w-lg w-full text-center">
+          <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <MdError className="w-10 h-10 text-k-orange" />
+          </div>
+          <h2 className="text-2xl font-bold text-k-dark-grey mb-3">
+            Waiting for Approval
+          </h2>
+          <p className="text-k-medium-grey mb-8">
+            Your onboarding application is currently on{" "}
+            <strong>Pending Approval</strong>.
+            <br />
+            <br />
+            You cannot access the dashboard until HR reviews and approves your
+            information. You will be notified via email once the process is
+            complete.
+          </p>
+          <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-500">
+            Please check back later or contact HR if you have any questions.
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -1031,11 +1027,11 @@ export default function EmployeeOnboarding() {
           <div className="mb-10">
             <div className="flex items-center justify-between relative">
               {/* Progress Line Background */}
-              <div className="absolute left-0 top-4 transform -translate-y-1/2 w-full h-[3px] bg-gray-200 z-10" />
+              <div className="absolute left-0 top-4 transform -translate-y-1/2 w-full h-0.75 bg-gray-200 z-10" />
 
               {/* Active Progress Line */}
               <div
-                className="absolute left-0 top-4 transform -translate-y-1/2 h-[3px] bg-success transition-all duration-500 z-20"
+                className="absolute left-0 top-4 transform -translate-y-1/2 h-0.75 bg-success transition-all duration-500 z-20"
                 style={{
                   width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%`,
                 }}

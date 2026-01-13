@@ -1,6 +1,5 @@
-import React from 'react';
-
-import { FiLoader } from 'react-icons/fi';
+import React from "react";
+import KachaSpinner from "../../common/KachaSpinner";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
@@ -30,11 +29,13 @@ export default function Button({
 
   return (
     <button
-      className={`${baseStyles} ${variants[variant]} ${className} ${isLoading || disabled ? 'opacity-70 cursor-not-allowed' : ''}`}
+      className={`${baseStyles} ${variants[variant]} ${className} ${
+        isLoading || disabled ? "opacity-70 cursor-not-allowed" : ""
+      }`}
       disabled={isLoading || disabled}
       {...props}
     >
-      {isLoading && <FiLoader className="animate-spin" />}
+      {isLoading && <KachaSpinner size="sm" />}
       {children}
     </button>
   );

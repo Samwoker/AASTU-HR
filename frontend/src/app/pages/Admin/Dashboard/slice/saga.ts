@@ -1,71 +1,30 @@
-import { call, put, takeLatest, all } from "redux-saga/effects";
+import { call, put, takeLatest } from "redux-saga/effects";
 import { dashboardActions } from "./index";
 import makeCall from "../../../../API";
 import apiRoutes from "../../../../API/apiRoutes";
 
-function* fetchDashboardStats(action: ReturnType<typeof dashboardActions.fetchStatsRequest>) {
+function* fetchDashboardStats() {
   try {
-    const filters = action.payload || {};
-    const queryParams = new URLSearchParams();
+    const response: {
+      data: {
+        status: string;
+        data: any;
+      };
+    } = yield call(makeCall, {
+      method: "GET",
+      route: apiRoutes.analytics.advancedStats,
+      isSecureRoute: true,
+    });
 
-    if (filters.department_id && filters.department_id !== 'All') {
-      queryParams.append('department_id', filters.department_id);
+    if (response?.data?.status === "success") {
+      yield put(dashboardActions.fetchStatsSuccess(response.data.data));
+    } else {
+      yield put(
+        dashboardActions.fetchStatsFailure(
+          "Failed to fetch dashboard stats: Invalid response",
+        ),
+      );
     }
-    if (filters.start_date) {
-      queryParams.append('start_date', filters.start_date);
-    }
-    if (filters.end_date) {
-      queryParams.append('end_date', filters.end_date);
-    }
-
-    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-
-    const [employeesRes, departmentsRes, activeRes, managersRes]: any[] =
-      yield all([
-        call(makeCall, {
-          method: "GET",
-          route: `${apiRoutes.employeesCount}${queryString}`,
-          isSecureRoute: true,
-        }),
-        call(makeCall, {
-          method: "GET",
-          route: `${apiRoutes.departmentsCount}${queryString}`,
-          isSecureRoute: true,
-        }),
-        call(makeCall, {
-          method: "GET",
-          route: `${apiRoutes.activeEmploymentsCount}${queryString}`,
-          isSecureRoute: true,
-        }),
-        call(makeCall, {
-          method: "GET",
-          route: `${apiRoutes.managersCount}${queryString}`,
-          isSecureRoute: true,
-        }),
-      ]);
-
-    // Response structure: { status: "success", data: { count: number } }
-    const extractCount = (res: any) => {
-      // Check for res.data.data.count (User provided structure)
-      if (typeof res?.data?.data?.count === "number")
-        return res.data.data.count;
-
-      // Fallbacks just in case
-      if (typeof res?.data?.count === "number") return res.data.count;
-      if (typeof res?.data?.data === "number") return res.data.data;
-      if (typeof res?.data === "number") return res.data;
-
-      return 0;
-    };
-
-    const stats = {
-      totalEmployees: extractCount(employeesRes),
-      totalDepartments: extractCount(departmentsRes),
-      activeEmployees: extractCount(activeRes),
-      totalManagers: extractCount(managersRes),
-    };
-
-    yield put(dashboardActions.fetchStatsSuccess(stats));
   } catch (error: any) {
     yield put(
       dashboardActions.fetchStatsFailure(
