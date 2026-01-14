@@ -1,7 +1,7 @@
 import FormInput from "../../../Core/ui/FormInput";
 import FormAutocomplete from "../../../Core/ui/FormAutocomplete";
 import FormSelect from "../../../Core/ui/FormSelect";
-import Button from "../../../Core/ui/Button";
+import Button from "../../../common/Button";
 import Checkbox from "../../../Core/ui/Checkbox";
 import FileUpload from "../../../Core/ui/FileUpload";
 import { MdAdd, MdDelete, MdWork } from "react-icons/md";
@@ -18,7 +18,7 @@ export default function StepWorkExperience({
 }: StepProps) {
   const handleExperienceChange = (index: number, field: string, value: any) => {
     const newExperience = formData.workExperience.map((exp: any, i: number) =>
-      i === index ? { ...exp, [field]: value } : exp,
+      i === index ? { ...exp, [field]: value } : exp
     );
     updateFormData("workExperience", newExperience);
   };
@@ -41,7 +41,7 @@ export default function StepWorkExperience({
 
   const removeExperience = (index: number) => {
     const newExperience = formData.workExperience.filter(
-      (_: any, i: number) => i !== index,
+      (_: any, i: number) => i !== index
     );
     updateFormData("workExperience", newExperience);
   };
@@ -127,7 +127,7 @@ export default function StepWorkExperience({
                   handleExperienceChange(
                     index,
                     "employmentType",
-                    e.target.value,
+                    e.target.value
                   )
                 }
                 options={[

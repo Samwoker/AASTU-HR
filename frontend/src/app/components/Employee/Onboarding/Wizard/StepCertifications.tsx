@@ -1,5 +1,5 @@
 import FormInput from "../../../Core/ui/FormInput";
-import Button from "../../../Core/ui/Button";
+import Button from "../../../common/Button";
 import FileUpload from "../../../Core/ui/FileUpload";
 import { MdAdd, MdDelete, MdCardMembership } from "react-icons/md";
 
@@ -9,8 +9,15 @@ interface StepProps {
   errors: any;
 }
 
-export default function StepCertifications({ formData, updateFormData }: StepProps) {
-  const handleCertificationChange = (index: number, field: string, value: any) => {
+export default function StepCertifications({
+  formData,
+  updateFormData,
+}: StepProps) {
+  const handleCertificationChange = (
+    index: number,
+    field: string,
+    value: any
+  ) => {
     const newCerts = formData.certifications.map((cert: any, i: number) =>
       i === index ? { ...cert, [field]: value } : cert
     );
@@ -27,13 +34,15 @@ export default function StepCertifications({ formData, updateFormData }: StepPro
         expirationDate: "",
         credentialId: "",
         credentialUrl: "",
-        certificateDocument: null
+        certificateDocument: null,
       },
     ]);
   };
 
   const removeCertification = (index: number) => {
-    const newCerts = formData.certifications.filter((_: any, i: number) => i !== index);
+    const newCerts = formData.certifications.filter(
+      (_: any, i: number) => i !== index
+    );
     updateFormData("certifications", newCerts);
   };
 
@@ -53,7 +62,11 @@ export default function StepCertifications({ formData, updateFormData }: StepPro
         <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
           <MdCardMembership className="mx-auto h-12 w-12 text-gray-400 mb-3" />
           <p className="text-gray-500">No certifications added yet.</p>
-          <Button variant="subtle" onClick={addCertification} className="mt-2 text-[#db602c]">
+          <Button
+            variant="subtle"
+            onClick={addCertification}
+            className="mt-2 text-[#db602c]"
+          >
             Add a certification
           </Button>
         </div>
@@ -67,7 +80,8 @@ export default function StepCertifications({ formData, updateFormData }: StepPro
           >
             <div className="flex justify-between items-start mb-4">
               <h4 className="text-lg font-medium text-gray-800 flex items-center">
-                <MdCardMembership className="mr-2 text-gray-500" /> Certification #{index + 1}
+                <MdCardMembership className="mr-2 text-gray-500" />{" "}
+                Certification #{index + 1}
               </h4>
               {formData.certifications.length > 0 && (
                 <Button
@@ -93,7 +107,11 @@ export default function StepCertifications({ formData, updateFormData }: StepPro
                 label="Issuing Organization"
                 value={cert.issuingOrganization}
                 onChange={(e) =>
-                  handleCertificationChange(index, "issuingOrganization", e.target.value)
+                  handleCertificationChange(
+                    index,
+                    "issuingOrganization",
+                    e.target.value
+                  )
                 }
                 placeholder="e.g. Google, Microsoft"
               />
@@ -110,21 +128,33 @@ export default function StepCertifications({ formData, updateFormData }: StepPro
                 type="date"
                 value={cert.expirationDate}
                 onChange={(e) =>
-                  handleCertificationChange(index, "expirationDate", e.target.value)
+                  handleCertificationChange(
+                    index,
+                    "expirationDate",
+                    e.target.value
+                  )
                 }
               />
               <FormInput
                 label="Credential ID"
                 value={cert.credentialId}
                 onChange={(e) =>
-                  handleCertificationChange(index, "credentialId", e.target.value)
+                  handleCertificationChange(
+                    index,
+                    "credentialId",
+                    e.target.value
+                  )
                 }
               />
               <FormInput
                 label="Credential URL"
                 value={cert.credentialUrl}
                 onChange={(e) =>
-                  handleCertificationChange(index, "credentialUrl", e.target.value)
+                  handleCertificationChange(
+                    index,
+                    "credentialUrl",
+                    e.target.value
+                  )
                 }
                 placeholder="https://..."
               />
@@ -135,15 +165,15 @@ export default function StepCertifications({ formData, updateFormData }: StepPro
                 label="Certificate Document"
                 file={cert.certificateDocument}
                 currentUrl={cert.documentUrl}
-                onFileChange={(file) => handleCertificationChange(index, "certificateDocument", file)}
+                onFileChange={(file) =>
+                  handleCertificationChange(index, "certificateDocument", file)
+                }
                 onRemove={() => {
                   handleCertificationChange(index, "certificateDocument", null);
                   handleCertificationChange(index, "documentUrl", null);
                 }}
               />
             </div>
-
-
           </div>
         ))}
       </div>

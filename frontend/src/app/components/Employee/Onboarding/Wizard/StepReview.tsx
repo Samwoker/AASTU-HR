@@ -1,5 +1,5 @@
 import React from "react";
-import Button from "../../../Core/ui/Button";
+import Button from "../../../common/Button";
 import { MdEdit } from "react-icons/md";
 
 interface StepProps {
@@ -8,7 +8,15 @@ interface StepProps {
 }
 
 export default function StepReview({ formData, onEditStep }: StepProps) {
-  const Section = ({ title, step, children }: { title: string; step: number; children: React.ReactNode }) => (
+  const Section = ({
+    title,
+    step,
+    children,
+  }: {
+    title: string;
+    step: number;
+    children: React.ReactNode;
+  }) => (
     <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
       <div className="flex items-center justify-between mb-4 border-b border-gray-200 pb-2">
         <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
@@ -51,7 +59,12 @@ export default function StepReview({ formData, onEditStep }: StepProps) {
           <p className="font-medium text-gray-500 mb-1">Phone Numbers:</p>
           {formData.phones.map((p: any, i: number) => (
             <p key={i} className="text-gray-800 ml-4">
-              {p.number} ({p.type}) {p.isPrimary && <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full ml-2">Primary</span>}
+              {p.number} ({p.type}){" "}
+              {p.isPrimary && (
+                <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full ml-2">
+                  Primary
+                </span>
+              )}
             </p>
           ))}
         </div>
@@ -62,9 +75,15 @@ export default function StepReview({ formData, onEditStep }: StepProps) {
           <p className="text-gray-500 italic">No education history added.</p>
         ) : (
           formData.education.map((edu: any, i: number) => (
-            <div key={i} className="mb-4 last:mb-0 border-b border-gray-100 last:border-0 pb-2 last:pb-0">
+            <div
+              key={i}
+              className="mb-4 last:mb-0 border-b border-gray-100 last:border-0 pb-2 last:pb-0"
+            >
               <p className="font-semibold text-gray-800">
-                {edu.institution} <span className="text-xs font-normal text-gray-400 capitalize">({edu.institutionCategory})</span>
+                {edu.institution}{" "}
+                <span className="text-xs font-normal text-gray-400 capitalize">
+                  ({edu.institutionCategory})
+                </span>
               </p>
               <p className="text-sm text-gray-600">
                 {edu.level} in {edu.fieldOfStudy}
@@ -80,7 +99,10 @@ export default function StepReview({ formData, onEditStep }: StepProps) {
               {edu.hasCostSharing && (
                 <div className="mt-1 text-xs text-gray-500 bg-gray-100 p-2 rounded-lg">
                   <p>Doc #: {edu.costSharingDocumentNumber}</p>
-                  <p>Issued by: {edu.costSharingIssuingInstitution} ({edu.costSharingIssueDate})</p>
+                  <p>
+                    Issued by: {edu.costSharingIssuingInstitution} (
+                    {edu.costSharingIssueDate})
+                  </p>
                 </div>
               )}
             </div>
@@ -93,7 +115,10 @@ export default function StepReview({ formData, onEditStep }: StepProps) {
           <p className="text-gray-500 italic">No work experience added.</p>
         ) : (
           formData.workExperience.map((exp: any, i: number) => (
-            <div key={i} className="mb-4 last:mb-0 border-b border-gray-100 last:border-0 pb-2 last:pb-0">
+            <div
+              key={i}
+              className="mb-4 last:mb-0 border-b border-gray-100 last:border-0 pb-2 last:pb-0"
+            >
               <p className="font-semibold text-gray-800">{exp.companyName}</p>
               <p className="text-sm text-gray-600">
                 {exp.jobTitle || "Position N/A"}
@@ -111,19 +136,29 @@ export default function StepReview({ formData, onEditStep }: StepProps) {
           <p className="text-gray-500 italic">No certifications added.</p>
         ) : (
           formData.certifications.map((cert: any, i: number) => (
-            <div key={i} className="mb-4 last:mb-0 border-b border-gray-100 last:border-0 pb-2 last:pb-0">
+            <div
+              key={i}
+              className="mb-4 last:mb-0 border-b border-gray-100 last:border-0 pb-2 last:pb-0"
+            >
               <p className="font-semibold text-gray-800">{cert.name}</p>
               <p className="text-sm text-gray-600">
                 {cert.issuingOrganization} | Issued: {cert.issueDate}
               </p>
               {cert.expirationDate && (
-                <p className="text-xs text-gray-500">Expires: {cert.expirationDate}</p>
+                <p className="text-xs text-gray-500">
+                  Expires: {cert.expirationDate}
+                </p>
               )}
               {cert.credentialId && (
                 <p className="text-xs text-gray-500">ID: {cert.credentialId}</p>
               )}
               {cert.credentialUrl && (
-                <a href={cert.credentialUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">
+                <a
+                  href={cert.credentialUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-500 hover:underline"
+                >
                   View Credential
                 </a>
               )}
@@ -137,16 +172,20 @@ export default function StepReview({ formData, onEditStep }: StepProps) {
 
       <Section title="Documents" step={6}>
         <div className="grid grid-cols-2 gap-4">
-          {Object.entries(formData.documents).map(([key, files]: [string, any]) => (
-            <div key={key}>
-              <p className="text-sm font-medium text-gray-500 capitalize">
-                {key.replace(/([A-Z])/g, " $1").trim()}
-              </p>
-              <p className="text-sm text-gray-800">
-                {files && files.length > 0 ? `${files.length} file(s) attached` : "No files"}
-              </p>
-            </div>
-          ))}
+          {Object.entries(formData.documents).map(
+            ([key, files]: [string, any]) => (
+              <div key={key}>
+                <p className="text-sm font-medium text-gray-500 capitalize">
+                  {key.replace(/([A-Z])/g, " $1").trim()}
+                </p>
+                <p className="text-sm text-gray-800">
+                  {files && files.length > 0
+                    ? `${files.length} file(s) attached`
+                    : "No files"}
+                </p>
+              </div>
+            )
+          )}
         </div>
       </Section>
     </div>

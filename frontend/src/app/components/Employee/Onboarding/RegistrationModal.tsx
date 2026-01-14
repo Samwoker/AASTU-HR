@@ -1,6 +1,6 @@
 import React from "react";
 import Modal from "../../Core/ui/Modal";
-import Button from "../../Core/ui/Button";
+import Button from "../../common/Button";
 import { MdFileUpload, MdEdit } from "react-icons/md";
 
 interface RegistrationModalProps {
@@ -35,7 +35,8 @@ export default function RegistrationModal({
     <Modal isOpen={isOpen} onClose={onClose} title="Welcome to Onboarding">
       <div className="space-y-6">
         <p className="text-gray-600">
-          To speed up your registration, you can upload your CV/Resume to auto-fill some information, or start manually.
+          To speed up your registration, you can upload your CV/Resume to
+          auto-fill some information, or start manually.
         </p>
 
         <div className="grid grid-cols-1 gap-4">
@@ -50,7 +51,9 @@ export default function RegistrationModal({
               <MdFileUpload className="text-blue-500 text-2xl" />
             </div>
             <h4 className="font-semibold text-gray-800">Auto-fill from CV</h4>
-            <p className="text-sm text-gray-500 mt-1">Upload PDF or Word document</p>
+            <p className="text-sm text-gray-500 mt-1">
+              Upload PDF or Word document
+            </p>
           </div>
 
           <div className="relative">

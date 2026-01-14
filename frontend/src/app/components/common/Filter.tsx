@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
-import { cn } from "../../../lib/utils";
 import { FiCheck, FiChevronDown } from "react-icons/fi";
 
 export interface FilterOption {
@@ -35,13 +34,13 @@ export function Filter({
       disabled={disabled}
     >
       <SelectPrimitive.Trigger
-        className={cn(
+        className={[
           "flex items-center justify-between gap-2 h-12 px-4 rounded-xl border shadow-sm bg-white/70 backdrop-blur-sm text-base",
           "border-gray-200 hover:bg-gray-50 transition-all w-full",
           "focus:outline-none focus:border-orange-200 focus:ring-4 focus:ring-orange-200",
           "text-k-dark-grey placeholder:text-k-medium-grey",
-          className
-        )}
+          className || "",
+        ].join(" ")}
       >
         <SelectPrimitive.Value placeholder={placeholder} />
         <FiChevronDown size={20} className="text-k-medium-grey" />
@@ -57,10 +56,9 @@ export function Filter({
               <SelectPrimitive.Item
                 value={o.value}
                 key={o.value}
-                className={cn(
-                  "flex items-center gap-2 px-3 py-2.5 text-sm rounded-lg cursor-pointer outline-none",
-                  "text-k-dark-grey hover:bg-orange-50 focus:bg-orange-50 transition-colors"
-                )}
+                className={
+                  "flex items-center gap-2 px-3 py-2.5 text-sm rounded-lg cursor-pointer outline-none text-k-dark-grey hover:bg-orange-50 focus:bg-orange-50 transition-colors"
+                }
               >
                 {o.icon && <span>{o.icon}</span>}
 

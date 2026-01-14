@@ -1,7 +1,7 @@
 import FormInput from "../../../Core/ui/FormInput";
 import FormAutocomplete from "../../../Core/ui/FormAutocomplete";
 import FormSelect from "../../../Core/ui/FormSelect";
-import Button from "../../../Core/ui/Button";
+import Button from "../../../common/Button";
 import Checkbox from "../../../Core/ui/Checkbox";
 import FileUpload from "../../../Core/ui/FileUpload";
 import { MdAdd, MdDelete, MdSchool } from "react-icons/md";
@@ -12,7 +12,11 @@ interface StepProps {
   errors: any;
 }
 
-export default function StepEducation({ formData, updateFormData, errors }: StepProps) {
+export default function StepEducation({
+  formData,
+  updateFormData,
+  errors,
+}: StepProps) {
   const handleEducationChange = (index: number, field: string, value: any) => {
     const newEducation = formData.education.map((edu: any, i: number) =>
       i === index ? { ...edu, [field]: value } : edu
@@ -41,7 +45,9 @@ export default function StepEducation({ formData, updateFormData, errors }: Step
   };
 
   const removeEducation = (index: number) => {
-    const newEducation = formData.education.filter((_: any, i: number) => i !== index);
+    const newEducation = formData.education.filter(
+      (_: any, i: number) => i !== index
+    );
     updateFormData("education", newEducation);
   };
 
@@ -61,7 +67,11 @@ export default function StepEducation({ formData, updateFormData, errors }: Step
         <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
           <MdSchool className="mx-auto h-12 w-12 text-gray-400 mb-3" />
           <p className="text-gray-500">No education history added yet.</p>
-          <Button variant="subtle" onClick={addEducation} className="mt-2 text-[#db602c]">
+          <Button
+            variant="subtle"
+            onClick={addEducation}
+            className="mt-2 text-[#db602c]"
+          >
             Add your education
           </Button>
         </div>
@@ -75,7 +85,8 @@ export default function StepEducation({ formData, updateFormData, errors }: Step
           >
             <div className="flex justify-between items-start mb-4">
               <h4 className="text-lg font-medium text-gray-800 flex items-center">
-                <MdSchool className="mr-2 text-gray-500" /> Education #{index + 1}
+                <MdSchool className="mr-2 text-gray-500" /> Education #
+                {index + 1}
               </h4>
               {formData.education.length > 0 && (
                 <Button
@@ -92,7 +103,9 @@ export default function StepEducation({ formData, updateFormData, errors }: Step
               <FormSelect
                 label="Level of Education"
                 value={edu.level}
-                onChange={(e) => handleEducationChange(index, "level", e.target.value)}
+                onChange={(e) =>
+                  handleEducationChange(index, "level", e.target.value)
+                }
                 options={[
                   { value: "High School", label: "High School" },
                   { value: "Diploma", label: "Diploma" },
@@ -106,7 +119,9 @@ export default function StepEducation({ formData, updateFormData, errors }: Step
               <FormAutocomplete
                 label="Field of Study"
                 value={edu.fieldOfStudy}
-                onChange={(val) => handleEducationChange(index, "fieldOfStudy", val)}
+                onChange={(val) =>
+                  handleEducationChange(index, "fieldOfStudy", val)
+                }
                 type="fieldsOfStudy"
                 required
               />
@@ -116,7 +131,9 @@ export default function StepEducation({ formData, updateFormData, errors }: Step
               <FormAutocomplete
                 label="Institution"
                 value={edu.institution}
-                onChange={(val) => handleEducationChange(index, "institution", val)}
+                onChange={(val) =>
+                  handleEducationChange(index, "institution", val)
+                }
                 type="institutions"
                 required
               />
@@ -124,7 +141,9 @@ export default function StepEducation({ formData, updateFormData, errors }: Step
               <FormSelect
                 label="Program Type"
                 value={edu.programType}
-                onChange={(e) => handleEducationChange(index, "programType", e.target.value)}
+                onChange={(e) =>
+                  handleEducationChange(index, "programType", e.target.value)
+                }
                 options={["Regular", "Extension", "Distance", "Summer"]}
                 required
                 placeholder="Select Program"
@@ -133,7 +152,13 @@ export default function StepEducation({ formData, updateFormData, errors }: Step
               <FormSelect
                 label="Institution Type"
                 value={edu.institutionCategory}
-                onChange={(e) => handleEducationChange(index, "institutionCategory", e.target.value)}
+                onChange={(e) =>
+                  handleEducationChange(
+                    index,
+                    "institutionCategory",
+                    e.target.value
+                  )
+                }
                 options={[
                   { value: "Private", label: "Private" },
                   { value: "Government", label: "Government" },
@@ -145,7 +170,13 @@ export default function StepEducation({ formData, updateFormData, errors }: Step
                 <Checkbox
                   label="Has Cost Sharing?"
                   checked={edu.hasCostSharing}
-                  onChange={(e) => handleEducationChange(index, "hasCostSharing", e.target.checked)}
+                  onChange={(e) =>
+                    handleEducationChange(
+                      index,
+                      "hasCostSharing",
+                      e.target.checked
+                    )
+                  }
                 />
               </div>
 
@@ -155,27 +186,51 @@ export default function StepEducation({ formData, updateFormData, errors }: Step
                     <FormInput
                       label="Cost Sharing Document Number"
                       value={edu.costSharingDocumentNumber}
-                      onChange={(e) => handleEducationChange(index, "costSharingDocumentNumber", e.target.value)}
+                      onChange={(e) =>
+                        handleEducationChange(
+                          index,
+                          "costSharingDocumentNumber",
+                          e.target.value
+                        )
+                      }
                       required
                     />
                     <FormInput
                       label="Issuing Institution"
                       value={edu.costSharingIssuingInstitution}
-                      onChange={(e) => handleEducationChange(index, "costSharingIssuingInstitution", e.target.value)}
+                      onChange={(e) =>
+                        handleEducationChange(
+                          index,
+                          "costSharingIssuingInstitution",
+                          e.target.value
+                        )
+                      }
                       required
                     />
                     <FormInput
                       label="Issue Date"
                       type="date"
                       value={edu.costSharingIssueDate}
-                      onChange={(e) => handleEducationChange(index, "costSharingIssueDate", e.target.value)}
+                      onChange={(e) =>
+                        handleEducationChange(
+                          index,
+                          "costSharingIssueDate",
+                          e.target.value
+                        )
+                      }
                       required
                     />
                     <FormInput
                       label="Total Cost Amount"
                       type="number"
                       value={edu.costSharingTotalCost}
-                      onChange={(e) => handleEducationChange(index, "costSharingTotalCost", e.target.value)}
+                      onChange={(e) =>
+                        handleEducationChange(
+                          index,
+                          "costSharingTotalCost",
+                          e.target.value
+                        )
+                      }
                       required
                     />
                   </div>
@@ -183,7 +238,13 @@ export default function StepEducation({ formData, updateFormData, errors }: Step
                   <FormInput
                     label="Remarks"
                     value={edu.costSharingRemarks}
-                    onChange={(e) => handleEducationChange(index, "costSharingRemarks", e.target.value)}
+                    onChange={(e) =>
+                      handleEducationChange(
+                        index,
+                        "costSharingRemarks",
+                        e.target.value
+                      )
+                    }
                     placeholder="Any additional notes..."
                   />
 
@@ -194,12 +255,26 @@ export default function StepEducation({ formData, updateFormData, errors }: Step
                       required
                       file={edu.costSharingDocument}
                       currentUrl={edu.costSharingDocumentUrl}
-                      onFileChange={(file) => handleEducationChange(index, "costSharingDocument", file)}
+                      onFileChange={(file) =>
+                        handleEducationChange(
+                          index,
+                          "costSharingDocument",
+                          file
+                        )
+                      }
                       onRemove={() => {
-                        handleEducationChange(index, "costSharingDocument", null);
+                        handleEducationChange(
+                          index,
+                          "costSharingDocument",
+                          null
+                        );
                         // If there was an existing URL, we might want to flag it for deletion or just clear the view
                         // For now, setting url to null in form data effectively removes it from view
-                        handleEducationChange(index, "costSharingDocumentUrl", null);
+                        handleEducationChange(
+                          index,
+                          "costSharingDocumentUrl",
+                          null
+                        );
                       }}
                       error={errors[`edu_cost_doc_${index}`]}
                     />
@@ -213,7 +288,9 @@ export default function StepEducation({ formData, updateFormData, errors }: Step
                   label="Education Document (Degree/Diploma)"
                   file={edu.document}
                   currentUrl={edu.documentUrl}
-                  onFileChange={(file) => handleEducationChange(index, "document", file)}
+                  onFileChange={(file) =>
+                    handleEducationChange(index, "document", file)
+                  }
                   onRemove={() => {
                     handleEducationChange(index, "document", null);
                     handleEducationChange(index, "documentUrl", null);
@@ -221,8 +298,6 @@ export default function StepEducation({ formData, updateFormData, errors }: Step
                 />
               </div>
             </div>
-
-
           </div>
         ))}
       </div>

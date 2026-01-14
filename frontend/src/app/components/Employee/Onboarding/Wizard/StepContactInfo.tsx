@@ -1,6 +1,6 @@
 import FormInput from "../../../Core/ui/FormInput";
 import FormSelect from "../../../Core/ui/FormSelect";
-import Button from "../../../Core/ui/Button";
+import Button from "../../../common/Button";
 import Checkbox from "../../../Core/ui/Checkbox";
 import { MdAdd, MdDelete, MdPhone } from "react-icons/md";
 

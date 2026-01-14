@@ -3,7 +3,14 @@ import KachaSpinner from "./KachaSpinner";
 
 interface ButtonProps {
   children: React.ReactNode;
-  variant?: "primary" | "secondary" | "outline" | "link" | "danger";
+  variant?:
+    | "primary"
+    | "secondary"
+    | "outline"
+    | "link"
+    | "danger"
+    | "success"
+    | "subtle";
   type?: "button" | "submit" | "reset";
   onClick?: () => void;
   disabled?: boolean;
@@ -29,7 +36,7 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const baseClasses =
-    "relative inline-flex items-center justify-center gap-2 h-12 px-8 rounded-xl border-0 font-semibold text-base cursor-pointer transition-all duration-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#e55400]/20 focus-visible:ring-offset-2 disabled:opacity-55 disabled:cursor-not-allowed";
+    "relative inline-flex items-center justify-center gap-3 h-12 px-6 rounded-xl border-0 font-semibold text-base cursor-pointer transition-all duration-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#e55400]/20 focus-visible:ring-offset-2 disabled:opacity-55 disabled:cursor-not-allowed";
 
   const variantClasses = {
     primary:
@@ -41,6 +48,9 @@ export default function Button({
     link: "text-[#e55400] bg-transparent p-0 h-auto font-medium shadow-none hover:text-k-dark-grey hover:underline",
     danger:
       "text-white bg-red-500 shadow-md hover:bg-red-600 hover:-translate-y-0.5 hover:shadow-lg disabled:hover:translate-y-0 disabled:hover:bg-red-500",
+    success:
+      "text-white bg-green-500 shadow-md hover:bg-green-600 hover:-translate-y-0.5 hover:shadow-lg disabled:hover:translate-y-0 disabled:hover:bg-green-500",
+    subtle: "text-k-dark-grey bg-gray-100 shadow-none hover:bg-gray-200",
   };
 
   const widthClass = fullWidth ? "w-full" : "";
@@ -61,13 +71,13 @@ export default function Button({
         </span>
       )}
       {!loading && Icon && iconPosition === "left" && (
-        <span className="flex items-center text-xl -mr-1">
+        <span className="flex items-center text-xl">
           <Icon />
         </span>
       )}
       <span className={loading ? "opacity-0" : ""}>{children}</span>
       {!loading && Icon && iconPosition === "right" && (
-        <span className="flex items-center text-xl -ml-1">
+        <span className="flex items-center text-xl">
           <Icon />
         </span>
       )}
