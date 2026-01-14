@@ -578,7 +578,7 @@ export default function EmployeeDetailsPage() {
     const editAction = (
       <Button
         variant="outline"
-        className="text-sm px-3 py-1.5 h-auto ml-auto"
+        className="text-sm ml-auto"
         onClick={() => setIsEditing(true)}
         icon={FiEdit2}
       >
@@ -665,7 +665,7 @@ export default function EmployeeDetailsPage() {
                 <div className="flex gap-2 ml-auto">
                   <Button
                     variant="outline"
-                    className="text-sm px-3 py-1.5 h-auto border-[#DB5E00] text-[#DB5E00] hover:bg-orange-50"
+                    className="text-sm"
                     onClick={() => navigate(`/admin/employees/${id}/promote`)}
                     icon={FiTrendingUp}
                   >

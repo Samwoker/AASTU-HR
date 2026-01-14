@@ -11,7 +11,7 @@ import {
   CancellableLeaveItem,
   ActiveLeaveItem,
   RecallNotificationItem,
-} from "../../../components/leave/LeaveRecallItems";
+} from "../../../components/Leave/LeaveRecallItems";
 import { useLeaveSlice, leaveActions } from "../../../slice/leaveSlice";
 import {
   selectCancellableLeaves,

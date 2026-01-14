@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
-import FormField from "../../../../components/common/FormField";
 import FormAutocomplete from "../../../../components/common/FormAutocomplete";
+import FormInput from "../../../../components/Core/ui/FormInput";
+import FormSelect from "../../../../components/Core/ui/FormSelect";
 import {
   FiDollarSign,
   FiBriefcase,
