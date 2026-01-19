@@ -1,5 +1,5 @@
 import React from "react";
-import KachaSpinner from "../../common/KachaSpinner";
+import aastuSpinner from "../../common/AastuSpinner";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
@@ -35,7 +35,7 @@ export default function Button({
       disabled={isLoading || disabled}
       {...props}
     >
-      {isLoading && <KachaSpinner size="sm" />}
+      {isLoading && <aastuSpinner size="sm" />}
       {children}
     </button>
   );

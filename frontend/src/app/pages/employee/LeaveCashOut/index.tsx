@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { routeConstants } from "../../../../utils/constants";
 import EmployeeLayout from "../../../components/DefaultLayout/EmployeeLayout";
-import KachaSpinner from "../../../components/common/KachaSpinner";
+import aastuSpinner from "../../../components/common/AastuSpinner";
 import {
   MdAttachMoney,
   MdCalculate,
@@ -244,7 +244,7 @@ export default function LeaveCashOut() {
                 disabled={loading}
               >
                 {loading ? (
-                  <KachaSpinner size="sm" />
+                  <aastuSpinner size="sm" />
                 ) : (
                   <span className="text-xl">↻</span>
                 )}

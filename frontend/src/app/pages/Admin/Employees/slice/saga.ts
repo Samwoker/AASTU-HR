@@ -162,7 +162,7 @@ export function* fetchEmployee(
           mockData = {
             id: "mock-1",
             full_name: "Abebe Bikila",
-            email: "abebe@kacha.com",
+            email: "abebe@aastu.com",
             job_title: "Chief Technology Officer",
             department: "Engineering",
             profilePicture: null,
@@ -173,7 +173,7 @@ export function* fetchEmployee(
           mockData = {
             id: "mock-2",
             full_name: "Derartu Tulu",
-            email: "derartu@kacha.com",
+            email: "derartu@aastu.com",
             job_title: "Head of Marketing",
             department: "Marketing",
             profilePicture: null,
@@ -184,7 +184,7 @@ export function* fetchEmployee(
           mockData = {
             id: "mock-3",
             full_name: "Haile Gebrselassie",
-            email: "haile@kacha.com",
+            email: "haile@aastu.com",
             job_title: "Operations Manager",
             department: "Operations",
             profilePicture: null,
@@ -195,7 +195,7 @@ export function* fetchEmployee(
           mockData = {
             id: id,
             full_name: "Mock User",
-            email: "mock@kacha.com",
+            email: "mock@aastu.com",
             job_title: "Mock Title",
             department: "Mock Dept",
             profilePicture: null,

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import AdminLayout from "../../../components/DefaultLayout/AdminLayout";
-import KachaSpinner from "../../../components/common/KachaSpinner";
+import aastuSpinner from "../../../components/common/AastuSpinner";
 import useMinimumDelay from "../../../hooks/useMinimumDelay";
-import { KACHA_SPINNER_CYCLE_MS } from "../../../components/common/KachaSpinner";
+import { aastu_SPINNER_CYCLE_MS } from "../../../components/common/AastuSpinner";
 import {
   MdSettings,
   MdSave,
@@ -326,14 +326,14 @@ export default function LeaveSettingsPage() {
 
   const showSettingsLoading = useMinimumDelay(
     settingsLoading,
-    KACHA_SPINNER_CYCLE_MS
+    aastu_SPINNER_CYCLE_MS
   );
 
   if (showSettingsLoading) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center h-96">
-          <KachaSpinner size="xl" variant="screen" />
+          <aastuSpinner size="xl" variant="screen" />
         </div>
       </AdminLayout>
     );

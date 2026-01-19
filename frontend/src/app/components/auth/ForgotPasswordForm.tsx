@@ -3,7 +3,7 @@ import { MdEmail } from "react-icons/md";
 import Input from "../common/Input";
 import Button from "../common/Button";
 import toast from "react-hot-toast";
-import kachaLogo from "../../../assets/images/kacha_logo.jpg";
+import aastuLogo from "../../../assets/images/aastu_logo.jpg";
 import authService from "../../services/authService";
 
 interface ForgotPasswordFormProps {
@@ -58,8 +58,8 @@ export default function ForgotPasswordForm({
       <div className="w-full max-w-[380px]">
         <div className="flex justify-center mb-6">
           <img
-            src={kachaLogo}
-            alt="Kacha HRMS"
+            src={aastuLogo}
+            alt="aastu HRMS"
             className="h-12 w-auto object-contain"
           />
         </div>

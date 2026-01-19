@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import EmployeeLayout from "../../../components/DefaultLayout/EmployeeLayout";
 import LeaveHistory from "./LeaveHistory";
 import LeaveForm from "./LeaveForm";
-import KachaSpinner from "../../../components/common/KachaSpinner";
+import aastuSpinner from "../../../components/common/AastuSpinner";
 import {
   MdCalendarToday,
   MdSick,
@@ -204,7 +204,7 @@ export default function LeaveApplication() {
               disabled={isLoading}
             >
               {isLoading ? (
-                <KachaSpinner size="sm" />
+                <aastuSpinner size="sm" />
               ) : (
                 <span className="text-lg">↻</span>
               )}

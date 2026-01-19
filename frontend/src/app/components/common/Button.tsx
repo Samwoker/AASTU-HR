@@ -1,5 +1,5 @@
 import React, { ComponentType } from "react";
-import KachaSpinner from "./KachaSpinner";
+import AastuSpinner from "./AastuSpinner";
 
 interface ButtonProps {
   children: React.ReactNode;
@@ -67,7 +67,7 @@ export default function Button({
     >
       {loading && (
         <span className="absolute">
-          <KachaSpinner size="sm" />
+          <AastuSpinner size="sm" />
         </span>
       )}
       {!loading && Icon && iconPosition === "left" && (

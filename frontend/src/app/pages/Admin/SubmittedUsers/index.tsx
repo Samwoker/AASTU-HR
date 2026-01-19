@@ -9,9 +9,9 @@ import {
 } from "./slice/selectors";
 import AdminLayout from "../../../components/DefaultLayout/AdminLayout";
 import BackButton from "../../../components/common/BackButton";
-import KachaSpinner from "../../../components/common/KachaSpinner";
+import aastuSpinner from "../../../components/common/AastuSpinner";
 import useMinimumDelay from "../../../hooks/useMinimumDelay";
-import { KACHA_SPINNER_CYCLE_MS } from "../../../components/common/KachaSpinner";
+import { aastu_SPINNER_CYCLE_MS } from "../../../components/common/AastuSpinner";
 import { ActionMenu } from "../../../components/common/ActionMenu";
 import Modal from "../../../components/common/Modal";
 import Button from "../../../components/common/Button";
@@ -36,7 +36,7 @@ export default function SubmittedUsers() {
   const isLoading = useSelector(selectSubmittedUsersLoading);
   const isApproving = useSelector(selectApproving);
 
-  const showLoading = useMinimumDelay(isLoading, KACHA_SPINNER_CYCLE_MS);
+  const showLoading = useMinimumDelay(isLoading, aastu_SPINNER_CYCLE_MS);
 
   const [approveModalOpen, setApproveModalOpen] = useState(false);
   const [userToApprove, setUserToApprove] = useState<SubmittedUser | null>(
@@ -208,7 +208,7 @@ export default function SubmittedUsers() {
                       className="px-6 py-8 text-center text-gray-500"
                     >
                       <div className="flex flex-col items-center gap-2">
-                        <KachaSpinner size="lg" />
+                        <aastuSpinner size="lg" />
                         <span>Loading submitted users...</span>
                       </div>
                     </td>

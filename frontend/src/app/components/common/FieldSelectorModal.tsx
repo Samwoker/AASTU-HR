@@ -161,7 +161,7 @@ export default function FieldSelectorModal({
 
           {isLoadingFields ? (
             <div className="flex items-center justify-center py-8">
-              <KachaSpinner size="md" />
+              <aastuSpinner size="md" />
               <span className="ml-2 text-gray-500">Loading fields...</span>
             </div>
           ) : fields.length === 0 ? (

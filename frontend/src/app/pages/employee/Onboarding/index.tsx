@@ -9,8 +9,8 @@ import StepDocuments from "../../../components/employees/wizard/StepDocuments";
 import StepReview from "../../../components/employees/wizard/StepReview";
 import RegistrationModal from "../../../components/employees/RegistrationModal";
 import useMinimumDelay from "../../../hooks/useMinimumDelay";
-import { KACHA_SPINNER_CYCLE_MS } from "../../../components/common/KachaSpinner";
-import KachaSpinner from "../../../components/common/KachaSpinner";
+import { aastu_SPINNER_CYCLE_MS } from "../../../components/common/AastuSpinner";
+import aastuSpinner from "../../../components/common/AastuSpinner";
 import Button from "../../../components/common/Button";
 import { MdCheck, MdArrowBack, MdArrowForward, MdError } from "react-icons/md";
 import toast from "react-hot-toast";
@@ -952,7 +952,7 @@ export default function EmployeeOnboarding() {
 
   const showLoadingStatus = useMinimumDelay(
     isLoadingStatus,
-    KACHA_SPINNER_CYCLE_MS
+    aastu_SPINNER_CYCLE_MS
   );
 
   // Redirect immediately if onboarding is completed (prevent flash)
@@ -965,7 +965,7 @@ export default function EmployeeOnboarding() {
     return (
       <div className="min-h-screen bg-k-light-grey flex items-center justify-center">
         <div className="text-center">
-          <KachaSpinner size="xl" variant="screen" showText={false} />
+          <aastuSpinner size="xl" variant="screen" showText={false} />
           <p className="text-k-medium-grey mt-4">
             Loading your onboarding data...
           </p>

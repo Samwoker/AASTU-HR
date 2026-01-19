@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import loginBg from "../../../assets/images/login_bg_image.jpg";
-import kachaLogo from "../../../assets/images/kacha_logo.jpg";
+import aastuLogo from "../../../assets/images/aastu_logo.jpg";
 import Button from "../../components/common/Button";
 import {
   selectAuthToken,
@@ -39,8 +39,8 @@ export default function NotFound() {
         <div className="bg-white/70 backdrop-blur-sm p-8">
           <div className="flex justify-center mb-6">
             <img
-              src={kachaLogo}
-              alt="Kacha HRMS"
+              src={aastuLogo}
+              alt="aastu HRMS"
               className="h-12 w-auto object-contain"
             />
           </div>

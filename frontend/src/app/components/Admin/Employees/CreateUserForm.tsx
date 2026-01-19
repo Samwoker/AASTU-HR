@@ -4,9 +4,9 @@ import Button from "../../common/Button";
 import FormField from "../../common/FormField";
 import FormAutocomplete from "../../common/FormAutocomplete";
 import CreateItemModal from "../../common/CreateItemModal";
-import KachaSpinner from "../../common/KachaSpinner";
+import aastuSpinner from "../../common/AastuSpinner";
 import useMinimumDelay from "../../../hooks/useMinimumDelay";
-import { KACHA_SPINNER_CYCLE_MS } from "../../common/KachaSpinner";
+import { aastu_SPINNER_CYCLE_MS } from "../../common/AastuSpinner";
 import { FiMail, FiUser, FiPlus, FiTrash2 } from "react-icons/fi";
 import { useCreateAccountSlice } from "../../../pages/Admin/CreateAccount/slice";
 import {
@@ -307,13 +307,13 @@ export default function CreateUserForm({
 
   const showLoadingData = useMinimumDelay(
     isLoadingData,
-    KACHA_SPINNER_CYCLE_MS
+    aastu_SPINNER_CYCLE_MS
   );
 
   if (showLoadingData) {
     return (
       <div className="flex items-center justify-center py-12">
-        <KachaSpinner size="lg" variant="screen" showText={false} />
+        <aastuSpinner size="lg" variant="screen" showText={false} />
         <span className="ml-3 text-gray-600">Loading form data...</span>
       </div>
     );
@@ -363,7 +363,7 @@ export default function CreateUserForm({
             label="Email Address"
             type="email"
             name="email"
-            placeholder="e.g. employee@kacha.com"
+            placeholder="e.g. employee@aastu.com"
             value={form.email}
             onChange={handleChange}
             required

@@ -8,7 +8,7 @@ import {
   MdArrowForward,
   MdArrowBack,
 } from "react-icons/md";
-import KachaSpinner from "../common/KachaSpinner";
+import aastuSpinner from "../common/AastuSpinner";
 import { extractResumeData } from "../../services/geminiService";
 import toast from "react-hot-toast";
 
@@ -316,7 +316,7 @@ export default function RegistrationModal({
                 >
                   {isProcessing ? (
                     <span className="flex items-center justify-center gap-2">
-                      <KachaSpinner size="sm" />
+                      <aastuSpinner size="sm" />
                       Processing Resume...
                     </span>
                   ) : success ? (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import KachaSpinner from "./KachaSpinner";
+import aastuSpinner from "./AastuSpinner";
 // We will adapt the service import later or use props for fetching
 // For now, I'll allow passing a fetcher function prop to make it reusable without hardcoding the service here
 // if the user strongly prefers the service import I can add it, but passing a prop is cleaner.
@@ -195,7 +195,7 @@ const FormAutocomplete: React.FC<FormAutocompleteProps> = ({
         <div className="autocomplete-dropdown absolute gap-1 z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-60 overflow-y-auto animate-[fadeInScale_0.2s_ease-out] ring-1 ring-gray-200">
           {isLoading ? (
             <div className="px-4 py-8 text-sm text-gray-400 flex flex-col items-center justify-center gap-3">
-              <KachaSpinner size="md" />
+              <aastuSpinner size="md" />
               <span className="animate-pulse font-medium">
                 Loading suggestions...
               </span>

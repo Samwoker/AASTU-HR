@@ -8,9 +8,9 @@ import {
   selectCreateAccountSuccess,
 } from "../../Admin/CreateAccount/slice/selectors";
 import AdminLayout from "../../../components/DefaultLayout/AdminLayout";
-import KachaSpinner from "../../../components/common/KachaSpinner";
+import aastuSpinner from "../../../components/common/AastuSpinner";
 import useMinimumDelay from "../../../hooks/useMinimumDelay";
-import { KACHA_SPINNER_CYCLE_MS } from "../../../components/common/KachaSpinner";
+import { aastu_SPINNER_CYCLE_MS } from "../../../components/common/AastuSpinner";
 import FormField from "../../../components/common/FormField";
 import FormAutocomplete from "../../../components/common/FormAutocomplete";
 import Button from "../../../components/common/Button";
@@ -372,14 +372,14 @@ export default function CreateEmployee() {
 
   const showMainLoading = useMinimumDelay(
     isLoadingMainData,
-    KACHA_SPINNER_CYCLE_MS
+    aastu_SPINNER_CYCLE_MS
   );
 
   if (showMainLoading) {
     return (
       <AdminLayout>
         <div className="flex h-[80vh] items-center justify-center">
-          <KachaSpinner size="xl" variant="screen" />
+          <aastuSpinner size="xl" variant="screen" />
         </div>
       </AdminLayout>
     );

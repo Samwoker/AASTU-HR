@@ -7,7 +7,7 @@ import {
   MdVisibility,
 } from "react-icons/md";
 import Modal from "../../../components/common/Modal";
-import KachaSpinner from "../../../components/common/KachaSpinner";
+import aastuSpinner from "../../../components/common/AastuSpinner";
 import StatusBadge from "../../../components/common/StatusBadge";
 import ExportDropdown from "../../../components/common/ExportDropdown";
 import FilterDropdown from "../../../components/common/FilterDropdown";
@@ -191,7 +191,7 @@ export default function LeaveHistory() {
             title="Refresh"
           >
             {loading ? (
-              <KachaSpinner size="sm" />
+              <aastuSpinner size="sm" />
             ) : (
               <span className="text-lg">↻</span>
             )}

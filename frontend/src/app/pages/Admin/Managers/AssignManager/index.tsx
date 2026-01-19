@@ -19,7 +19,7 @@ export default function AssignManagerPage() {
   return (
     <AdminLayout>
       <Helmet>
-        <title>Assign Manager | Kacha Digital Financial Service</title>
+        <title>Assign Manager | aastu Digital Financial Service</title>
       </Helmet>
 
       <div className="min-h-[calc(100vh-80px)] bg-gray-50 flex flex-col">

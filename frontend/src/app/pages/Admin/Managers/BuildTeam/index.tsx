@@ -126,7 +126,7 @@ export default function BuildTeamPage() {
   return (
     <AdminLayout>
       <Helmet>
-        <title>Build Team | Kacha Digital Financial Service</title>
+        <title>Build Team | aastu Digital Financial Service</title>
       </Helmet>
 
       <div className="min-h-[calc(100vh-80px)] bg-gray-50 flex flex-col">

@@ -1,6 +1,6 @@
 import React from "react";
 
-interface KachaSpinnerProps {
+interface aastuSpinnerProps {
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
   variant?: "inline" | "screen";
@@ -8,9 +8,9 @@ interface KachaSpinnerProps {
   text?: string;
 }
 
-export const KACHA_SPINNER_CYCLE_MS = 1200;
+export const aastu_SPINNER_CYCLE_MS = 1200;
 
-const KachaSpinner: React.FC<KachaSpinnerProps> = ({
+const aastuSpinner: React.FC<aastuSpinnerProps> = ({
   size = "md",
   className = "",
   variant = "inline",
@@ -50,7 +50,7 @@ const KachaSpinner: React.FC<KachaSpinnerProps> = ({
          *   80-100%: Pause before restart
          */
         
-        @keyframes kacha-draw-erase-v-line {
+        @keyframes aastu-draw-erase-v-line {
           0% {
             stroke-dashoffset: 100;
           }
@@ -62,7 +62,7 @@ const KachaSpinner: React.FC<KachaSpinnerProps> = ({
           }
         }
 
-        @keyframes kacha-draw-erase-top-slash {
+        @keyframes aastu-draw-erase-top-slash {
           0%, 10% {
             stroke-dashoffset: 100;
           }
@@ -74,7 +74,7 @@ const KachaSpinner: React.FC<KachaSpinnerProps> = ({
           }
         }
 
-        @keyframes kacha-draw-erase-bot-slash {
+        @keyframes aastu-draw-erase-bot-slash {
           0%, 20% {
             stroke-dashoffset: 100;
           }
@@ -86,45 +86,45 @@ const KachaSpinner: React.FC<KachaSpinnerProps> = ({
           }
         }
 
-        @keyframes kacha-k-breathe {
+        @keyframes aastu-k-breathe {
           0%, 100% { transform: scale(1); }
           40% { transform: scale(1.03); }
         }
 
-        .kacha-k-wrapper {
-          animation: kacha-k-breathe ${KACHA_SPINNER_CYCLE_MS}ms ease-in-out infinite;
+        .aastu-k-wrapper {
+          animation: aastu-k-breathe ${aastu_SPINNER_CYCLE_MS}ms ease-in-out infinite;
           will-change: transform;
         }
 
-        .kacha-stroke {
+        .aastu-stroke {
           stroke-dasharray: 100;
           stroke-dashoffset: 100;
           will-change: stroke-dashoffset;
         }
 
-        .kacha-v-line { 
-          animation: kacha-draw-erase-v-line ${KACHA_SPINNER_CYCLE_MS}ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        .aastu-v-line { 
+          animation: aastu-draw-erase-v-line ${aastu_SPINNER_CYCLE_MS}ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
           filter: drop-shadow(0 0 3px rgba(229, 84, 0, 0.35)); 
         }
         
-        .kacha-top-slash { 
-          animation: kacha-draw-erase-top-slash ${KACHA_SPINNER_CYCLE_MS}ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        .aastu-top-slash { 
+          animation: aastu-draw-erase-top-slash ${aastu_SPINNER_CYCLE_MS}ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
           filter: drop-shadow(0 0 3px rgba(255, 218, 0, 0.45)); 
         }
         
-        .kacha-bot-slash { 
-          animation: kacha-draw-erase-bot-slash ${KACHA_SPINNER_CYCLE_MS}ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        .aastu-bot-slash { 
+          animation: aastu-draw-erase-bot-slash ${aastu_SPINNER_CYCLE_MS}ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
           filter: drop-shadow(0 0 3px rgba(229, 84, 0, 0.28)); 
         }
       `}</style>
 
-      <div className="kacha-k-wrapper">
+      <div className="aastu-k-wrapper">
         <svg
           width={svgSize}
           height={svgSize}
           viewBox="0 0 100 100"
           xmlns="http://www.w3.org/2000/svg"
-          className="kacha-k-svg-container"
+          className="aastu-k-svg-container"
         >
           {/* Vertical line (left side of K) - Orange */}
           <path
@@ -134,7 +134,7 @@ const KachaSpinner: React.FC<KachaSpinnerProps> = ({
             strokeLinecap="round"
             fill="none"
             pathLength={100}
-            className="kacha-stroke kacha-v-line"
+            className="aastu-stroke aastu-v-line"
           />
 
           {/* Top diagonal slash (upper part of K) - Yellow */}
@@ -145,7 +145,7 @@ const KachaSpinner: React.FC<KachaSpinnerProps> = ({
             strokeLinecap="round"
             fill="none"
             pathLength={100}
-            className="kacha-stroke kacha-top-slash"
+            className="aastu-stroke aastu-top-slash"
           />
 
           {/* Bottom diagonal slash (lower part of K) - Orange */}
@@ -156,7 +156,7 @@ const KachaSpinner: React.FC<KachaSpinnerProps> = ({
             strokeLinecap="round"
             fill="none"
             pathLength={100}
-            className="kacha-stroke kacha-bot-slash"
+            className="aastu-stroke aastu-bot-slash"
           />
         </svg>
       </div>
@@ -172,4 +172,4 @@ const KachaSpinner: React.FC<KachaSpinnerProps> = ({
   );
 };
 
-export default KachaSpinner;
+export default aastuSpinner;

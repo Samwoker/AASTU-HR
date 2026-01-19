@@ -8,9 +8,9 @@ import {
 } from "../Employees/slice/selectors";
 import AdminLayout from "../../../components/DefaultLayout/AdminLayout";
 import Button from "../../../components/common/Button";
-import KachaSpinner from "../../../components/common/KachaSpinner";
+import aastuSpinner from "../../../components/common/AastuSpinner";
 import useMinimumDelay from "../../../hooks/useMinimumDelay";
-import { KACHA_SPINNER_CYCLE_MS } from "../../../components/common/KachaSpinner";
+import { aastu_SPINNER_CYCLE_MS } from "../../../components/common/AastuSpinner";
 import BackButton from "../../../components/common/BackButton";
 import PageHeader from "../../../components/common/PageHeader";
 import exportService, { ExportFormat } from "../../../services/exportService";
@@ -55,7 +55,7 @@ export default function FullEmployeeProfile() {
   const completedEmployees = useSelector(selectAllEmployees);
   const isLoading = useSelector(selectEmployeesLoading);
 
-  const showLoading = useMinimumDelay(isLoading, KACHA_SPINNER_CYCLE_MS);
+  const showLoading = useMinimumDelay(isLoading, aastu_SPINNER_CYCLE_MS);
 
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [selectedSections, setSelectedSections] = useState<string[]>(
@@ -158,7 +158,7 @@ export default function FullEmployeeProfile() {
       <AdminLayout>
         <div className="flex items-center justify-center h-96">
           <div className="flex flex-col items-center gap-4">
-            <KachaSpinner size="xl" />
+            <aastuSpinner size="xl" />
             <span className="text-gray-500">Loading employee details...</span>
           </div>
         </div>

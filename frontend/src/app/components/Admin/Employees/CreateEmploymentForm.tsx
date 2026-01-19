@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Button from "../../common/Button";
 import FormField from "../../common/FormField";
-import KachaSpinner from "../../common/KachaSpinner";
+import aastuSpinner from "../../common/AastuSpinner";
 import {
   FiCalendar,
   FiDollarSign,
@@ -420,7 +420,7 @@ export default function CreateEmploymentForm({
           placeholder="e.g. Engineering"
           icon={() => (
             <div className="text-gray-400">
-              {departmentsLoading ? <KachaSpinner size="sm" /> : <FiLayers />}
+              {departmentsLoading ? <aastuSpinner size="sm" /> : <FiLayers />}
             </div>
           )}
           autoComplete="off"

@@ -9,9 +9,9 @@ import {
 import { PendingUser } from "./slice/types";
 import AdminLayout from "../../../components/DefaultLayout/AdminLayout";
 import BackButton from "../../../components/common/BackButton";
-import KachaSpinner from "../../../components/common/KachaSpinner";
+import aastuSpinner from "../../../components/common/AastuSpinner";
 import useMinimumDelay from "../../../hooks/useMinimumDelay";
-import { KACHA_SPINNER_CYCLE_MS } from "../../../components/common/KachaSpinner";
+import { aastu_SPINNER_CYCLE_MS } from "../../../components/common/AastuSpinner";
 import { routeConstants } from "../../../../utils/constants";
 import ToastService from "../../../../utils/ToastService";
 import makeCall from "../../../API";
@@ -26,7 +26,7 @@ export default function PendingUsers() {
   const users = useSelector(selectPendingUsers);
   const isLoading = useSelector(selectPendingUsersLoading);
 
-  const showLoading = useMinimumDelay(isLoading, KACHA_SPINNER_CYCLE_MS);
+  const showLoading = useMinimumDelay(isLoading, aastu_SPINNER_CYCLE_MS);
 
   useEffect(() => {
     dispatch(actions.fetchPendingUsersRequest());
@@ -106,7 +106,7 @@ export default function PendingUsers() {
     }
     return (
       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-        <KachaSpinner size="sm" />
+        <aastuSpinner size="sm" />
         <span className="ml-1">In Progress</span>
       </span>
     );
@@ -211,7 +211,7 @@ export default function PendingUsers() {
                       className="px-6 py-8 text-center text-gray-500"
                     >
                       <div className="flex flex-col items-center gap-2">
-                        <KachaSpinner size="lg" />
+                        <aastuSpinner size="lg" />
                         <span>Loading pending users...</span>
                       </div>
                     </td>

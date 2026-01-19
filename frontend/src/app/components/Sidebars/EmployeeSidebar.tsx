@@ -96,8 +96,8 @@ export default function EmployeeSidebar() {
 
         <div className="pt-8 pb-6 px-4 flex flex-col items-center relative">
           <img
-            src="/kacha-logo.jpg"
-            alt="Kacha Logo"
+            src="/aastu-logo.jpg"
+            alt="aastu Logo"
             className={`w-auto object-contain mx-auto transition-all duration-300 ${
               isOpen || isMobileOpen ? "h-12" : "h-8"
             }`}

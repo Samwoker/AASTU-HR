@@ -6,7 +6,7 @@ import {
   FiCalendar,
   FiChevronRight,
 } from "react-icons/fi";
-import KachaSpinner from "../common/KachaSpinner";
+import aastuSpinner from "../common/AastuSpinner";
 import careerService, { CareerEvent } from "../../services/careerService";
 
 interface CareerHistoryTimelineProps {
@@ -87,7 +87,7 @@ export default function CareerHistoryTimeline({
           Career History
         </h2>
         <div className="flex items-center justify-center py-8">
-          <KachaSpinner size="md" />
+          <aastuSpinner size="md" />
           <span className="ml-2 text-gray-500">Loading career history...</span>
         </div>
       </div>

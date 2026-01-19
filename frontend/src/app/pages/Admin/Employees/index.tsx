@@ -285,7 +285,7 @@ export default function Employees() {
   return (
     <AdminLayout>
       <Helmet>
-        <title>Employees | Kacha Digital Financial Service</title>
+        <title>Employees | aastu Digital Financial Service</title>
       </Helmet>
       <div className="max-w-7xl mx-auto space-y-8">
         <PageHeader>

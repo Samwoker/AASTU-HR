@@ -14,9 +14,9 @@ import BackButton from "../../../components/common/BackButton";
 import Modal from "../../../components/common/Modal";
 import FormField from "../../../components/common/FormField";
 import useMinimumDelay from "../../../hooks/useMinimumDelay";
-import KachaSpinner, {
-  KACHA_SPINNER_CYCLE_MS,
-} from "../../../components/common/KachaSpinner";
+import aastuSpinner, {
+  aastu_SPINNER_CYCLE_MS,
+} from "../../../components/common/AastuSpinner";
 import { routeConstants } from "../../../../utils/constants";
 import {
   FiArrowLeft,
@@ -104,7 +104,7 @@ export default function SubmittedUserDetail() {
   const isLoading = useSelector(selectSubmittedUsersLoading);
   const isApproving = useSelector(selectApproving);
 
-  const showLoading = useMinimumDelay(isLoading, KACHA_SPINNER_CYCLE_MS);
+  const showLoading = useMinimumDelay(isLoading, aastu_SPINNER_CYCLE_MS);
 
   const jobTitles = useSelector(selectAllJobTitles) || [];
   const departments = useSelector(selectDepartments) || [];
@@ -206,7 +206,7 @@ export default function SubmittedUserDetail() {
       <AdminLayout>
         <div className="flex items-center justify-center h-96">
           <div className="flex flex-col items-center gap-4">
-            <KachaSpinner size="xl" />
+            <aastuSpinner size="xl" />
             <span className="text-gray-500">Loading user details...</span>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import EmployeeLayout from "../../../components/DefaultLayout/EmployeeLayout";
-import KachaSpinner from "../../../components/common/KachaSpinner";
+import aastuSpinner from "../../../components/common/AastuSpinner";
 import { MdWarning, MdHistory, MdPersonAdd } from "react-icons/md";
 import toast from "react-hot-toast";
 import Button from "../../../components/common/Button";
@@ -245,7 +245,7 @@ export default function LeaveRecallPage() {
           title="Refresh"
         >
           {isLoading ? (
-            <KachaSpinner size="sm" />
+            <aastuSpinner size="sm" />
           ) : (
             <span className="text-lg">↻</span>
           )}
