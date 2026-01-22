@@ -87,14 +87,12 @@ const ToggleSwitch = ({
     </div>
     <button
       type="button"
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
-        checked ? "bg-k-orange" : "bg-gray-300"
-      }`}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${checked ? "bg-k-orange" : "bg-gray-300"
+        }`}
     >
       <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-          checked ? "translate-x-6" : "translate-x-1"
-        }`}
+        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${checked ? "translate-x-6" : "translate-x-1"
+          }`}
       />
     </button>
   </div>
@@ -313,11 +311,10 @@ export default function LeaveSettingsPage() {
   }) => (
     <button
       onClick={() => setActiveTab(tab)}
-      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all cursor-pointer ${
-        activeTab === tab
+      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all cursor-pointer ${activeTab === tab
           ? "bg-k-orange text-white shadow-md"
           : "bg-white text-gray-600 hover:bg-gray-100"
-      }`}
+        }`}
     >
       <Icon className="text-lg" />
       {label}
@@ -591,7 +588,7 @@ export default function LeaveSettingsPage() {
                     </span>
                     <span>→</span>
                     <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded">
-                      CEO
+                      Vice Chancellor
                     </span>
                     <span>→</span>
                     <span className="bg-green-100 text-green-700 px-2 py-1 rounded">
@@ -628,11 +625,10 @@ export default function LeaveSettingsPage() {
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <label
-                    className={`flex items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-colors ${
-                      formData.accrual_frequency === "DAILY"
+                    className={`flex items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-colors ${formData.accrual_frequency === "DAILY"
                         ? "bg-k-orange text-white"
                         : "bg-gray-50 hover:bg-gray-100"
-                    }`}
+                      }`}
                   >
                     <input
                       type="radio"
@@ -645,11 +641,10 @@ export default function LeaveSettingsPage() {
                     <span className="text-sm font-medium">Daily</span>
                   </label>
                   <label
-                    className={`flex items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-colors ${
-                      formData.accrual_frequency === "MONTHLY"
+                    className={`flex items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-colors ${formData.accrual_frequency === "MONTHLY"
                         ? "bg-k-orange text-white"
                         : "bg-gray-50 hover:bg-gray-100"
-                    }`}
+                      }`}
                   >
                     <input
                       type="radio"
@@ -669,11 +664,10 @@ export default function LeaveSettingsPage() {
                 type="number"
                 value={formData.accrual_divisor}
                 onChange={handleInputChange}
-                hint={`Daily rate = Base days / ${
-                  formData.accrual_divisor
-                } = ${(
-                  formData.annual_leave_base_days / formData.accrual_divisor
-                ).toFixed(4)} days`}
+                hint={`Daily rate = Base days / ${formData.accrual_divisor
+                  } = ${(
+                    formData.annual_leave_base_days / formData.accrual_divisor
+                  ).toFixed(4)} days`}
               />
             </div>
           </SettingsCard>
@@ -818,11 +812,10 @@ export default function LeaveSettingsPage() {
                       (method) => (
                         <label
                           key={method}
-                          className={`flex items-center justify-center p-3 rounded-xl cursor-pointer transition-colors ${
-                            formData.encashment_rounding === method
+                          className={`flex items-center justify-center p-3 rounded-xl cursor-pointer transition-colors ${formData.encashment_rounding === method
                               ? "bg-k-orange text-white"
                               : "bg-gray-50 hover:bg-gray-100"
-                          }`}
+                            }`}
                         >
                           <input
                             type="radio"

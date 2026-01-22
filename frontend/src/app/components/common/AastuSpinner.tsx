@@ -37,20 +37,20 @@ const aastuSpinner: React.FC<aastuSpinnerProps> = ({
     >
       <style>{`
         /* 
-         * Draw-Erase-Redraw Animation Cycle
+         * Draw-Erase-Redraw Animation Cycle for 'A'
          * One full cycle: Draw all 3 strokes sequentially → Erase all 3 strokes sequentially
          * Timeline (100% = full cycle):
-         *   0-10%:   Draw vertical line
-         *   10-20%:  Draw top slash  
-         *   20-30%:  Draw bottom slash
-         *   30-50%:  Hold complete K
-         *   50-60%:  Erase vertical line
-         *   60-70%:  Erase top slash
-         *   70-80%:  Erase bottom slash
+         *   0-10%:   Draw left leg
+         *   10-20%:  Draw right leg
+         *   20-30%:  Draw cross bar
+         *   30-50%:  Hold complete A
+         *   50-60%:  Erase left leg
+         *   60-70%:  Erase right leg
+         *   70-80%:  Erase cross bar
          *   80-100%: Pause before restart
          */
         
-        @keyframes aastu-draw-erase-v-line {
+        @keyframes aastu-draw-erase-left-leg {
           0% {
             stroke-dashoffset: 100;
           }
@@ -62,7 +62,7 @@ const aastuSpinner: React.FC<aastuSpinnerProps> = ({
           }
         }
 
-        @keyframes aastu-draw-erase-top-slash {
+        @keyframes aastu-draw-erase-right-leg {
           0%, 10% {
             stroke-dashoffset: 100;
           }
@@ -74,7 +74,7 @@ const aastuSpinner: React.FC<aastuSpinnerProps> = ({
           }
         }
 
-        @keyframes aastu-draw-erase-bot-slash {
+        @keyframes aastu-draw-erase-cross-bar {
           0%, 20% {
             stroke-dashoffset: 100;
           }
@@ -86,13 +86,13 @@ const aastuSpinner: React.FC<aastuSpinnerProps> = ({
           }
         }
 
-        @keyframes aastu-k-breathe {
+        @keyframes aastu-a-breathe {
           0%, 100% { transform: scale(1); }
           40% { transform: scale(1.03); }
         }
 
-        .aastu-k-wrapper {
-          animation: aastu-k-breathe ${aastu_SPINNER_CYCLE_MS}ms ease-in-out infinite;
+        .aastu-a-wrapper {
+          animation: aastu-a-breathe ${aastu_SPINNER_CYCLE_MS}ms ease-in-out infinite;
           will-change: transform;
         }
 
@@ -102,61 +102,61 @@ const aastuSpinner: React.FC<aastuSpinnerProps> = ({
           will-change: stroke-dashoffset;
         }
 
-        .aastu-v-line { 
-          animation: aastu-draw-erase-v-line ${aastu_SPINNER_CYCLE_MS}ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        .aastu-left-leg { 
+          animation: aastu-draw-erase-left-leg ${aastu_SPINNER_CYCLE_MS}ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
           filter: drop-shadow(0 0 3px rgba(229, 84, 0, 0.35)); 
         }
         
-        .aastu-top-slash { 
-          animation: aastu-draw-erase-top-slash ${aastu_SPINNER_CYCLE_MS}ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
-          filter: drop-shadow(0 0 3px rgba(255, 218, 0, 0.45)); 
+        .aastu-right-leg { 
+          animation: aastu-draw-erase-right-leg ${aastu_SPINNER_CYCLE_MS}ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+          filter: drop-shadow(0 0 3px rgba(229, 84, 0, 0.35)); 
         }
         
-        .aastu-bot-slash { 
-          animation: aastu-draw-erase-bot-slash ${aastu_SPINNER_CYCLE_MS}ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        .aastu-cross-bar { 
+          animation: aastu-draw-erase-cross-bar ${aastu_SPINNER_CYCLE_MS}ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
           filter: drop-shadow(0 0 3px rgba(229, 84, 0, 0.28)); 
         }
       `}</style>
 
-      <div className="aastu-k-wrapper">
+      <div className="aastu-a-wrapper">
         <svg
           width={svgSize}
           height={svgSize}
           viewBox="0 0 100 100"
           xmlns="http://www.w3.org/2000/svg"
-          className="aastu-k-svg-container"
+          className="aastu-a-svg-container"
         >
-          {/* Vertical line (left side of K) - Orange */}
+          {/* Left leg of A - Orange */}
           <path
-            d="M30 20 L30 80"
+            d="M50 20 L25 80"
             stroke="#e55400"
-            strokeWidth="16"
+            strokeWidth="12"
             strokeLinecap="round"
             fill="none"
             pathLength={100}
-            className="aastu-stroke aastu-v-line"
+            className="aastu-stroke aastu-left-leg"
           />
 
-          {/* Top diagonal slash (upper part of K) - Yellow */}
+          {/* Right leg of A - Orange */}
           <path
-            d="M30 50 L65 20"
-            stroke="#ffda00"
-            strokeWidth="16"
+            d="M50 20 L75 80"
+            stroke="#e55400"
+            strokeWidth="12"
             strokeLinecap="round"
             fill="none"
             pathLength={100}
-            className="aastu-stroke aastu-top-slash"
+            className="aastu-stroke aastu-right-leg"
           />
 
-          {/* Bottom diagonal slash (lower part of K) - Orange */}
+          {/* Cross bar of A - Orange */}
           <path
-            d="M30 50 L65 80"
+            d="M35 55 L65 55"
             stroke="#e55400"
-            strokeWidth="16"
+            strokeWidth="12"
             strokeLinecap="round"
             fill="none"
             pathLength={100}
-            className="aastu-stroke aastu-bot-slash"
+            className="aastu-stroke aastu-cross-bar"
           />
         </svg>
       </div>
@@ -173,3 +173,4 @@ const aastuSpinner: React.FC<aastuSpinnerProps> = ({
 };
 
 export default aastuSpinner;
+
