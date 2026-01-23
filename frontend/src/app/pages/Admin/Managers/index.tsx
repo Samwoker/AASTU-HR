@@ -133,7 +133,7 @@ export default function ManagersPage() {
   return (
     <AdminLayout>
       <Helmet>
-        <title>Managers | aastu Digital Financial Service</title>
+        <title>Managers | AASTU HR Management</title>
       </Helmet>
 
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-6">

@@ -126,7 +126,7 @@ export default function BuildTeamPage() {
   return (
     <AdminLayout>
       <Helmet>
-        <title>Build Team | aastu Digital Financial Service</title>
+        <title>Build Team | AASTU HR Management</title>
       </Helmet>
 
       <div className="min-h-[calc(100vh-80px)] bg-gray-50 flex flex-col">
@@ -310,11 +310,10 @@ export default function BuildTeamPage() {
                         onClick={() => toggleSelection(emp.id)}
                         className={`
                                             group p-4 rounded-2xl border cursor-pointer transition-all duration-200 flex items-center gap-4 select-none
-                                            ${
-                                              isSelected
-                                                ? "bg-orange-50 border-orange-200 shadow-sm relative overflow-hidden"
-                                                : "bg-white border-gray-100 hover:border-orange-200 hover:shadow-md hover:-translate-y-0.5"
-                                            }
+                                            ${isSelected
+                            ? "bg-orange-50 border-orange-200 shadow-sm relative overflow-hidden"
+                            : "bg-white border-gray-100 hover:border-orange-200 hover:shadow-md hover:-translate-y-0.5"
+                          }
                                         `}
                       >
                         {isSelected && (
@@ -324,11 +323,10 @@ export default function BuildTeamPage() {
                         <div
                           className={`
                                             w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold transition-colors shrink-0
-                                            ${
-                                              isSelected
-                                                ? "bg-orange-100 text-orange-600"
-                                                : "bg-gray-100 text-gray-500 group-hover:bg-orange-50 group-hover:text-orange-600"
-                                            }
+                                            ${isSelected
+                              ? "bg-orange-100 text-orange-600"
+                              : "bg-gray-100 text-gray-500 group-hover:bg-orange-50 group-hover:text-orange-600"
+                            }
                                         `}
                         >
                           {emp.full_name?.charAt(0)}
@@ -336,9 +334,8 @@ export default function BuildTeamPage() {
 
                         <div className="flex-1 min-w-0">
                           <h4
-                            className={`text-sm font-bold truncate transition-colors ${
-                              isSelected ? "text-gray-900" : "text-gray-800"
-                            }`}
+                            className={`text-sm font-bold truncate transition-colors ${isSelected ? "text-gray-900" : "text-gray-800"
+                              }`}
                           >
                             {emp.full_name}
                           </h4>
@@ -356,11 +353,10 @@ export default function BuildTeamPage() {
                         <div
                           className={`
                                             w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all shrink-0
-                                            ${
-                                              isSelected
-                                                ? "bg-orange-500 border-orange-500 text-white shadow-md shadow-orange-200 scale-100"
-                                                : "border-gray-200 bg-white text-gray-300 group-hover:border-orange-300 group-hover:text-orange-300"
-                                            }
+                                            ${isSelected
+                              ? "bg-orange-500 border-orange-500 text-white shadow-md shadow-orange-200 scale-100"
+                              : "border-gray-200 bg-white text-gray-300 group-hover:border-orange-300 group-hover:text-orange-300"
+                            }
                                         `}
                         >
                           {isSelected ? (
@@ -383,11 +379,10 @@ export default function BuildTeamPage() {
                     w-full md:w-80 lg:w-96 flex flex-col
                     bg-white md:rounded-2xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:shadow-xl md:border border-gray-100
                     transition-transform duration-300 ease-in-out
-                    ${
-                      showMobileSquad
-                        ? "translate-y-0"
-                        : "translate-y-[calc(100%-80px)] md:translate-y-0"
-                    }
+                    ${showMobileSquad
+                  ? "translate-y-0"
+                  : "translate-y-[calc(100%-80px)] md:translate-y-0"
+                }
                     md:h-full lg:h-full
                 `}
             >

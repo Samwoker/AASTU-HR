@@ -285,7 +285,7 @@ export default function Employees() {
   return (
     <AdminLayout>
       <Helmet>
-        <title>Employees | aastu Digital Financial Service</title>
+        <title>Employees | AASTU HR Management</title>
       </Helmet>
       <div className="max-w-7xl mx-auto space-y-8">
         <PageHeader>
@@ -305,11 +305,10 @@ export default function Employees() {
                 onClick={() => openExportModal("BULK")}
                 variant="secondary"
                 icon={FiDownload}
-                className={`border-white/20 hover:border-white/40 font-semibold px-6 py-3 rounded-xl shadow-sm ${
-                  selectedIds.length > 0
+                className={`border-white/20 hover:border-white/40 font-semibold px-6 py-3 rounded-xl shadow-sm ${selectedIds.length > 0
                     ? "bg-white text-[#DB5E00] hover:text-[#DB5E00]"
                     : "bg-white/10 text-white hover:bg-white/20 hover:text-white"
-                }`}
+                  }`}
               >
                 {selectedIds.length > 0
                   ? `Export (${selectedIds.length})`
@@ -342,31 +341,28 @@ export default function Employees() {
           <div className="flex items-center gap-8 px-6 border-b border-gray-100 bg-white">
             <button
               onClick={() => handleTabChange("active")}
-              className={`py-4 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === "active"
+              className={`py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === "active"
                   ? "border-[#DB5E00] text-[#DB5E00]"
                   : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
+                }`}
             >
               All Employees
             </button>
             <button
               onClick={() => handleTabChange("pending")}
-              className={`py-4 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === "pending"
+              className={`py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === "pending"
                   ? "border-[#DB5E00] text-[#DB5E00]"
                   : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
+                }`}
             >
               Pending Approval
             </button>
             <button
               onClick={() => handleTabChange("inactive")}
-              className={`py-4 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === "inactive"
+              className={`py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === "inactive"
                   ? "border-[#DB5E00] text-[#DB5E00]"
                   : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
+                }`}
             >
               In Progress
             </button>
@@ -482,11 +478,10 @@ export default function Employees() {
                     dispatch(actions.setPage(1));
                   }}
                   disabled={!isFilterActive}
-                  className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-full transition-all border ${
-                    isFilterActive
+                  className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-full transition-all border ${isFilterActive
                       ? "bg-orange-50 text-[#DB5E00] border-orange-100 hover:bg-orange-100"
                       : "bg-gray-50 text-gray-400 border-transparent cursor-not-allowed"
-                  }`}
+                    }`}
                 >
                   <FiFilter className={isFilterActive ? "" : "text-gray-300"} />
                   Reset
@@ -654,23 +649,23 @@ export default function Employees() {
                         },
                         ...(activeTab === "pending"
                           ? [
-                              {
-                                label: "Approve",
-                                value: "approve",
-                                icon: <FiUserPlus size={14} />,
-                                onClick: () => openApproveModal(emp),
-                              },
-                            ]
+                            {
+                              label: "Approve",
+                              value: "approve",
+                              icon: <FiUserPlus size={14} />,
+                              onClick: () => openApproveModal(emp),
+                            },
+                          ]
                           : []),
                         ...(activeTab === "inactive"
                           ? [
-                              {
-                                label: "Activate",
-                                value: "activate",
-                                icon: <FiUserPlus size={14} />,
-                                onClick: () => openActivateModal(emp),
-                              },
-                            ]
+                            {
+                              label: "Activate",
+                              value: "activate",
+                              icon: <FiUserPlus size={14} />,
+                              onClick: () => openActivateModal(emp),
+                            },
+                          ]
                           : []),
                         {
                           label: "Deactivate",
@@ -747,9 +742,8 @@ export default function Employees() {
                 <FiTrash2 className="text-red-600 text-xl" />
               </div>
               <h3
-                className={`text-xl font-black mb-2 ${
-                  isHardDelete ? "text-red-800" : "text-gray-900"
-                }`}
+                className={`text-xl font-black mb-2 ${isHardDelete ? "text-red-800" : "text-gray-900"
+                  }`}
               >
                 {isHardDelete ? "DELETE FOREVER?" : "Delete Employee"}
               </h3>
@@ -832,11 +826,10 @@ export default function Employees() {
                 Cancel
               </Button>
               <Button
-                className={`flex-1 text-white shadow-md border-transparent font-bold ${
-                  isHardDelete
+                className={`flex-1 text-white shadow-md border-transparent font-bold ${isHardDelete
                     ? "bg-red-600 hover:bg-red-700 shadow-red-300"
                     : "bg-red-500 hover:bg-red-600"
-                }`}
+                  }`}
                 onClick={confirmDelete}
                 disabled={loading}
               >
@@ -845,8 +838,8 @@ export default function Employees() {
                     ? "PURGING..."
                     : "Deleting..."
                   : isHardDelete
-                  ? "PURGE FOREVER"
-                  : "Deactivate"}
+                    ? "PURGE FOREVER"
+                    : "Deactivate"}
               </Button>
             </div>
           </div>
